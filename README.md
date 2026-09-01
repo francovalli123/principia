@@ -1,0 +1,1 @@
+Desarrollar una plataforma educativa interactiva que permita crear, almacenar, ejecutar y compartir simulaciones de fenómenos básicos de Física 1 mediante parametrización visual, sin necesidad de programación.
