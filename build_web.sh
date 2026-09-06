@@ -11,7 +11,7 @@ make PLATFORM=PLATFORM_WEB
 cd /app
 mkdir -p build
 
-emcc simulador/tiroOblicuo.c 5 45 20 \
+emcc simulador/tiroOblicuo.c\
     -o build/index.html \
     -I/app/raylib/src \
     /app/raylib/src/libraylib.web.a \
