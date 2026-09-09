@@ -5,7 +5,8 @@ from django.conf import settings
 # La implementación de User se realiza a partir del usuario estándar de DJango
 class User(AbstractUser):
     def __str__(self):
-        return self.get_full_name() or self.full_name
+        return self.get_full_name() or self.username
+
 
 class Profile(models.Model):
     user = models.OneToOneField(
@@ -23,4 +24,4 @@ class Profile(models.Model):
     creation_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Profile of {self.visible_name or self.user_id.full_name() or self.user.username}"
+        return f"Profile of {self.visible_name or self.user.get_full_name() or self.user.username}"
