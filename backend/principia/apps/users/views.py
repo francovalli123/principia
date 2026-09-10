@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
 
 from .models import User
-from .serializers import UserSerializer
+from .serializers import RegisterSerializer, UserSerializer
 
 # UserView 
 class UserView(APIView):
@@ -43,9 +43,9 @@ class UserView(APIView):
 
 # Para Auth conviene separar 
 class RegisterView(CreateAPIView):
-    # Implementar
-    a = 1 # Pongo esto para que el IDE no me rompa las pelotas con clase vacia
-
+    # Indica el serializer que valida y crea las cuentas nuevas.
+    serializer_class = RegisterSerializer
+    
 class LoginView(APIView):
     # Implementar
     a = 1

@@ -17,7 +17,7 @@ class Publication(models.Model):
         related_name="publications",
     )
 
-    forum = models.ForeingKey(
+    forum = models.ForeignKey(
         "forums.Forum",
         on_delete=models.CASCADE,
         related_name="publications"
