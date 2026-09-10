@@ -17,6 +17,12 @@ class Publication(models.Model):
         related_name="publications",
     )
 
+    forum = models.ForeingKey(
+        "forums.Forum",
+        on_delete=models.CASCADE,
+        related_name="publications"
+            )
+
     creation_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
