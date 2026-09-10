@@ -38,8 +38,7 @@ class PublicationView(APIView):
     def post(self,request,*args,**kwargs):
         serializer = PublicationSerializer(data = request.data)
         if serializer.is_valid():
-            serializer.save() #Aca la IA me rompe las pelostas con que ponga serializer.save(user=request.user)
-                              #Pero creo que habria que modificar el serializer
+            serializer.save(user=request.user)
             return Response({"status": "success", "data": serializer.data}, status = status.HTTP_201_CREATED)
         return Response({"status": "error", "data": serializer.errors}, status = status.HTTP_400_BAD_REQUEST)
 
