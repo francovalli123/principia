@@ -3,11 +3,14 @@ from rest_framework import serializers
 from apps.users.models import User, Profile
 
 # Un serializer transforma instancias de un modelo en representaciones como json y viceversa
+
+# Serializador del usuario
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
 
+# Serializador del perfil
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
