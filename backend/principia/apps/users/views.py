@@ -3,9 +3,12 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
+from rest_framework.permissions import AllowAny
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
-from .serializers import UserSerializer
+from .serializers import RegisterSerializer, UserSerializer
 
 # UserView 
 class UserView(APIView):
@@ -41,15 +44,39 @@ class UserView(APIView):
         result.delete()
         return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_200_OK)
 
-# Para Auth conviene separar 
 class RegisterView(CreateAPIView):
-    # Implementar
-    a = 1 # Pongo esto para que el IDE no me rompa las pelotas con clase vacia
-
+    # Indica el serializer que valida y crea las cuentas nuevas.
+    serializer_class = RegisterSerializer
+    
 class LoginView(APIView):
-    # Implementar
-    a = 1
+    permission_classes = [AllowAny]
 
+    # Post 
+    def post(self, request):
+        # Extraigo credenciales de la request
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        # Verifica las credenciales del usuario respecto a la base de datos
+        user = authenticate(username = username, password=password)
+
+        # autenticate devuelve un objeto User si las credenciales son validas
+        # Entonces, si no es User (por ejemplo, None), las credenciales NO son validas
+        if not User:    
+            return Response(
+                {'error': 'Credenciales invalidas'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        # Genera un nuevo refresh token para el usuario
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+        }, status = status.HTTP_200_OK)
+
+        
 class LogoutView(APIView):
     # Implementar
     a = 1

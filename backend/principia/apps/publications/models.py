@@ -20,8 +20,10 @@ class Publication(models.Model):
     forum = models.ForeignKey(
         "forums.Forum",
         on_delete=models.CASCADE,
-        related_name="publications"
-            )
+        related_name="publications",
+        null=True,
+        blank=True
+    )
 
     creation_date = models.DateTimeField(auto_now_add=True)
 
