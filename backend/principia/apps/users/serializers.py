@@ -12,9 +12,19 @@ class UserSerializer(serializers.ModelSerializer):
 
 # Serializador del perfil
 class ProfileSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True) # el user debe asignarse desde request.user
+    creation_date = serializers.DateTimeField(read_only=True)
+    # No usamos fields = '__all__' porque expone campos internos y permite escribir user o creation_date
     class Meta:
         model = Profile
-        fields = '__all__'
+        fields = (
+            "id",
+            "user",
+            "bio",
+            "visible_name",
+            "profile_picture",
+            "creation_date",
+        )
 
 # Serializador del registro de usuarios
 class RegisterSerializer(serializers.ModelSerializer):
