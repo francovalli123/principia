@@ -3,9 +3,11 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+
 
 from .models import User
 from .serializers import RegisterSerializer, UserSerializer
@@ -76,10 +78,30 @@ class LoginView(APIView):
             'refresh': str(refresh),
         }, status = status.HTTP_200_OK)
 
-        
+# Consideraciones a tener en cuenta sobre el logout 
+# JWT es stateless, o sea, una vzez emitido un token sigue siendo valido hasta que expire.
+# No hay una sesión en el servidor que puedas destruir. Pero si se puede revocar el refresh token porque
+# ese si lo guarda en la base de datos. 
+# Entonces el cliente envía el refresh token (/api/logout/) y se pone ese refresh token en la blacklist (ya no se podra utilizar ese refresh token)
+
 class LogoutView(APIView):
-    # Implementar
-    a = 1
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get('refresh')
+        token = RefreshToken(refresh_token) # Lo decodifica para validar que sea un token JWT valido
+        token.blacklist()   # Marca el token como negado. Se mantiene en la BD hasta que expire
+        return Response({"detail": "Sesión cerrada exitosamente"})
+
+# Blacklista todos los refresh tokens del usuario (todos los dispositivos) 
+class LogoutAllView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Nota: Outstanding token es la tabla donde SimpleJWT registra todos los refresh tokens activos de todos los usuarios
+        for token in OutstandingToken.objects.filter(user=request.user):   
+            BlacklistedToken.objects.get_or_create(token=token) # Si ya está blacklisted no hace nada y sino lo blacklista
+        return Response({"detail": "Sesión cerrada en todos los dispositivos"})
 
 # Para manejar datos extras del perfil: bio, foto, etc
 class ProfileView(APIView):
