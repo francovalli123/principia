@@ -5,4 +5,4 @@ class PublicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Publication
         fields = '__all__'
-        read_only_fields = ["user"]
+        read_only_fields = ["owner"]

@@ -11,7 +11,7 @@ class Publication(models.Model):
         related_name="publications",
     )
 
-    user = models.ForeignKey(
+    owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="publications",

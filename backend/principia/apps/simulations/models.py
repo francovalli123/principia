@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 
 class Simulation(models.Model):
-    user = models.ForeignKey(
+    owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="simulations",
@@ -21,10 +21,10 @@ class Simulation(models.Model):
     creation_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.phenomenon_type} - {self.user.username}"
+        return f"{self.phenomenon_type} - {self.owner.username}"
 
 class Favorite(models.Model):
-    user = models.ForeignKey(
+    owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="favorite_simulations",
@@ -39,10 +39,10 @@ class Favorite(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "simulation"],
-                name = "unique_user_simulation_favorite",
+                fields=["owner", "simulation"],
+                name = "unique_owner_simulation_favorite",
             )
         ]
 
     def __str__(self):
-        return f"{self.user.username} - {self.simulation}"
+        return f"{self.owner.username} - {self.simulation}"
