@@ -1,6 +1,7 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from apps.users.models import User, Profile
+from django.db import transaction
 
 # Un serializer transforma instancias de un modelo en representaciones como json y viceversa
 
@@ -26,9 +27,13 @@ class ProfileSerializer(serializers.ModelSerializer):
             "creation_date",
         )
 
+
 # Serializador del registro de usuarios
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, validators=[validate_password])
+    password = serializers.CharField(
+        write_only=True, 
+        validators=[validate_password]
+    )
     username = serializers.CharField(max_length = 150)
     email = serializers.EmailField(
         # Mensajes de error
@@ -53,6 +58,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         # Devuelve el correo validado al proceso de creación.
         return value
 
+    @transaction.atomic # para garantizar que si no se crea el perfil, tampoco se guarde el usuario
     def create(self, validated_data):
-        # Extrae los datos validados y crea el usuario con password hasheada.
-        return User.objects.create_user(**validated_data)    
+        user = User.objects.create_user(**validated_data)
+        Profile.objects.create(user=user)
+        return user

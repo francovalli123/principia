@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'apps.forums',
     'apps.comments',
     'rest_framework_simplejwt.token_blacklist',  # Para blacklist de tokens
-
+    "apps.users.apps.UsersConfig",
 ]
 
 MIDDLEWARE = [

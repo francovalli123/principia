@@ -7,10 +7,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+from rest_framework.parsers import FormParser, MultiPartParser
 
-
-from .models import User
-from .serializers import RegisterSerializer, UserSerializer
+from .models import User, Profile
+from .serializers import RegisterSerializer, UserSerializer, ProfileSerializer
 
 # UserView 
 class UserView(APIView):
@@ -103,8 +103,61 @@ class LogoutAllView(APIView):
             BlacklistedToken.objects.get_or_create(token=token) # Si ya está blacklisted no hace nada y sino lo blacklista
         return Response({"detail": "Sesión cerrada en todos los dispositivos"})
 
-# Para manejar datos extras del perfil: bio, foto, etc
+# El perfil se crea automaticamente en RegisterSerializer.create(). ProfileView permite consultar y modificar perfil post registro
 class ProfileView(APIView):
-    #Implementar 
-    a = 1
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
+    def get_profile(self, user):
+        profile, _ = Profile.objects.get_or_create(user=user)
+        return profile
+
+    def get(self, request):
+        profile = self.get_profile(request.user)
+        serializer = ProfileSerializer(profile)
+
+        return Response(
+            {"status": "success", "data": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+
+    def patch(self, request):
+        profile = self.get_profile(request.user)
+        serializer = ProfileSerializer(
+            profile,
+            data = request.data,
+            partial=True,
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                {"status": "success", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {"status": "error", "data": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    def put(self, request):
+        profile = self.get_profile(request.user)
+        serializer = ProfileSerializer(
+            profile,
+            data = request.data,
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                {"status": "success", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {"status": "error", "data": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
