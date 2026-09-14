@@ -31,7 +31,7 @@ class ForumView(APIView):
     def post(self,request,*args,**kwargs):
         serializer = ForumSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(owner = request.user)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_201_CREATED)
         return Response({"status": "error", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
