@@ -3,11 +3,13 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
-
-from common.permissions import IsOwnerOrReadOnly
+from apps.common.permissions import IsOwnerOrReadOnly
 from .models import Simulation
 from .serializers import SimulationSerializer
+from apps.publications.models import Publication
+from apps.forums.models import Forum
 
 #SimulationView
 class SimulationView(APIView):
@@ -27,7 +29,7 @@ class SimulationView(APIView):
         #Get simulations from User
         owner_id = request.query_params.get("owner_id")
         if owner_id is not None:
-            result = Simulations.objects.filter(owner_id = owner_id)
+            result = Simulation.objects.filter(owner_id = owner_id)
             serializer = SimulationSerializer(result, many=True)
             return Response({"status": "success","data": serializer.data},status=status.HTTP_200_OK)
             

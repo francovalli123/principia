@@ -24,4 +24,5 @@ urlpatterns = [
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/signup/', RegisterView.as_view(), name="api_signup"),
     path('api/login/', LoginView.as_view(), name='api_login'),
+    path("api/", include("apps.forums.urls")),
 ]
