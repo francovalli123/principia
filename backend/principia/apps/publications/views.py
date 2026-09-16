@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 
-from common.permissions import IsOwnerOrReadOnly
+from apps.common.permissions import IsOwnerOrReadOnly
 from .models import Publication
 from .serializers import PublicationSerializer
 

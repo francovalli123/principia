@@ -64,7 +64,7 @@ class LoginView(APIView):
 
         # autenticate devuelve un objeto User si las credenciales son validas
         # Entonces, si no es User (por ejemplo, None), las credenciales NO son validas
-        if not User:    
+        if user is None:
             return Response(
                 {'error': 'Credenciales invalidas'},
                 status=status.HTTP_401_UNAUTHORIZED
