@@ -15,4 +15,11 @@ class ObliqueProjectileMotionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ObliqueProjectileMotion
         fields = ['initial_velocity', 'angle', 'initial_height']
-   
+    
+    def validate(self, attrs):
+        allowed_fields = set(self.fields.keys())
+        received_fields = set(self.initial_data.keys())
+        extra_fields = received_fields - allowed_fields
+        if extra_fields:
+            raise serializers.ValidationError({"unknown_fields": list(extra_fields)})
+        return attrs
