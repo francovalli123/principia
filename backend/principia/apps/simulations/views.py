@@ -3,10 +3,12 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from django.db import transaction
 
 from apps.common.permissions import IsOwnerOrReadOnly
 from .models import Simulation
 from .serializers import SimulationSerializer
+from .phRegistry import PHENOMENON_SERIALIZERS
 from apps.publications.models import Publication
 
 
@@ -44,23 +46,30 @@ class SimulationView(APIView):
             {"status": "error", "message": "publication_id or owner_id is required"},
             status=status.HTTP_400_BAD_REQUEST,
         )
+def post(self, request, *args, **kwargs):
+    phenomenon_type = request.data.get("phenomenon_type")
+    parameters = request.data.get("parameters", {})
+    # Obtengo la configuración correspondiente al phenomenon_type
+    config = PHENOMENON_SERIALIZERS.get(phenomenon_type)
+    if config is None:
+        return Response({"status": "error","message": "Invalid phenomenon_type"},status=status.HTTP_400_BAD_REQUEST,)
+    
+    serializer_class = config["serializer"]
+    phenomenon_serializer = serializer_class(data=parameters)
+    if not phenomenon_serializer.is_valid():
+        return Response({"status": "error","data": phenomenon_serializer.errors},status=status.HTTP_400_BAD_REQUEST,)
 
-    def post(self, request, *args, **kwargs):
-        serializer = SimulationSerializer(data=request.data)
+    simulation_serializer = SimulationSerializer(data={"phenomenon_type": phenomenon_type})
 
-        if serializer.is_valid():
-            # simulation from authenticated user
-            serializer.save(owner=request.user)
-            return Response(
-                {"status": "success", "data": serializer.data},
-                status=status.HTTP_201_CREATED,
-            )
+    if not simulation_serializer.is_valid():
+        return Response({"status": "error","data": simulation_serializer.errors},status=status.HTTP_400_BAD_REQUEST,)
 
-        return Response(
-            {"status": "error", "data": serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+    with transaction.atomic():
+        simulation = simulation_serializer.save(owner=request.user)
+        phenomenon_serializer.save(simulation=simulation)
 
+    return Response({"status": "success","data": SimulationSerializer(simulation).data},status=status.HTTP_201_CREATED,)
+    
     def delete(self, request, id=None, *args, **kwargs):
         result = get_object_or_404(Simulation, id=id)
         self.check_object_permissions(request, result)
@@ -70,3 +79,27 @@ class SimulationView(APIView):
             status=status.HTTP_200_OK,
         )
 
+
+#View generica para cualquier fenomeno
+# Este get da el fenomeno y sus parametros a partir de la simulacion asociada
+class PhenomenonTypeView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    def get(self, request,*args, **kwargs):
+        simulation_id = kwargs.get("simulation_id")
+        simulation = get_object_or_404(Simulation, id=simulation_id)
+        phenomenon_type = simulation.phenomenon_type
+        #obtengo del Registry el diccionario correspondiente al phenomenon_type. 
+        #que contiene el serializer y el related_name
+        config = PHENOMENON_SERIALIZERS.get(phenomenon_type)
+        if config is None:
+            return Response({"status": "error","message": "Invalid phenomenon_type"},status=status.HTTP_400_BAD_REQUEST,)
+        
+        serializer_class = config["serializer"]
+        related_name = config["related_name"]
+        phenomenon = getattr(simulation, related_name)
+        serializer = serializer_class(phenomenon)
+        return Response(
+            {"status": "success", "data": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+    
