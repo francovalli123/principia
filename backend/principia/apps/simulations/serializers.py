@@ -10,3 +10,9 @@ class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = '__all__'
+
+class ObliqueProjectileMotionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Simulation
+        fields = ['initial_velocity', 'launch_angle', 'initial_height']
+   

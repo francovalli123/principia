@@ -8,7 +8,7 @@ class Simulation(models.Model):
         related_name="simulations",
     )
     phenomenon_type = models.CharField(max_length=255)
-    json_configuration = models.JSONField()
+    #json_configuration = models.JSONField()
     visibility = models.CharField(
         max_length=50,
         choices=[
@@ -46,3 +46,13 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.owner.username} - {self.simulation}"
+
+
+class ObliqueProjectileMotion(models.Model):
+    simulation = models.OneToOneField(Simulation, on_delete=models.CASCADE)
+    initial_velocity = models.FloatField()
+    angle = models.FloatField()
+    initial_height = models.FloatField(default=0.0)
+
+    def __str__(self):
+        return f"Oblique Projectile Motion - {self.simulation}"
