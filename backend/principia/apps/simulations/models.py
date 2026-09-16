@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Simulation(models.Model):
     owner = models.ForeignKey(
@@ -50,9 +51,9 @@ class Favorite(models.Model):
 
 class ObliqueProjectileMotion(models.Model):
     simulation = models.OneToOneField(Simulation, on_delete=models.CASCADE)
-    initial_velocity = models.FloatField()
-    angle = models.FloatField()
-    initial_height = models.FloatField(default=0.0)
+    initial_velocity = models.FloatField(validators=[MinValueValidator(0)])
+    angle = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(90)])
+    initial_height = models.FloatField(default=0.0, validators=[MinValueValidator(0)])
 
     def __str__(self):
         return f"Oblique Projectile Motion - {self.simulation}"
