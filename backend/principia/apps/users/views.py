@@ -14,6 +14,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 
 from .models import User, Profile, LoginAttempt
 from .serializers import RegisterSerializer, UserSerializer, ProfileSerializer
+from apps.simulations.phRegistry import PHENOMENON_SERIALIZERS
 
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_COOLDOWN_MINUTES = 30
@@ -154,13 +155,20 @@ class ProfileView(APIView):
         return profile
 
     def get(self, request):
+        phenomenon_type = request.query_params.get("phenomenon_type")
+        
+        if phenomenon_type is not None:
+            phenomenon = PHENOMENON_SERIALIZERS.get(phenomenon_type)
+            if phenomenon is None:
+                return Response({"status": "error", "data": f"Phenomenon type '{phenomenon_type}' not found."}, status=status.HTTP_400_BAD_REQUEST)
+
+            simulations = request.user.simulations.filter(phenomenon_type=phenomenon_type)
+            serializer = SimulationSerializer(simulations, many=True)
+            return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+
         profile = self.get_profile(request.user)
         serializer = ProfileSerializer(profile)
-
-        return Response(
-            {"status": "success", "data": serializer.data},
-            status=status.HTTP_200_OK,
-        )
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
     def patch(self, request):
         profile = self.get_profile(request.user)
