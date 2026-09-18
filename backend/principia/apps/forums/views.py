@@ -11,6 +11,9 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from apps.common.permissions import IsOwnerOrReadOnly
 from apps.forums.models import Forum, ForumMembership
 from apps.forums.serializers import ForumSerializer
+from apps.publications.serializers import PublicationSerializer
+from apps.simulations.phRegistry import PHENOMENON_SERIALIZERS
+
 
 #ForumView
 class ForumView(APIView):
@@ -19,27 +22,40 @@ class ForumView(APIView):
         IsOwnerOrReadOnly,
     ]
 
-    def get(self,request,*args,**kwargs):
-        forum_id = kwargs.get('id')
+    def get(self, request, *args, **kwargs):
+        forum_id = kwargs.get("id")
+        publication_title = request.query_params.get("publication_title")
+        phenomenon_type = request.query_params.get("phenomenon_type")
 
         if forum_id is not None:
-            result = get_object_or_404(Forum, id=forum_id)
-            self.check_object_permissions(request,result) #Chequea si tiene los permisos necesarios.Si falla retorna Forbidden
-            serializer = ForumSerializer(result)
+            forum = get_object_or_404(Forum, id=forum_id)
+            self.check_object_permissions(request, forum)
 
-            return Response(
-                {"status": "success", "data":serializer.data}, 
-                status = status.HTTP_200_OK
-            )
+        if request.user.id not in forum.members.values_list("id", flat=True):
+            return Response({"status": "error", "data": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
-        #Get All
+        if publication_title is not None:
+            publication_title = publication_title.strip()
+            publications = forum.publications.filter(title__icontains=publication_title)
+            serializer = PublicationSerializer(publications, many=True)
+            return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+
+        if phenomenon_type is not None:
+            phenomenon = PHENOMENON_SERIALIZERS.get(phenomenon_type)
+
+            if phenomenon is None:
+                return Response({"status": "error", "data": f"Phenomenon type '{phenomenon_type}' not found."}, status=status.HTTP_400_BAD_REQUEST)
+
+            publications = forum.publications.filter(simulation__phenomenon_type=phenomenon_type)
+            serializer = PublicationSerializer(publications, many=True)
+            return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+
+        serializer = ForumSerializer(forum)
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+
         forums = Forum.objects.all()
         serializer = ForumSerializer(forums, many=True)
-
-        return Response(
-            {"status": "success", "data": serializer.data}, 
-            status=status.HTTP_200_OK
-        )
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
     @transaction.atomic 
     def post(self,request,*args,**kwargs):
