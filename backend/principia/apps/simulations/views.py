@@ -2,7 +2,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+
 from django.db import transaction
 
 from apps.common.permissions import IsOwnerOrReadOnly
@@ -79,6 +80,44 @@ def post(self, request, *args, **kwargs):
             status=status.HTTP_200_OK,
         )
 
+
+class FavoriteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        simulation_id = kwargs.get("simulation_id")
+        #Obtener especifico
+        if simulation_id is not None:
+            favorite = get_object_or_404(Favorite,owner=request.user,simulation_id=simulation_id)
+            serializer = FavoriteSerializer(favorite)
+            return Response({"status": "success","data": serializer.data},status=status.HTTP_200_OK)
+        #Obtener todos los favoritos del usuario
+        favorites = Favorite.objects.filter(owner=request.user)
+        serializer = FavoriteSerializer(favorites,many=True)
+        return Response({"status": "success","data": serializer.data},status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        simulation_id = request.data.get("simulation_id")
+        if simulation_id is None:
+            return Response({"status": "error","message": "simulation_id is required"},status=status.HTTP_400_BAD_REQUEST)
+
+        simulation = get_object_or_404(Simulation,id=simulation_id)
+        favorite, created = Favorite.objects.get_or_create(owner=request.user,simulation=simulation)
+
+        if not created:
+            return Response({"status": "error","message": "Simulation already favorited"},status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"status": "success","data": FavoriteSerializer(favorite).data},status=status.HTTP_201_CREATED)
+
+    def delete(self, request, *args, **kwargs):
+        simulation_id = kwargs.get("simulation_id")
+        if simulation_id is None:
+            return Response({"status": "error","message": "simulation_id is required"},status=status.HTTP_400_BAD_REQUEST)
+
+        favorite = get_object_or_404(Favorite,owner=request.user,simulation_id=simulation_id)
+        favorite.delete()
+
+        return Response({"status": "success","data": "Favorite removed"},status=status.HTTP_200_OK)
 
 #View generica para cualquier fenomeno
 # Este get da el fenomeno y sus parametros a partir de la simulacion asociada

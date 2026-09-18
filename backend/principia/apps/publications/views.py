@@ -19,14 +19,14 @@ class PublicationView(APIView):
     # Método get
     def get(self, request, *args, **kwargs):
         publication_id = kwargs.get("id")
-
+        #Publicacion espefica por ID
         if publication_id is not None:
             publication = get_object_or_404(Publication, id=publication_id)
             serializer = PublicationSerializer(publication)
             return Response({"status": "success", "data": serializer.data},status=status.HTTP_200_OK)
 
         forum_id = request.query_params.get("forum_id")
-       
+       #Obtener publicaciones de un foro
         if forum_id is not None:
             result = Publication.objects.filter(forum_id=forum_id)
             serializer = PublicationSerializer(result, many = True)
