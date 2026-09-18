@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
@@ -14,10 +15,10 @@ from rest_framework.parsers import FormParser, MultiPartParser
 
 from .models import User, Profile, LoginAttempt
 from .serializers import RegisterSerializer, UserSerializer, ProfileSerializer
+from .security import hash_lookup_value
 
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_COOLDOWN_MINUTES = 30
-
 
 def _normalize_username(username):
     if username is None:
@@ -26,19 +27,32 @@ def _normalize_username(username):
 
 # UserView 
 class UserView(APIView):
+    # La informacion se descifra al serializarse, por lo que nunca debe exponerse
+    # mediante un endpoint anonimo ni a usuarios distintos del propietario.
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, *args, **kwargs):
         user_id = kwargs.get('id')
 
-        if user_id is not None:
-            result = get_object_or_404(User, id=user_id)
-            serializer = UserSerializer(result)
+        if request.user.is_staff:
+            if user_id is not None:
+                result = get_object_or_404(User, id=user_id)
+                serializer = UserSerializer(result)
+                return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+
+            result = User.objects.all()
+            serializer = UserSerializer(result, many=True)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
-        result = User.objects.all()
-        serializer = UserSerializer(result, many=True)
+        if user_id is not None and user_id != request.user.id:
+            raise PermissionDenied("No tiene permiso para consultar este usuario.")
+
+        serializer = UserSerializer(request.user)
         return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            raise PermissionDenied("Solo el personal administrativo puede crear usuarios desde esta ruta.")
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -46,6 +60,8 @@ class UserView(APIView):
         return Response({"status": "error", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, id=None, *args, **kwargs):
+        if not request.user.is_staff and id != request.user.id:
+            raise PermissionDenied("No tiene permiso para modificar este usuario.")
         result = get_object_or_404(User, id=id)
         serializer = UserSerializer(result, data=request.data, partial=True)
         if serializer.is_valid():
@@ -54,6 +70,8 @@ class UserView(APIView):
         return Response({"status": "error", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id=None, *args, **kwargs):
+        if not request.user.is_staff and id != request.user.id:
+            raise PermissionDenied("No tiene permiso para eliminar este usuario.")
         result = get_object_or_404(User, id=id)
         result.delete()
         return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_200_OK)
@@ -67,11 +85,11 @@ class LoginView(APIView):
 
     # Post 
     def post(self, request):
-        username = _normalize_username(request.data.get('username')) # Noramliza el username
+        username = _normalize_username(request.data.get('username')) # Normaliza el username
         password = request.data.get('password')
 
         # Busca o crea el registro de intentos de login del usuario
-        login_attempt, _ = LoginAttempt.objects.get_or_create(username=username) 
+        login_attempt, _ = LoginAttempt.objects.get_or_create(username=hash_lookup_value(username))  # Se normaliza el user y transforma mediante HMAC-SHA256 antes de guardarse
 
         # Si está bloqueado pero se cumplió el cool off, se desbloquea el usuario
         if login_attempt.locked_until and login_attempt.locked_until <= timezone.now():
