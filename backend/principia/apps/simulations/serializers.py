@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.simulations.models import Simulation, Favorite
+from apps.simulations.models import Simulation, Favorite, ObliqueProjectileMotion
 
 class SimulationSerializer(serializers.ModelSerializer):
     class Meta:

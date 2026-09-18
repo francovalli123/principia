@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
@@ -9,8 +12,17 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework.parsers import FormParser, MultiPartParser
 
-from .models import User, Profile
+from .models import User, Profile, LoginAttempt
 from .serializers import RegisterSerializer, UserSerializer, ProfileSerializer
+
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_COOLDOWN_MINUTES = 30
+
+
+def _normalize_username(username):
+    if username is None:
+        return ""
+    return str(username).strip().casefold()
 
 # UserView 
 class UserView(APIView):
@@ -55,20 +67,49 @@ class LoginView(APIView):
 
     # Post 
     def post(self, request):
-        # Extraigo credenciales de la request
-        username = request.data.get('username')
+        username = _normalize_username(request.data.get('username')) # Noramliza el username
         password = request.data.get('password')
 
-        # Verifica las credenciales del usuario respecto a la base de datos
-        user = authenticate(username = username, password=password)
+        # Busca o crea el registro de intentos de login del usuario
+        login_attempt, _ = LoginAttempt.objects.get_or_create(username=username) 
 
-        # autenticate devuelve un objeto User si las credenciales son validas
-        # Entonces, si no es User (por ejemplo, None), las credenciales NO son validas
+        # Si está bloqueado pero se cumplió el cool off, se desbloquea el usuario
+        if login_attempt.locked_until and login_attempt.locked_until <= timezone.now():
+            login_attempt.failed_attempts = 0
+            login_attempt.locked_until = None
+            login_attempt.save(update_fields=['failed_attempts', 'locked_until', 'updated_at'])
+
+        # Si se alcanzó el max retry, se bloquea el usuario temporalmente y rechaza la peticion con 403 forbidden
+        if login_attempt.is_locked():
+            remaining_minutes = max(1, int((login_attempt.locked_until - timezone.now()).total_seconds() // 60))
+            return Response(
+                {'error': f'Muchos intentos fallidos. Intente nuevamente en {remaining_minutes} minutos.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        user = authenticate(username=request.data.get('username'), password=password)
+
         if user is None:
+            # Si la contraseña es incorrecta , aumenta el contador de intentos fallidos
+            login_attempt.failed_attempts += 1
+
+            # Si la cantidad de intentos fallidos llegó a 5, la cuenta sufre un cool-off
+            if login_attempt.failed_attempts >= MAX_LOGIN_ATTEMPTS:
+                login_attempt.locked_until = timezone.now() + timedelta(minutes=LOGIN_COOLDOWN_MINUTES)
+                login_attempt.save(update_fields=['failed_attempts', 'locked_until', 'updated_at'])
+                return Response(
+                    {'error': f'Cuenta bloqueada por {LOGIN_COOLDOWN_MINUTES} minutos por demasiados intentos fallidos.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            # Se guarda el intento
+            login_attempt.save(update_fields=['failed_attempts', 'updated_at'])
             return Response(
                 {'error': 'Credenciales invalidas'},
-                status=status.HTTP_401_UNAUTHORIZED
+                status=status.HTTP_401_UNAUTHORIZED,
             )
+
+        # Si el intento fue existoso, se reinicia el contador de intentos
+        login_attempt.reset()
 
         # Genera un nuevo refresh token para el usuario
         refresh = RefreshToken.for_user(user)
@@ -76,10 +117,10 @@ class LoginView(APIView):
         return Response({
             'access': str(refresh.access_token),
             'refresh': str(refresh),
-        }, status = status.HTTP_200_OK)
+        }, status=status.HTTP_200_OK)
 
 # Consideraciones a tener en cuenta sobre el logout 
-# JWT es stateless, o sea, una vzez emitido un token sigue siendo valido hasta que expire.
+# JWT es stateless, o sea, una vez emitido un token sigue siendo valido hasta que expire.
 # No hay una sesión en el servidor que puedas destruir. Pero si se puede revocar el refresh token porque
 # ese si lo guarda en la base de datos. 
 # Entonces el cliente envía el refresh token (/api/logout/) y se pone ese refresh token en la blacklist (ya no se podra utilizar ese refresh token)
