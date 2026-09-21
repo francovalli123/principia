@@ -78,6 +78,7 @@ class UserView(APIView):
         return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_200_OK)
 
 class RegisterView(CreateAPIView):
+    permission_classes = [AllowAny]
     # Indica el serializer que valida y crea las cuentas nuevas.
     serializer_class = RegisterSerializer
     

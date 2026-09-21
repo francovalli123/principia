@@ -21,28 +21,34 @@ class ForumView(APIView):
         IsAuthenticatedOrReadOnly,
         IsOwnerOrReadOnly,
     ]
-
     def get(self, request, *args, **kwargs):
         forum_id = kwargs.get("id")
         publication_title = request.query_params.get("publication_title")
         phenomenon_type = request.query_params.get("phenomenon_type")
 
-        if forum_id is not None:
-            forum = get_object_or_404(Forum, id=forum_id)
-            self.check_object_permissions(request, forum)
+        # Get all forums
+        if forum_id is None:
+            forums = Forum.objects.all()
+            serializer = ForumSerializer(forums, many=True)
+            return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+
+        # Get specific forum
+        forum = get_object_or_404(Forum, id=forum_id)
+        self.check_object_permissions(request, forum)
 
         if request.user.id not in forum.members.values_list("id", flat=True):
             return Response({"status": "error", "data": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
+        # Filter publications by title
         if publication_title is not None:
             publication_title = publication_title.strip()
             publications = forum.publications.filter(title__icontains=publication_title)
             serializer = PublicationSerializer(publications, many=True)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
+        # Filter publications by phenomenon type
         if phenomenon_type is not None:
             phenomenon = PHENOMENON_SERIALIZERS.get(phenomenon_type)
-
             if phenomenon is None:
                 return Response({"status": "error", "data": f"Phenomenon type '{phenomenon_type}' not found."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -52,11 +58,7 @@ class ForumView(APIView):
 
         serializer = ForumSerializer(forum)
         return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
-
-        forums = Forum.objects.all()
-        serializer = ForumSerializer(forums, many=True)
-        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
-
+   
     @transaction.atomic 
     def post(self,request,*args,**kwargs):
         serializer = ForumSerializer(data=request.data)
