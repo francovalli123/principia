@@ -1,6 +1,7 @@
 from django.db import IntegrityError, connection, transaction
 from django.test import TestCase
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.users.models import User
 from apps.users.security import hash_lookup_value
@@ -54,3 +55,36 @@ class SensitiveDataSecurityTests(TestCase):
         response = client.get(f"/api/users/{other_user.id}/")
 
         self.assertEqual(response.status_code, 403)
+
+    def test_logout_rejects_missing_refresh_token(self):
+        client = APIClient(HTTP_HOST="localhost")
+        client.force_authenticate(user=self.user)
+
+        response = client.post("/api/users/logout/", {}, format="json")
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_logout_rejects_invalid_refresh_token(self):
+        client = APIClient(HTTP_HOST="localhost")
+        client.force_authenticate(user=self.user)
+
+        response = client.post(
+            "/api/users/logout/",
+            {"refresh": "not-a-valid-refresh-token"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_logout_blacklists_valid_refresh_token(self):
+        client = APIClient(HTTP_HOST="localhost")
+        client.force_authenticate(user=self.user)
+        refresh = str(RefreshToken.for_user(self.user))
+
+        response = client.post(
+            "/api/users/logout/",
+            {"refresh": refresh},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)

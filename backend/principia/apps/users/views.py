@@ -10,6 +10,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework.parsers import FormParser, MultiPartParser
 
@@ -151,8 +152,23 @@ class LogoutView(APIView):
 
     def post(self, request):
         refresh_token = request.data.get('refresh')
-        token = RefreshToken(refresh_token) # Lo decodifica para validar que sea un token JWT valido
-        token.blacklist()   # Marca el token como negado. Se mantiene en la BD hasta que expire
+        # Valida la existencia del token
+        if not isinstance(refresh_token, str) or not refresh_token.strip():
+            return Response(
+                {"detail": "El refresh token es obligatorio."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()   # Marca el token como negado. Se mantiene en la BD hasta que expire
+        # Si el token es inválido o revocado, devuelve error
+        except TokenError:
+            return Response(
+                {"detail": "El refresh token no es valido o ya fue revocado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         return Response({"detail": "Sesión cerrada exitosamente"})
 
 # Blacklista todos los refresh tokens del usuario (todos los dispositivos) 
