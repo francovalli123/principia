@@ -17,6 +17,7 @@ from .models import User, Profile, LoginAttempt
 from .serializers import RegisterSerializer, UserSerializer, ProfileSerializer
 from apps.simulations.phRegistry import PHENOMENON_SERIALIZERS
 from .security import hash_lookup_value
+from apps.simulations.serializers import SimulationSerializer
 
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_COOLDOWN_MINUTES = 30

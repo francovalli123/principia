@@ -8,10 +8,9 @@ from django.db import transaction
 
 from apps.common.permissions import IsOwnerOrReadOnly, SimulationPermission
 from .models import Favorite, Simulation
-from .serializers import SimulationSerializer
+from .serializers import SimulationSerializer, FavoriteSerializer
 from .phRegistry import PHENOMENON_SERIALIZERS
 from apps.publications.models import Publication
-
 
 #SimulationView
 class SimulationView(APIView):

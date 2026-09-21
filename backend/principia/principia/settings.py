@@ -34,6 +34,12 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
 if "DJANGO_SECRET_KEY" not in os.environ:
     raise ImproperlyConfigured("DJANGO_SECRET_KEY must be configured through the environment")
 
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+if not JWT_SECRET_KEY:
+    raise ImproperlyConfigured("JWT_SECRET_KEY must be configured through the environment")
+if len(JWT_SECRET_KEY) < 32:
+    raise ImproperlyConfigured("JWT_SECRET_KEY must contain at least 32 characters")
+
 ALLOWED_HOSTS = [host for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if host]
 
 
@@ -157,6 +163,7 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
     'ALGORITHM': 'HS256',
+    'SIGNING_KEY': JWT_SECRET_KEY,
 }
 
 if not DEBUG:
