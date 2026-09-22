@@ -5,11 +5,13 @@ class SimulationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Simulation
         fields = '__all__'
+        read_only_fields = ['owner']
 
 class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = '__all__'
+        read_only_fields = ['owner', 'marked_date']
 
 class ObliqueProjectileMotionSerializer(serializers.ModelSerializer):
     class Meta:

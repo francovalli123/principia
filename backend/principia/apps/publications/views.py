@@ -48,6 +48,8 @@ class PublicationView(APIView):
                 if forum is not None and forum.members.filter(id=request.user.id).exists()
                 else None
             )
+            if forum is not None and not forum.members.filter(id=request.user.id).exists():
+                return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
             self.check_object_permissions(request, simulation)
             serializer.save(owner=request.user)
             return Response({"status": "success", "data": serializer.data}, status = status.HTTP_201_CREATED)
