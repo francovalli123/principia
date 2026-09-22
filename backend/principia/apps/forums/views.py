@@ -13,6 +13,7 @@ from apps.forums.models import Forum, ForumMembership
 from apps.forums.serializers import ForumSerializer
 from apps.publications.serializers import PublicationSerializer
 from apps.simulations.phRegistry import PHENOMENON_SERIALIZERS
+from apps.users.serializers import UserSerializer
 
 
 #ForumView
@@ -148,3 +149,48 @@ class LeaveForumView(APIView):
             {"detail": "Has abandonado el foro."},
             status=status.HTTP_204_NO_CONTENT,
         )
+
+class ForumMembersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    # Listar miembros de un foro
+    def get(self, request, id):
+        forum = get_object_or_404(Forum, id=id)
+        if not forum.members.filter(id=request.user.id).exists():
+            return Response(
+                {"status": "error", "data": "You are not a member of this forum."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Ordenar por username
+        members = forum.members.all().order_by("username")
+        serializer = UserSerializer(members, many=True)
+        return Response(
+            {"status": "success", "data": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+
+    # Expulsar miembros
+    def delete(self, request, id, user_id):
+        forum = get_object_or_404(Forum, id=id)
+        # Solo el dueño del foro puede expulsar miembros
+        if forum.owner_id != request.user.id:
+            return Response(
+                {"status": "error", "data": "Only the forum owner can expel members."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # El owner del foro no puede ser expulsado (para que no quede un foro sin owner)
+        if forum.owner_id == user_id:
+            return Response(
+                {"status": "error", "data": "The forum owner cannot be expelled."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        membership = get_object_or_404(
+            ForumMembership,
+            forum=forum,
+            user_id=user_id,
+        )
+        membership.delete() # Borrar la membresía de un determinado usuario
+        return Response(status=status.HTTP_204_NO_CONTENT)
