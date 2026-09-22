@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
 
 from django.db import transaction
 
@@ -11,6 +11,16 @@ from .models import Favorite, Simulation
 from .serializers import SimulationSerializer, FavoriteSerializer
 from .phRegistry import PHENOMENON_SERIALIZERS
 from apps.publications.models import Publication
+
+class PhenomenonCatalogView(APIView):
+    permission_classes = [AllowAny] # Catalogo publico
+
+    def get(self, request, *args, **kwargs):
+        return Response(
+            {"status": "success", "data": list(PHENOMENON_SERIALIZERS.keys())}, # Obtiene los fenemenos directamente desde PHENOMENON_SERIALIZERS
+            status=status.HTTP_200_OK,
+        )
+
 
 #SimulationView
 class SimulationView(APIView):
