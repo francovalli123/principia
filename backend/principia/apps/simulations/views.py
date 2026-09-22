@@ -46,7 +46,7 @@ class SimulationView(APIView):
             filters = {"owner_id": owner_id}
             if str(request.user.id) != str(owner_id):
                 filters["visibility"] = "public"
-            result = Simulation.objects.filter(**filters)
+            result = Simulation.objects.filter(**filters).order_by("-creation_date")
             serializer = SimulationSerializer(result, many=True)
             return Response(
                 {"status": "success", "data": serializer.data},
@@ -102,7 +102,7 @@ class FavoriteView(APIView):
             serializer = FavoriteSerializer(favorite)
             return Response({"status": "success","data": serializer.data},status=status.HTTP_200_OK)
         #Obtener todos los favoritos del usuario
-        favorites = Favorite.objects.filter(owner=request.user)
+        favorites = Favorite.objects.filter(owner=request.user).order_by("-marked_date")
         serializer = FavoriteSerializer(favorites,many=True)
         return Response({"status": "success","data": serializer.data},status=status.HTTP_200_OK)
 

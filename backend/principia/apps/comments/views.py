@@ -29,7 +29,7 @@ class CommentView(APIView):
         if publication_id is None:
             return Response({"status": "error","message": "publication_id is required"},status=status.HTTP_400_BAD_REQUEST)
         
-        result = Comment.objects.filter(publication_id=publication_id)
+        result = Comment.objects.filter(publication_id=publication_id).order_by("-creation_date")
         serializer = CommentSerializer(result, many=True)
 
         return Response({"status": "success","data": serializer.data},status=status.HTTP_200_OK)

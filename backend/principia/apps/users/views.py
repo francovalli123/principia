@@ -198,7 +198,7 @@ class ProfileView(APIView):
             if phenomenon is None:
                 return Response({"status": "error", "data": f"Phenomenon type '{phenomenon_type}' not found."}, status=status.HTTP_400_BAD_REQUEST)
 
-            simulations = request.user.simulations.filter(phenomenon_type=phenomenon_type)
+            simulations = request.user.simulations.filter(phenomenon_type=phenomenon_type).order_by("-creation_date")
             serializer = SimulationSerializer(simulations, many=True)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 

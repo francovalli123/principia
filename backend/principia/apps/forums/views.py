@@ -42,7 +42,7 @@ class ForumView(APIView):
         # Filter publications by title
         if publication_title is not None:
             publication_title = publication_title.strip()
-            publications = forum.publications.filter(title__icontains=publication_title)
+            publications = forum.publications.filter(title__icontains=publication_title).order_by("-creation_date")
             serializer = PublicationSerializer(publications, many=True)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
@@ -52,7 +52,7 @@ class ForumView(APIView):
             if phenomenon is None:
                 return Response({"status": "error", "data": f"Phenomenon type '{phenomenon_type}' not found."}, status=status.HTTP_400_BAD_REQUEST)
 
-            publications = forum.publications.filter(simulation__phenomenon_type=phenomenon_type)
+            publications = forum.publications.filter(simulation__phenomenon_type=phenomenon_type).order_by("-creation_date")
             serializer = PublicationSerializer(publications, many=True)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 

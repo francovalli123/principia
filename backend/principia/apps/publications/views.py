@@ -30,7 +30,7 @@ class PublicationView(APIView):
         forum_id = request.query_params.get("forum_id")
        #Get publications by forum_id
         if forum_id is not None:
-            result = Publication.objects.filter(forum_id=forum_id)
+            result = Publication.objects.filter(forum_id=forum_id).order_by("-creation_date")
             serializer = PublicationSerializer(result, many = True)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
   
