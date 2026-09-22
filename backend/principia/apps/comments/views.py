@@ -15,35 +15,52 @@ class CommentView(APIView):
         IsAuthenticatedOrReadOnly,
         IsOwnerOrReadOnly,
     ]
-    def get(self,request,*args,**kwargs):
-        comment_id = kwargs.get('id')
+
+    def get(self, request, *args, **kwargs):
+        comment_id = kwargs.get("id")
 
         if comment_id is not None:
             result = get_object_or_404(Comment, id=comment_id)
-            self.check_object_permissions(request,result) #Chequea si tiene los permisos necesarios.Si falla retorna Forbidden
+
+            if not result.publication.forum.members.filter(id=request.user.id).exists():
+                return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
+
+            self.check_object_permissions(request, result)
             serializer = CommentSerializer(result)
-            return Response({"status": "success", "data":serializer.data}, status = status.HTTP_200_OK)
-        
+            return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+
         publication_id = request.query_params.get("publication_id")
-        
+
         if publication_id is None:
-            return Response({"status": "error","message": "publication_id is required"},status=status.HTTP_400_BAD_REQUEST)
-        
-        result = Comment.objects.filter(publication_id=publication_id).order_by("-creation_date")
+            return Response({"status": "error", "message": "publication_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        publication = get_object_or_404(Publication, id=publication_id)
+
+        if not publication.forum.members.filter(id=request.user.id).exists():
+            return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
+
+        result = Comment.objects.filter(publication=publication).order_by("-creation_date")
         serializer = CommentSerializer(result, many=True)
 
-        return Response({"status": "success","data": serializer.data},status=status.HTTP_200_OK)
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
 
-    def post(self,request,*args,**kwargs):
-        serializer = CommentSerializer(data = request.data)
-        if serializer.is_valid():
-            serializer.save(owner=request.user)
-            return Response({"status": "success", "data": serializer.data}, status = status.HTTP_201_CREATED)
-        return Response({"status": "error", "data": serializer.errors}, status = status.HTTP_400_BAD_REQUEST)
+def post(self, request, *args, **kwargs):
+    serializer = CommentSerializer(data=request.data)
 
-    def delete(self, request, id=None, *args, **kwargs):
-        result = get_object_or_404(Comment, id=id)
-        self.check_object_permissions(request,result) 
-        result.delete()
-        return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_200_OK)
+    if serializer.is_valid():
+        publication = serializer.validated_data["publication"]
+
+        if not publication.forum.members.filter(id=request.user.id).exists():
+            return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer.save(owner=request.user)
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_201_CREATED)
+
+    return Response({"status": "error", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+def delete(self, request, id=None, *args, **kwargs):
+    result = get_object_or_404(Comment, id=id)
+    self.check_object_permissions(request,result) 
+    result.delete()
+    return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_200_OK)
