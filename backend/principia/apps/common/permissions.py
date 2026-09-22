@@ -14,9 +14,11 @@ class SimulationPermission(permissions.BasePermission):
     message = "You do not have permission to access this simulation."
 
     def has_object_permission(self, request, view, obj):
-        if request.user == obj.owner:
+        # Obtiene la simulacion relacionada
+        simulation = getattr(obj, "simulation", obj)  # Así funciona tanto si recibe una Simulation como una Publication
+        if request.user == simulation.owner:
             return True
-        visibility = obj.visibility.lower()
+        visibility = simulation.visibility.lower()
         if visibility == "hidden":
             return False
         if visibility == "private":
