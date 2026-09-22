@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
+from django.db.models import Q
 
 from apps.common.permissions import IsOwnerOrReadOnly, SimulationPermission
 from .models import Publication
@@ -30,7 +31,22 @@ class PublicationView(APIView):
         forum_id = request.query_params.get("forum_id")
        #Get publications by forum_id
         if forum_id is not None:
-            result = Publication.objects.filter(forum_id=forum_id).order_by("-creation_date")
+            # Q permite construir condiciones para el ORM de Django y el operador |
+            # las combina como un OR: la simulacion debe ser publica, pertenecer al
+            # usuario autenticado o ser privada cuando este pertenece al foro.
+            filters = Q(simulation__visibility="public")
+            is_authenticated = request.user.is_authenticated
+
+            if is_authenticated:
+                filters |= Q(simulation__owner=request.user)    # Visibilidad publica OR la simulacion pertenece al usuario actual
+                is_forum_member = Publication.objects.filter(
+                    forum_id=forum_id,  # Limita la busqueda al foro solicitado
+                    forum__members=request.user,    
+                ).exists()  # Devuelve true si encuentra al menos una publicacion de ese foro asociada a un foro donde el usuario sea miembro
+                if is_forum_member:
+                    filters |= Q(simulation__visibility="private")  # Si está privada, un usuario solo la puede ver si pertenece al foro donde está publicada
+
+            result = Publication.objects.filter(forum_id=forum_id).filter(filters).order_by("-creation_date")
             serializer = PublicationSerializer(result, many = True)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
   
