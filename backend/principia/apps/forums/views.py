@@ -70,10 +70,9 @@ class ForumView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # El propuetario se obtiene del token
+        # owner obtained through token
         forum = serializer.save(owner=request.user)
-
-        # El creador del foro se registra automaticamente como miembro
+        #Creator of forum is automatically set as member
         ForumMembership.objects.create(
             forum=forum,
             user=request.user,
@@ -90,7 +89,7 @@ class ForumView(APIView):
     def delete(self,request, id=None,*args,**kwargs):
         forum = get_object_or_404(Forum,id=id)
 
-        self.check_object_permissions(request,forum) #Chequea si tiene los permisos necesarios.Si falla retorna Forbidden
+        self.check_object_permissions(request,forum) #Checks if it has the necessary permissions. On fail returns Forbidden
         forum.delete()
 
         return Response(
@@ -99,10 +98,10 @@ class ForumView(APIView):
         )
 
 class JoinForumView(APIView):
-    # Solo los usuarios autenticados pueden unirse a un foro
+    #Only authenticated users can join forums
     permission_classes = [IsAuthenticated]
 
-    # Unirse a un foro
+    # Join forum
     def post(self, request, id):
         forum = get_object_or_404(Forum, id=id)
 
@@ -111,10 +110,10 @@ class JoinForumView(APIView):
             user=request.user,
         )
 
-        # No te podes unir mas de una vez a un foro
+        # Cant join more than one time the same forum
         if not created:
             return Response(
-                {"detail": "Ya perteneces a este foro"},
+                {"detail": "Ya already belong to this forum"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -129,7 +128,7 @@ class LeaveForumView(APIView):
     def delete(self, request, id):
         forum = get_object_or_404(Forum, id=id)
 
-        # El propietario no puede abandonar su propio foro para evitar que quede el foro sin owner
+        #Owner cant abandon its own forum. To avoid having a ownerless forum
         if forum.owner_id == request.user.id:
             return Response(
                 {"detail": "Owner cant abandon their forum"},
@@ -142,7 +141,6 @@ class LeaveForumView(APIView):
             user=request.user,
         )
 
-        # Se borra la membresia al foro
         membership.delete()
 
         return Response(
@@ -153,7 +151,7 @@ class LeaveForumView(APIView):
 class ForumMembersView(APIView):
     permission_classes = [IsAuthenticated]
 
-    # Listar miembros de un foro
+    # List forum members
     def get(self, request, id):
         forum = get_object_or_404(Forum, id=id)
         if not forum.members.filter(id=request.user.id).exists():
@@ -162,7 +160,7 @@ class ForumMembersView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Ordenar por username
+        # Order by username
         members = forum.members.all().order_by("username")
         serializer = UserSerializer(members, many=True)
         return Response(
@@ -170,17 +168,17 @@ class ForumMembersView(APIView):
             status=status.HTTP_200_OK,
         )
 
-    # Expulsar miembros
+    # Kick member
     def delete(self, request, id, user_id):
         forum = get_object_or_404(Forum, id=id)
-        # Solo el dueño del foro puede expulsar miembros
+        #Only owner can kick members 
         if forum.owner_id != request.user.id:
             return Response(
                 {"status": "error", "data": "Only the forum owner can expel members."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # El owner del foro no puede ser expulsado (para que no quede un foro sin owner)
+        #Forum owner cant be kicked out, (to avoid ownerless forum)
         if forum.owner_id == user_id:
             return Response(
                 {"status": "error", "data": "The forum owner cannot be expelled."},
@@ -192,5 +190,5 @@ class ForumMembersView(APIView):
             forum=forum,
             user_id=user_id,
         )
-        membership.delete() # Borrar la membresía de un determinado usuario
+        membership.delete() # Erase membership of a specific user
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -4,22 +4,19 @@ from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 
 from .models import Profile
-
-# La señal se ejecutará cuando se elimine el usuario y django elimine su perfil relacionado
+# Signal will be executed when the user is eliminated and django removes its related profile
 @receiver(post_delete, sender=Profile)
 def delete_profile_picture(sender, instance, **kwargs):
-    # Si no hay foto de perfil, no hace nada
+    #If there isnt profile picture, does nothing
     if not instance.profile_picture:
         return
 
     profile_picture = instance.profile_picture
-
-    # Garantiza que el archivo se elimine solamente si la eliminación de la bd se confirma correctamente
+    #Guarantees that the file is removed only if the elimination from the bd is confirmed correctly
     transaction.on_commit(
         lambda: profile_picture.delete(save=False)
     )
-
-# Si el usuario cambia su foto mediante patch, la nueva imagen se guarda y se borra la anterior
+#If user changes its picture through patch, the new image is stored and the old one erased
 @receiver(pre_save, sender=Profile)
 def delete_replaced_profile_picture(sender, instance, **kwargs):
     if not instance.pk:

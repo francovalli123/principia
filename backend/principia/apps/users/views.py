@@ -30,8 +30,8 @@ def _normalize_username(username):
 
 # UserView 
 class UserView(APIView):
-    # La informacion se descifra al serializarse, por lo que nunca debe exponerse
-    # mediante un endpoint anonimo ni a usuarios distintos del propietario.
+    #The information is decoded on serialization, for which it should never be exposed 
+    #through an anonymous endpoint to users other than the owner
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -81,7 +81,7 @@ class UserView(APIView):
 
 class RegisterView(CreateAPIView):
     permission_classes = [AllowAny]
-    # Indica el serializer que valida y crea las cuentas nuevas.
+    #Indicates the serializer that validates and creates new accounts
     serializer_class = RegisterSerializer
     
 class LoginView(APIView):
@@ -89,19 +89,18 @@ class LoginView(APIView):
 
     # Post 
     def post(self, request):
-        username = _normalize_username(request.data.get('username')) # Normaliza el username
+        username = _normalize_username(request.data.get('username')) # Normalizes the username
         password = request.data.get('password')
+        #searchs or creates the attempts registry of the user login
+        login_attempt, _ = LoginAttempt.objects.get_or_create(username=hash_lookup_value(username))# User is normalized
+        #and transformed through HMAC_SHA256 before saving.
 
-        # Busca o crea el registro de intentos de login del usuario
-        login_attempt, _ = LoginAttempt.objects.get_or_create(username=hash_lookup_value(username))  # Se normaliza el user y transforma mediante HMAC-SHA256 antes de guardarse
-
-        # Si está bloqueado pero se cumplió el cool off, se desbloquea el usuario
+        #If its blocked but the cool off is completed, user is unblocked
         if login_attempt.locked_until and login_attempt.locked_until <= timezone.now():
             login_attempt.failed_attempts = 0
             login_attempt.locked_until = None
             login_attempt.save(update_fields=['failed_attempts', 'locked_until', 'updated_at'])
-
-        # Si se alcanzó el max retry, se bloquea el usuario temporalmente y rechaza la peticion con 403 forbidden
+        #if max retry has been reached, user is blocked temporarily and request is denied with 403 forbidden
         if login_attempt.is_locked():
             remaining_minutes = max(1, int((login_attempt.locked_until - timezone.now()).total_seconds() // 60))
             return Response(
@@ -112,10 +111,9 @@ class LoginView(APIView):
         user = authenticate(username=request.data.get('username'), password=password)
 
         if user is None:
-            # Si la contraseña es incorrecta , aumenta el contador de intentos fallidos
+            # if password is incorrect, failed try's counter increases
             login_attempt.failed_attempts += 1
-
-            # Si la cantidad de intentos fallidos llegó a 5, la cuenta sufre un cool-off
+            #if falid try's counter reaches 5, account suffers cool-off
             if login_attempt.failed_attempts >= MAX_LOGIN_ATTEMPTS:
                 login_attempt.locked_until = timezone.now() + timedelta(minutes=LOGIN_COOLDOWN_MINUTES)
                 login_attempt.save(update_fields=['failed_attempts', 'locked_until', 'updated_at'])
@@ -123,17 +121,15 @@ class LoginView(APIView):
                     {'error': f'Cuenta bloqueada por {LOGIN_COOLDOWN_MINUTES} minutos por demasiados intentos fallidos.'},
                     status=status.HTTP_403_FORBIDDEN,
                 )
-            # Se guarda el intento
+            # attempt is saved
             login_attempt.save(update_fields=['failed_attempts', 'updated_at'])
             return Response(
                 {'error': 'Credenciales invalidas'},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
-
-        # Si el intento fue existoso, se reinicia el contador de intentos
+        # if the attemt is succesful, the counter resets
         login_attempt.reset()
-
-        # Genera un nuevo refresh token para el usuario
+        #Generates a new refresh token for user
         refresh = RefreshToken.for_user(user)
 
         return Response({
@@ -141,18 +137,19 @@ class LoginView(APIView):
             'refresh': str(refresh),
         }, status=status.HTTP_200_OK)
 
-# Consideraciones a tener en cuenta sobre el logout 
-# JWT es stateless, o sea, una vez emitido un token sigue siendo valido hasta que expire.
-# No hay una sesión en el servidor que puedas destruir. Pero si se puede revocar el refresh token porque
-# ese si lo guarda en la base de datos. 
-# Entonces el cliente envía el refresh token (/api/logout/) y se pone ese refresh token en la blacklist (ya no se podra utilizar ese refresh token)
+# Considerations regarding logout
+# JWT is stateless, meaning that once a token is issued, it remains valid until it expires.
+# There is no server-side session that can be destroyed. However, the refresh token can be revoked
+# because it is stored in the database.
+# Therefore, the client sends the refresh token to /api/logout/, and that refresh token is added
+# to the blacklist, so it can no longer be used.
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         refresh_token = request.data.get('refresh')
-        # Valida la existencia del token
+        # Validates existence of token
         if not isinstance(refresh_token, str) or not refresh_token.strip():
             return Response(
                 {"detail": "El refresh token es obligatorio."},
@@ -161,8 +158,8 @@ class LogoutView(APIView):
 
         try:
             token = RefreshToken(refresh_token)
-            token.blacklist()   # Marca el token como negado. Se mantiene en la BD hasta que expire
-        # Si el token es inválido o revocado, devuelve error
+            token.blacklist()   #Marks token as denied,it remains in the bd until expiration.
+        # if token is invalid or revoked, returns error
         except TokenError:
             return Response(
                 {"detail": "El refresh token no es valido o ya fue revocado."},
@@ -170,18 +167,17 @@ class LogoutView(APIView):
             )
 
         return Response({"detail": "Sesión cerrada exitosamente"})
-
-# Blacklista todos los refresh tokens del usuario (todos los dispositivos) 
+ #Blacklists all refresh tokens from user(all devices)
 class LogoutAllView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Nota: Outstanding token es la tabla donde SimpleJWT registra todos los refresh tokens activos de todos los usuarios
+        # Note: Outstanding token is the table where SimpleJWT registers every active refresh token of all the users
         for token in OutstandingToken.objects.filter(user=request.user):   
-            BlacklistedToken.objects.get_or_create(token=token) # Si ya está blacklisted no hace nada y sino lo blacklista
+            BlacklistedToken.objects.get_or_create(token=token) # does nothing if its already blacklisted, else  blacklists
         return Response({"detail": "Sesión cerrada en todos los dispositivos"})
 
-# El perfil se crea automaticamente en RegisterSerializer.create(). ProfileView permite consultar y modificar perfil post registro
+# Profile is automatically created in RegisterSerializer.create(). ProfileView allows to consult and modify profile post signuo
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]

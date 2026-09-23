@@ -13,11 +13,11 @@ from .phRegistry import PHENOMENON_SERIALIZERS
 from apps.publications.models import Publication
 
 class PhenomenonCatalogView(APIView):
-    permission_classes = [AllowAny] # Catalogo publico
+    permission_classes = [AllowAny] #Public catalogue
 
     def get(self, request, *args, **kwargs):
         return Response(
-            {"status": "success", "data": list(PHENOMENON_SERIALIZERS.keys())}, # Obtiene los fenemenos directamente desde PHENOMENON_SERIALIZERS
+            {"status": "success", "data": list(PHENOMENON_SERIALIZERS.keys())},#Gets the phenomenons directly from PHENOMENON_SERIALIZERS
             status=status.HTTP_200_OK,
         )
 
@@ -74,7 +74,7 @@ class SimulationView(APIView):
         config = PHENOMENON_SERIALIZERS.get(phenomenon_type)
         if config is None:
             return Response({"status": "error","message": "Invalid phenomenon_type"},status=status.HTTP_400_BAD_REQUEST,)
-
+        #Obtains the serializer that matches the phenomenon type
         serializer_class = config["serializer"]
         phenomenon_serializer = serializer_class(data=parameters)
         if not phenomenon_serializer.is_valid():
@@ -106,13 +106,13 @@ class FavouriteView(APIView):
 
     def get(self, request, *args, **kwargs):
         simulation_id = kwargs.get("simulation_id")
-        #Obtener especifico
+        #Get especific 
         if simulation_id is not None:
             favorite = get_object_or_404(Favourite,owner=request.user,simulation_id=simulation_id)
             self.check_object_permissions(request, favorite.simulation)
             serializer = FavouriteSerializer(favorite)
             return Response({"status": "success","data": serializer.data},status=status.HTTP_200_OK)
-        #Obtener todos los favoritos del usuario
+        #get all favourites of user
         favorites = Favourite.objects.filter(owner=request.user).order_by("-marked_date")
         serializer = FavouriteSerializer(favorites,many=True)
         return Response({"status": "success","data": serializer.data},status=status.HTTP_200_OK)
@@ -142,8 +142,8 @@ class FavouriteView(APIView):
 
         return Response({"status": "success","data": "Favourite removed"},status=status.HTTP_200_OK)
 
-#View generica para cualquier fenomeno
-# Este get da el fenomeno y sus parametros a partir de la simulacion asociada
+#Generic view for all phenomenons
+# This gets returns the phenomenon and the parameters of the related simulation
 class PhenomenonTypeView(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly, SimulationPermission]
     def get(self, request,*args, **kwargs):
@@ -151,8 +151,8 @@ class PhenomenonTypeView(APIView):
         simulation = get_object_or_404(Simulation, id=simulation_id)
         self.check_object_permissions(request, simulation)
         phenomenon_type = simulation.phenomenon_type
-        #obtengo del Registry el diccionario correspondiente al phenomenon_type. 
-        #que contiene el serializer y el related_name
+        #get from the registry the matching dictionary to the phenomenon_tyoe  
+        #which contains the serializer and related_name
         config = PHENOMENON_SERIALIZERS.get(phenomenon_type)
         if config is None:
             return Response({"status": "error","message": "Invalid phenomenon_type"},status=status.HTTP_400_BAD_REQUEST,)

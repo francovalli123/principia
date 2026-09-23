@@ -19,17 +19,17 @@ class CommentView(APIView):
 
     def get(self, request, *args, **kwargs):
         comment_id = kwargs.get("id")
-
+        #Get specific comment
         if comment_id is not None:
             result = get_object_or_404(Comment, id=comment_id)
-
+           #Checks that the request.user belongs to the forum where the comment is. 
             if not result.publication.forum.members.filter(id=request.user.id).exists():
                 return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
             self.check_object_permissions(request, result)
             serializer = CommentSerializer(result)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
-
+        #Get comments from a publication
         publication_id = request.query_params.get("publication_id")
 
         if publication_id is None:
@@ -37,6 +37,7 @@ class CommentView(APIView):
 
         publication = get_object_or_404(Publication, id=publication_id)
 
+        #Checks that the request.user belongs to the forum where the comment is. 
         if not publication.forum.members.filter(id=request.user.id).exists():
             return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
@@ -51,7 +52,7 @@ class CommentView(APIView):
 
         if serializer.is_valid():
             publication = serializer.validated_data["publication"]
-
+            #Must be a member of the forum to post a comment
             if not publication.forum.members.filter(id=request.user.id).exists():
                 return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 

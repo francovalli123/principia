@@ -18,7 +18,6 @@ class PublicationView(APIView):
         SimulationPermission,
     ]
 
-    # Método get
     def get(self, request, *args, **kwargs):
         publication_id = kwargs.get("id")
         #Get Publication by id
@@ -31,20 +30,20 @@ class PublicationView(APIView):
         forum_id = request.query_params.get("forum_id")
        #Get publications by forum_id
         if forum_id is not None:
-            # Q permite construir condiciones para el ORM de Django y el operador |
-            # las combina como un OR: la simulacion debe ser publica, pertenecer al
-            # usuario autenticado o ser privada cuando este pertenece al foro.
+            #Q allows building conditions for Django's ORM, and the | operator
+            # combines them as an OR: the simulation must be public, belong to the
+            # authenticated user, or be private when the user belongs to the forum.
             filters = Q(simulation__visibility="public")
             is_authenticated = request.user.is_authenticated
 
             if is_authenticated:
-                filters |= Q(simulation__owner=request.user)    # Visibilidad publica OR la simulacion pertenece al usuario actual
+                filters |= Q(simulation__owner=request.user)#public visibility OR simulation belongs to the current user
                 is_forum_member = Publication.objects.filter(
-                    forum_id=forum_id,  # Limita la busqueda al foro solicitado
+                    forum_id=forum_id,  # Limits search to solicitated forum
                     forum__members=request.user,    
-                ).exists()  # Devuelve true si encuentra al menos una publicacion de ese foro asociada a un foro donde el usuario sea miembro
+                ).exists()# Returns True if it finds at least one publication from that forum associated with a forum where the user is a member
                 if is_forum_member:
-                    filters |= Q(simulation__visibility="private")  # Si está privada, un usuario solo la puede ver si pertenece al foro donde está publicada
+                    filters |= Q(simulation__visibility="private")#if its private, a user can only see it, if he belongs to the forum where it is published
 
             result = Publication.objects.filter(forum_id=forum_id).filter(filters).order_by("-creation_date")
             serializer = PublicationSerializer(result, many = True)
