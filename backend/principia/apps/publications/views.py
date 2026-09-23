@@ -80,4 +80,4 @@ class PublicationView(PaginatedAPIView):
         result = get_object_or_404(Publication, id=id)
         self.check_object_permissions(request,result) 
         result.delete()
-        return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_200_OK)
+        return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_204_NO_CONTENT)

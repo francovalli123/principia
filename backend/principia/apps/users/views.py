@@ -82,7 +82,7 @@ class UserView(PaginatedAPIView):
             raise PermissionDenied("No tiene permiso para eliminar este usuario.")
         result = get_object_or_404(User, id=id)
         result.delete()
-        return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_200_OK)
+        return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_204_NO_CONTENT)
 
 class RegisterView(CreateAPIView):
     permission_classes = [AllowAny]

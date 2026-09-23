@@ -105,7 +105,7 @@ class ForumView(PaginatedAPIView):
 
         return Response(
             {"status": "success", "data": "Record Deleted"}, 
-            status=status.HTTP_200_OK
+            status=status.HTTP_204_NO_CONTENT
         )
 
 class JoinForumView(APIView):
