@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAu
 from django.db import transaction
 
 from apps.common.permissions import IsOwnerOrReadOnly, SimulationPermission
+from apps.common.pagination import PaginatedAPIView
 from .models import Favourite, Simulation
 from .serializers import SimulationSerializer, FavouriteSerializer
 from .phRegistry import PHENOMENON_SERIALIZERS
@@ -23,7 +24,7 @@ class PhenomenonCatalogView(APIView):
 
 
 #SimulationView
-class SimulationView(APIView):
+class SimulationView(PaginatedAPIView):
     permission_classes = [
         IsAuthenticatedOrReadOnly,
         IsOwnerOrReadOnly,
@@ -57,7 +58,11 @@ class SimulationView(APIView):
             if str(request.user.id) != str(owner_id):
                 filters["visibility"] = "public"
             result = Simulation.objects.filter(**filters).order_by("-creation_date")
-            serializer = SimulationSerializer(result, many=True)
+            # La paginación se aplica antes de convertir las simulaciones a JSON.
+            page = self.paginate_queryset(result, request)
+            serializer = SimulationSerializer(page if page is not None else result, many=True)
+            if page is not None:
+                return self.get_paginated_response(serializer.data)
             return Response(
                 {"status": "success", "data": serializer.data},
                 status=status.HTTP_200_OK,
@@ -101,7 +106,7 @@ class SimulationView(APIView):
         )
 
 
-class FavouriteView(APIView):
+class FavouriteView(PaginatedAPIView):
     permission_classes = [IsAuthenticated, SimulationPermission]
 
     def get(self, request, *args, **kwargs):
@@ -114,7 +119,10 @@ class FavouriteView(APIView):
             return Response({"status": "success","data": serializer.data},status=status.HTTP_200_OK)
         #get all favourites of user
         favorites = Favourite.objects.filter(owner=request.user).order_by("-marked_date")
-        serializer = FavouriteSerializer(favorites,many=True)
+        page = self.paginate_queryset(favorites, request)
+        serializer = FavouriteSerializer(page if page is not None else favorites, many=True)
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
         return Response({"status": "success","data": serializer.data},status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):

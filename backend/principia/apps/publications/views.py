@@ -7,11 +7,12 @@ from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticate
 from django.db.models import Q
 
 from apps.common.permissions import IsOwnerOrReadOnly, SimulationPermission
+from apps.common.pagination import PaginatedAPIView
 from .models import Publication
 from .serializers import PublicationSerializer
 
 #PublicationView
-class PublicationView(APIView):
+class PublicationView(PaginatedAPIView):
     permission_classes = [
         IsAuthenticatedOrReadOnly,
         IsOwnerOrReadOnly,
@@ -46,7 +47,11 @@ class PublicationView(APIView):
                     filters |= Q(simulation__visibility="private")#if its private, a user can only see it, if he belongs to the forum where it is published
 
             result = Publication.objects.filter(forum_id=forum_id).filter(filters).order_by("-creation_date")
-            serializer = PublicationSerializer(result, many = True)
+            # Paginar el queryset antes de serializarlo evita cargar toda la colección.
+            page = self.paginate_queryset(result, request)
+            serializer = PublicationSerializer(page if page is not None else result, many=True)
+            if page is not None:
+                return self.get_paginated_response(serializer.data)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
   
         return Response({"status": "error","message": "forum_id is required"},status=status.HTTP_400_BAD_REQUEST)

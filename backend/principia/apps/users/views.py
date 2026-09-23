@@ -19,6 +19,7 @@ from .serializers import RegisterSerializer, UserSerializer, ProfileSerializer
 from apps.simulations.phRegistry import PHENOMENON_SERIALIZERS
 from .security import hash_lookup_value
 from apps.simulations.serializers import SimulationSerializer
+from apps.common.pagination import PaginatedAPIView
 
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_COOLDOWN_MINUTES = 30
@@ -29,7 +30,7 @@ def _normalize_username(username):
     return str(username).strip().casefold()
 
 # UserView 
-class UserView(APIView):
+class UserView(PaginatedAPIView):
     #The information is decoded on serialization, for which it should never be exposed 
     #through an anonymous endpoint to users other than the owner
     permission_classes = [IsAuthenticated]
@@ -43,8 +44,12 @@ class UserView(APIView):
                 serializer = UserSerializer(result)
                 return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
-            result = User.objects.all()
-            serializer = UserSerializer(result, many=True)
+            result = User.objects.all().order_by("id")
+            # Solo se serializan los usuarios de la página solicitada.
+            page = self.paginate_queryset(result, request)
+            serializer = UserSerializer(page if page is not None else result, many=True)
+            if page is not None:
+                return self.get_paginated_response(serializer.data)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
         if user_id is not None and user_id != request.user.id:
@@ -178,7 +183,7 @@ class LogoutAllView(APIView):
         return Response({"detail": "Sesión cerrada en todos los dispositivos"})
 
 # Profile is automatically created in RegisterSerializer.create(). ProfileView allows to consult and modify profile post signuo
-class ProfileView(APIView):
+class ProfileView(PaginatedAPIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
@@ -195,7 +200,10 @@ class ProfileView(APIView):
                 return Response({"status": "error", "data": f"Phenomenon type '{phenomenon_type}' not found."}, status=status.HTTP_400_BAD_REQUEST)
 
             simulations = request.user.simulations.filter(phenomenon_type=phenomenon_type).order_by("-creation_date")
-            serializer = SimulationSerializer(simulations, many=True)
+            page = self.paginate_queryset(simulations, request)
+            serializer = SimulationSerializer(page if page is not None else simulations, many=True)
+            if page is not None:
+                return self.get_paginated_response(serializer.data)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
         profile = self.get_profile(request.user)

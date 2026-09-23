@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 
 
 from apps.common.permissions import IsOwnerOrReadOnly
+from apps.common.pagination import PaginatedAPIView
 from apps.forums.models import Forum, ForumMembership
 from apps.forums.serializers import ForumSerializer
 from apps.publications.serializers import PublicationSerializer
@@ -17,7 +18,7 @@ from apps.users.serializers import UserSerializer
 
 
 #ForumView
-class ForumView(APIView):
+class ForumView(PaginatedAPIView):
     permission_classes = [
         IsAuthenticatedOrReadOnly,
         IsOwnerOrReadOnly,
@@ -29,8 +30,12 @@ class ForumView(APIView):
 
         # Get all forums
         if forum_id is None:
-            forums = Forum.objects.all()
-            serializer = ForumSerializer(forums, many=True)
+            forums = Forum.objects.all().order_by("id")
+            # La página se calcula sobre el queryset completo para conservar el count.
+            page = self.paginate_queryset(forums, request)
+            serializer = ForumSerializer(page if page is not None else forums, many=True)
+            if page is not None:
+                return self.get_paginated_response(serializer.data)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
         # Get specific forum
@@ -44,7 +49,10 @@ class ForumView(APIView):
         if publication_title is not None:
             publication_title = publication_title.strip()
             publications = forum.publications.filter(title__icontains=publication_title).order_by("-creation_date")
-            serializer = PublicationSerializer(publications, many=True)
+            page = self.paginate_queryset(publications, request)
+            serializer = PublicationSerializer(page if page is not None else publications, many=True)
+            if page is not None:
+                return self.get_paginated_response(serializer.data)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
         # Filter publications by phenomenon type
@@ -54,7 +62,10 @@ class ForumView(APIView):
                 return Response({"status": "error", "data": f"Phenomenon type '{phenomenon_type}' not found."}, status=status.HTTP_400_BAD_REQUEST)
 
             publications = forum.publications.filter(simulation__phenomenon_type=phenomenon_type).order_by("-creation_date")
-            serializer = PublicationSerializer(publications, many=True)
+            page = self.paginate_queryset(publications, request)
+            serializer = PublicationSerializer(page if page is not None else publications, many=True)
+            if page is not None:
+                return self.get_paginated_response(serializer.data)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
         serializer = ForumSerializer(forum)
@@ -148,7 +159,7 @@ class LeaveForumView(APIView):
             status=status.HTTP_204_NO_CONTENT,
         )
 
-class ForumMembersView(APIView):
+class ForumMembersView(PaginatedAPIView):
     permission_classes = [IsAuthenticated]
 
     # List forum members
@@ -162,7 +173,13 @@ class ForumMembersView(APIView):
 
         # Order by username
         members = forum.members.all().order_by("username")
-        serializer = UserSerializer(members, many=True)
+        # Aplica la paginación al queryset members
+        page = self.paginate_queryset(members, request)
+        # Serializa los datos
+        serializer = UserSerializer(page if page is not None else members, many=True)
+        # Si existe una página, genera la respuesta paginada
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
         return Response(
             {"status": "success", "data": serializer.data},
             status=status.HTTP_200_OK,

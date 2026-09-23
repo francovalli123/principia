@@ -6,12 +6,13 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from apps.common.permissions import IsOwnerOrReadOnly
+from apps.common.pagination import PaginatedAPIView
 from apps.publications.models import Publication
 from .models import Comment
 from .serializers import CommentSerializer
 
 #CommentView
-class CommentView(APIView):
+class CommentView(PaginatedAPIView):
     permission_classes = [
         IsAuthenticatedOrReadOnly,
         IsOwnerOrReadOnly,
@@ -42,7 +43,11 @@ class CommentView(APIView):
             return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
         result = Comment.objects.filter(publication=publication).order_by("-creation_date")
-        serializer = CommentSerializer(result, many=True)
+        # La serialización recibe solo la página solicitada, no todos los comentarios.
+        page = self.paginate_queryset(result, request)
+        serializer = CommentSerializer(page if page is not None else result, many=True)
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
 
         return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
