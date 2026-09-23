@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.simulations.models import Simulation, Favorite, ObliqueProjectileMotion
+from apps.simulations.models import Simulation, Favourite, ObliqueProjectileMotion
 
 class SimulationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,9 +7,9 @@ class SimulationSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['owner']
 
-class FavoriteSerializer(serializers.ModelSerializer):
+class FavouriteSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Favorite
+        model = Favourite
         fields = '__all__'
         read_only_fields = ['owner', 'marked_date']
 

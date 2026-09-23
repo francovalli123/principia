@@ -6,6 +6,7 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from apps.common.permissions import IsOwnerOrReadOnly
+from apps.publications.models import Publication
 from .models import Comment
 from .serializers import CommentSerializer
 
@@ -45,22 +46,22 @@ class CommentView(APIView):
         return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
 
-def post(self, request, *args, **kwargs):
-    serializer = CommentSerializer(data=request.data)
+    def post(self, request, *args, **kwargs):
+        serializer = CommentSerializer(data=request.data)
 
-    if serializer.is_valid():
-        publication = serializer.validated_data["publication"]
+        if serializer.is_valid():
+            publication = serializer.validated_data["publication"]
 
-        if not publication.forum.members.filter(id=request.user.id).exists():
-            return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
+            if not publication.forum.members.filter(id=request.user.id).exists():
+                return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
-        serializer.save(owner=request.user)
-        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_201_CREATED)
+            serializer.save(owner=request.user)
+            return Response({"status": "success", "data": serializer.data}, status=status.HTTP_201_CREATED)
 
-    return Response({"status": "error", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"status": "error", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-def delete(self, request, id=None, *args, **kwargs):
-    result = get_object_or_404(Comment, id=id)
-    self.check_object_permissions(request,result) 
-    result.delete()
-    return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_200_OK)
+    def delete(self, request, id=None, *args, **kwargs):
+        result = get_object_or_404(Comment, id=id)
+        self.check_object_permissions(request,result) 
+        result.delete()
+        return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_200_OK)

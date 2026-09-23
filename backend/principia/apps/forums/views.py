@@ -119,7 +119,7 @@ class JoinForumView(APIView):
             )
 
         return Response(
-            {"detail": "Te has unido al foro."},
+            {"detail": "You have joined the forum."},
             status=status.HTTP_201_CREATED,
         )
 
@@ -132,7 +132,7 @@ class LeaveForumView(APIView):
         # El propietario no puede abandonar su propio foro para evitar que quede el foro sin owner
         if forum.owner_id == request.user.id:
             return Response(
-                {"detail": "El propietario no puede abandonar "},
+                {"detail": "Owner cant abandon their forum"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

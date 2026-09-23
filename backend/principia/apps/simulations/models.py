@@ -24,16 +24,16 @@ class Simulation(models.Model):
     def __str__(self):
         return f"{self.phenomenon_type} - {self.owner.username}"
 
-class Favorite(models.Model):
+class Favourite(models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="favorite_simulations",
+        related_name="favourite_simulations",
     )
     simulation = models.ForeignKey(
         Simulation,
         on_delete=models.CASCADE,
-        related_name="favorites",
+        related_name="favourites",
     )
     marked_date = models.DateTimeField(auto_now_add=True)
 
