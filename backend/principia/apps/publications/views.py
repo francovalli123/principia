@@ -24,6 +24,12 @@ class PublicationView(PaginatedAPIView):
         #Get Publication by id
         if publication_id is not None:
             publication = get_object_or_404(Publication, id=publication_id)
+            self.access_context = (
+                "forum"
+                if publication.forum_id is not None
+                and publication.forum.members.filter(id=request.user.id).exists()
+                else None
+            )
             self.check_object_permissions(request, publication.simulation)
             serializer = PublicationSerializer(publication)
             return Response({"status": "success", "data": serializer.data},status=status.HTTP_200_OK)

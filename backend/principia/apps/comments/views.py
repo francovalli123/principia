@@ -24,7 +24,10 @@ class CommentView(PaginatedAPIView):
         if comment_id is not None:
             result = get_object_or_404(Comment, id=comment_id)
            #Checks that the request.user belongs to the forum where the comment is. 
-            if not result.publication.forum.members.filter(id=request.user.id).exists():
+            if (
+                result.publication.forum_id is None
+                or not result.publication.forum.members.filter(id=request.user.id).exists()
+            ):
                 return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
             self.check_object_permissions(request, result)
@@ -39,7 +42,10 @@ class CommentView(PaginatedAPIView):
         publication = get_object_or_404(Publication, id=publication_id)
 
         #Checks that the request.user belongs to the forum where the comment is. 
-        if not publication.forum.members.filter(id=request.user.id).exists():
+        if (
+            publication.forum_id is None
+            or not publication.forum.members.filter(id=request.user.id).exists()
+        ):
             return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
         result = Comment.objects.filter(publication=publication).order_by("-creation_date")
@@ -58,7 +64,10 @@ class CommentView(PaginatedAPIView):
         if serializer.is_valid():
             publication = serializer.validated_data["publication"]
             #Must be a member of the forum to post a comment
-            if not publication.forum.members.filter(id=request.user.id).exists():
+            if (
+                publication.forum_id is None
+                or not publication.forum.members.filter(id=request.user.id).exists()
+            ):
                 return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
             serializer.save(owner=request.user)
@@ -68,6 +77,15 @@ class CommentView(PaginatedAPIView):
 
     def delete(self, request, id=None, *args, **kwargs):
         result = get_object_or_404(Comment, id=id)
+        if (
+            # Valida que siga siendo miembro del foro asociado a la publicacion
+            result.publication.forum_id is None
+            or not result.publication.forum.members.filter(id=request.user.id).exists()
+        ):
+            return Response(
+                {"status": "error", "message": "You are not a member of this forum."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         self.check_object_permissions(request,result) 
         result.delete()
         return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_204_NO_CONTENT)
