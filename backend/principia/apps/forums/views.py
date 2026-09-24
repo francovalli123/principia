@@ -43,7 +43,7 @@ class ForumView(PaginatedAPIView):
         self.check_object_permissions(request, forum)
 
         if request.user.id not in forum.members.values_list("id", flat=True):
-            return Response({"status": "error", "data": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
         # Filter publications by title
         if publication_title is not None:
@@ -59,7 +59,7 @@ class ForumView(PaginatedAPIView):
         if phenomenon_type is not None:
             phenomenon = PHENOMENON_SERIALIZERS.get(phenomenon_type)
             if phenomenon is None:
-                return Response({"status": "error", "data": f"Phenomenon type '{phenomenon_type}' not found."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"status": "error", "message": f"Phenomenon type '{phenomenon_type}' not found."}, status=status.HTTP_400_BAD_REQUEST)
 
             publications = forum.publications.filter(simulation__phenomenon_type=phenomenon_type).order_by("-creation_date")
             page = self.paginate_queryset(publications, request)
@@ -77,7 +77,7 @@ class ForumView(PaginatedAPIView):
 
         if not serializer.is_valid():
             return Response(
-                {"status": "error", "data": serializer.errors},
+                {"status": "error", "message": serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -124,7 +124,7 @@ class JoinForumView(APIView):
         # Cant join more than one time the same forum
         if not created:
             return Response(
-                {"detail": "Ya already belong to this forum"},
+                {"status": "error", "message": "Ya already belong to this forum"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -142,7 +142,7 @@ class LeaveForumView(APIView):
         #Owner cant abandon its own forum. To avoid having a ownerless forum
         if forum.owner_id == request.user.id:
             return Response(
-                {"detail": "Owner cant abandon their forum"},
+                {"status": "error", "message": "Owner cant abandon their forum"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -167,7 +167,7 @@ class ForumMembersView(PaginatedAPIView):
         forum = get_object_or_404(Forum, id=id)
         if not forum.members.filter(id=request.user.id).exists():
             return Response(
-                {"status": "error", "data": "You are not a member of this forum."},
+                {"status": "error", "message": "You are not a member of this forum."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -191,14 +191,14 @@ class ForumMembersView(PaginatedAPIView):
         #Only owner can kick members 
         if forum.owner_id != request.user.id:
             return Response(
-                {"status": "error", "data": "Only the forum owner can expel members."},
+                {"status": "error", "message": "Only the forum owner can expel members."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         #Forum owner cant be kicked out, (to avoid ownerless forum)
         if forum.owner_id == user_id:
             return Response(
-                {"status": "error", "data": "The forum owner cannot be expelled."},
+                {"status": "error", "message": "The forum owner cannot be expelled."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

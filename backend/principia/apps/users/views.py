@@ -65,7 +65,7 @@ class UserView(PaginatedAPIView):
         if serializer.is_valid():
             serializer.save()
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_201_CREATED)
-        return Response({"status": "error", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"status": "error", "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, id=None, *args, **kwargs):
         if not request.user.is_staff and id != request.user.id:
@@ -75,7 +75,7 @@ class UserView(PaginatedAPIView):
         if serializer.is_valid():
             serializer.save()
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
-        return Response({"status": "error", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"status": "error", "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id=None, *args, **kwargs):
         if not request.user.is_staff and id != request.user.id:
@@ -109,7 +109,7 @@ class LoginView(APIView):
         if login_attempt.is_locked():
             remaining_minutes = max(1, int((login_attempt.locked_until - timezone.now()).total_seconds() // 60))
             return Response(
-                {'error': f'Muchos intentos fallidos. Intente nuevamente en {remaining_minutes} minutos.'},
+                {'status': 'error', 'message': f'Muchos intentos fallidos. Intente nuevamente en {remaining_minutes} minutos.'},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -123,13 +123,13 @@ class LoginView(APIView):
                 login_attempt.locked_until = timezone.now() + timedelta(minutes=LOGIN_COOLDOWN_MINUTES)
                 login_attempt.save(update_fields=['failed_attempts', 'locked_until', 'updated_at'])
                 return Response(
-                    {'error': f'Cuenta bloqueada por {LOGIN_COOLDOWN_MINUTES} minutos por demasiados intentos fallidos.'},
+                    {'status': 'error', 'message': f'Cuenta bloqueada por {LOGIN_COOLDOWN_MINUTES} minutos por demasiados intentos fallidos.'},
                     status=status.HTTP_403_FORBIDDEN,
                 )
             # attempt is saved
             login_attempt.save(update_fields=['failed_attempts', 'updated_at'])
             return Response(
-                {'error': 'Credenciales invalidas'},
+                {'status': 'error', 'message': 'Credenciales invalidas'},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         # if the attemt is succesful, the counter resets
@@ -157,7 +157,7 @@ class LogoutView(APIView):
         # Validates existence of token
         if not isinstance(refresh_token, str) or not refresh_token.strip():
             return Response(
-                {"detail": "El refresh token es obligatorio."},
+                {"status": "error", "message": "El refresh token es obligatorio."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -167,7 +167,7 @@ class LogoutView(APIView):
         # if token is invalid or revoked, returns error
         except TokenError:
             return Response(
-                {"detail": "El refresh token no es valido o ya fue revocado."},
+                {"status": "error", "message": "El refresh token no es valido o ya fue revocado."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -197,7 +197,7 @@ class ProfileView(PaginatedAPIView):
         if phenomenon_type is not None:
             phenomenon = PHENOMENON_SERIALIZERS.get(phenomenon_type)
             if phenomenon is None:
-                return Response({"status": "error", "data": f"Phenomenon type '{phenomenon_type}' not found."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"status": "error", "message": f"Phenomenon type '{phenomenon_type}' not found."}, status=status.HTTP_400_BAD_REQUEST)
 
             simulations = request.user.simulations.filter(phenomenon_type=phenomenon_type).order_by("-creation_date")
             page = self.paginate_queryset(simulations, request)
@@ -227,7 +227,7 @@ class ProfileView(PaginatedAPIView):
             )
 
         return Response(
-            {"status": "error", "data": serializer.errors},
+            {"status": "error", "message": serializer.errors},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -247,6 +247,6 @@ class ProfileView(PaginatedAPIView):
             )
 
         return Response(
-            {"status": "error", "data": serializer.errors},
+            {"status": "error", "message": serializer.errors},
             status=status.HTTP_400_BAD_REQUEST,
         )

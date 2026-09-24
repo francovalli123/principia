@@ -74,7 +74,7 @@ class PublicationView(PaginatedAPIView):
             serializer.save(owner=request.user)
             return Response({"status": "success", "data": serializer.data}, status = status.HTTP_201_CREATED)
 
-        return Response({"status": "error", "data": serializer.errors}, status = status.HTTP_400_BAD_REQUEST)
+        return Response({"status": "error", "message": serializer.errors}, status = status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id=None, *args, **kwargs):
         result = get_object_or_404(Publication, id=id)

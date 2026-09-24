@@ -55,6 +55,8 @@ class SensitiveDataSecurityTests(TestCase):
         response = client.get(f"/api/users/{other_user.id}/")
 
         self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data["status"], "error")
+        self.assertIn("message", response.data)
 
     def test_logout_rejects_missing_refresh_token(self):
         client = APIClient(HTTP_HOST="localhost")
@@ -63,6 +65,10 @@ class SensitiveDataSecurityTests(TestCase):
         response = client.post("/api/users/logout/", {}, format="json")
 
         self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, {
+            "status": "error",
+            "message": "El refresh token es obligatorio.",
+        })
 
     def test_logout_rejects_invalid_refresh_token(self):
         client = APIClient(HTTP_HOST="localhost")

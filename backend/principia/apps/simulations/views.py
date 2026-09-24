@@ -83,12 +83,12 @@ class SimulationView(PaginatedAPIView):
         serializer_class = config["serializer"]
         phenomenon_serializer = serializer_class(data=parameters)
         if not phenomenon_serializer.is_valid():
-            return Response({"status": "error","data": phenomenon_serializer.errors},status=status.HTTP_400_BAD_REQUEST,)
+            return Response({"status": "error","message": phenomenon_serializer.errors},status=status.HTTP_400_BAD_REQUEST,)
 
         simulation_serializer = SimulationSerializer(data={"phenomenon_type": phenomenon_type, "visibility": visibility})
 
         if not simulation_serializer.is_valid():
-            return Response({"status": "error","data": simulation_serializer.errors},status=status.HTTP_400_BAD_REQUEST,)
+            return Response({"status": "error","message": simulation_serializer.errors},status=status.HTTP_400_BAD_REQUEST,)
 
         with transaction.atomic():
             simulation = simulation_serializer.save(owner=request.user)
