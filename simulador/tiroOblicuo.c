@@ -12,21 +12,18 @@
  */
 
 
-/*TO DO:
- * Poder ir para atras 
- */
 #define G 9.81
 float calculatePositionX(float v0x, float t);
 float calculatePositionY(float y0, float v0y, float g, float t);
 
 int main(int argc, char *argv[]){
-    if (argc < 3) {
+    if (argc < 4) {
         printf("Te faltaron los parametros\n");
         return 1;
     }
-    float y0 = atoi(argv[1]);
-    float angle = atoi(argv[2]) * M_PI / 180.0;
-    float v0 = atoi(argv[3]);
+    float y0 = atof(argv[1]);
+    float angle = atof(argv[2]) * M_PI / 180.0;
+    float v0 = atof(argv[3]);
     
     //Para Testear
     /*float y0 = 5;
