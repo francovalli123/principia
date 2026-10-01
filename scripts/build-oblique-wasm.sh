@@ -13,6 +13,7 @@ emcc simulador/tiroOblicuo.c\
   -s USE_GLFW=3 \
   -s ASYNCIFY \
   -s MODULARIZE=1 \
-  -s EXPORT_ES6=1
+  -s EXPORT_ES6=1 \
+  -s EXPORTED_FUNCTIONS='["_main","_pauseSim","_resetSim"]'
 
 echo "Oblique Projectile Motion WASM build completed."

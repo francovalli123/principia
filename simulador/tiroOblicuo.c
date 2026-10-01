@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <raylib.h>
 #include <math.h>
+#include <emscripten/emscripten.h>
 
 /* Escenario de tiro oblicuo.
  * Parámetros:
@@ -11,22 +12,42 @@
  * La simulación pausa cuando la pelota cae al piso.
  */
 
-
 #define G 9.81
+
 float calculatePositionX(float v0x, float t);
 float calculatePositionY(float y0, float v0y, float g, float t);
 
-int main(int argc, char *argv[]){
+/* Estado global de la simulación */
+float t = 0;
+bool pause = true;
+
+/* Funciones accesibles desde WebAssembly */
+
+EMSCRIPTEN_KEEPALIVE
+void pauseSim() {
+    pause = !pause;
+}
+
+
+EMSCRIPTEN_KEEPALIVE
+void resetSim() {
+    t = 0;
+    pause = true;
+}
+
+int main(int argc, char *argv[]) {
     if (argc < 4) {
         printf("Te faltaron los parametros\n");
         return 1;
     }
+
     float y0 = atof(argv[1]);
     float angle = atof(argv[2]) * M_PI / 180.0;
     float v0 = atof(argv[3]);
-    
-    //Para Testear
-    /*float y0 = 5;
+
+    // Para testear
+    /*
+    float y0 = 5;
     float angle = 40 * M_PI / 180;
     float v0 = 20;
     */
@@ -42,38 +63,40 @@ int main(int argc, char *argv[]){
     float xScreen = 0;
     float yScreen = 0;
 
-    float t = 0;
-
     int radius = 20;
 
     InitWindow(800, 600, "Tiro oblicuo");
+
     // Tamaño de ventana
     int monitor = GetCurrentMonitor();
     int screenWidth = GetMonitorWidth(monitor);
     int screenHeight = GetMonitorHeight(monitor);
-    //Determinar escala 
-    float flightTime = (vy + sqrt(vy*vy + 2*G*y0)) / G;
+
+    // Determinar escala
+    float flightTime = (vy + sqrt(vy * vy + 2 * G * y0)) / G;
     float maxRange = vx * flightTime;
     float maxHeight = y0 + (vy * vy) / (2 * G);
+
     float scaleX = (screenWidth - 200) / maxRange;
     float scaleY = (screenHeight - 200) / maxHeight;
     float const SCALE = fmin(scaleX, scaleY);
 
-    SetWindowSize(screenWidth,screenHeight);
+    SetWindowSize(screenWidth, screenHeight);
     SetWindowPosition(0, 0);
-    
+
     SetTargetFPS(60);
 
-   
-    //Origen fisico
+    // Origen físico
     int originX = 100;
     int originY = GetScreenHeight() - 100;
-    bool pause = true;
-    while (!WindowShouldClose()){
-        // PAUSE
+
+    while (!WindowShouldClose()) {
+
+        // PAUSE / RESUME
         if (IsKeyPressed(KEY_SPACE)) {
             pause = !pause;
         }
+
         // RESET
         if (IsKeyPressed(KEY_R)) {
             t = 0;
@@ -88,6 +111,7 @@ int main(int argc, char *argv[]){
                 t = 0;
             }
         }
+
         // ADVANCE
         else if (!pause) {
             t += GetFrameTime();
@@ -95,33 +119,40 @@ int main(int argc, char *argv[]){
 
         x = calculatePositionX(vx, t);
         y = calculatePositionY(y0, vy, G, t);
+
         xScreen = originX + x * SCALE;
         yScreen = originY - y * SCALE;
 
         if (yScreen >= originY - radius && t >= 0.1f) {
             pause = true;
         }
+
         BeginDrawing();
-            ClearBackground(WHITE);
-            DrawText(TextFormat("t = %.2f s", t),20,20,20,BLACK);
-            DrawText(TextFormat("x = %.2f m", x),20,50,20,BLACK);
-            DrawText(TextFormat("y = %.2f m", y),20,80,20,BLACK);
-            // Piso
-            DrawLine(0,originY,GetScreenWidth(),originY,BLACK);
-            //Pelota
-            DrawCircle((int)xScreen,(int)yScreen,radius,RED);
+
+        ClearBackground(WHITE);
+
+        DrawText(TextFormat("t = %.2f s", t), 20, 20, 20, BLACK);
+        DrawText(TextFormat("x = %.2f m", x), 20, 50, 20, BLACK);
+        DrawText(TextFormat("y = %.2f m", y), 20, 80, 20, BLACK);
+
+        // Piso
+        DrawLine(0, originY, GetScreenWidth(), originY, BLACK);
+
+        // Pelota
+        DrawCircle((int)xScreen, (int)yScreen, radius, RED);
+
         EndDrawing();
     }
 
     CloseWindow();
+
     return 0;
 }
 
-float calculatePositionY(float y0,float v0y,float g,float t){
-    return y0+ v0y * t- 0.5 * g * t * t;
+float calculatePositionY(float y0, float v0y, float g, float t) {
+    return y0 + v0y * t - 0.5 * g * t * t;
 }
 
-float calculatePositionX(float v0x,float t){
+float calculatePositionX(float v0x, float t) {
     return v0x * t;
 }
-
