@@ -8,7 +8,9 @@ export class AuthService {
         localStorage.setItem('access_token', access);
         localStorage.setItem('refresh_token', refresh);
     }
-
+    setAccessToken(access: string): void {
+    localStorage.setItem('access_token', access);
+    }
     getAccessToken(): string | null {
         return localStorage.getItem('access_token');
     }
