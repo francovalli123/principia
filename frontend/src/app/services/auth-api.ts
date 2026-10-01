@@ -1,24 +1,26 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { BaseApiService } from './base-api.service';
 //Communicates with the backend API for authentication-related operations
 @Injectable({
     providedIn: 'root'
 })
 export class AuthApiService {
-    private baseUrl = 'http://127.0.0.1:8000/api';
-
-    constructor(private http: HttpClient) {}
+    constructor(
+        private http: HttpClient,
+        private api: BaseApiService
+    ) {}
 
     login(username: string, password: string): Observable<any> {
-        return this.http.post<any>(`${this.baseUrl}/login/`, {
+        return this.http.post<any>(this.api.getUrl('login/'), {
             username,
             password
         });
     }
 
     signup(username: string, email: string, password: string): Observable<any> {
-        return this.http.post<any>(`${this.baseUrl}/signup/`, {
+        return this.http.post<any>(this.api.getUrl('signup/'), {
             username,
             email,
             password
@@ -26,7 +28,7 @@ export class AuthApiService {
     }
 
     refreshToken(refresh: string): Observable<any> {
-        return this.http.post<any>(`${this.baseUrl}/token/refresh`, {
+        return this.http.post<any>(this.api.getUrl('token/refresh/'), {
             refresh
         });
     }
@@ -37,7 +39,7 @@ export class AuthApiService {
         });
 
         return this.http.post<any>(
-            `${this.baseUrl}/users/logout/`,
+            this.api.getUrl('users/logout/'),
             { refresh },
             { headers }
         );
@@ -49,7 +51,7 @@ export class AuthApiService {
         });
 
         return this.http.post<any>(
-            `${this.baseUrl}/users/logout-all/`,
+            this.api.getUrl('users/logout-all/'),
             {},
             { headers }
         );

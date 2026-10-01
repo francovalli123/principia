@@ -1,28 +1,26 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { BaseApiService } from './base-api.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class UserApiService {
-    private baseUrl = 'http://127.0.0.1:8000/api/users';
-
-    constructor(private http: HttpClient) {}
+    constructor(private api: BaseApiService) {}
 
     getCurrentUser(): Observable<any> {
-        return this.http.get<any>(`${this.baseUrl}/`);
+        return this.api.get<any>('users/');
     }
 
     getUser(id: number): Observable<any> {
-        return this.http.get<any>(`${this.baseUrl}/${id}/`);
+        return this.api.get<any>(`users/${id}/`);
     }
 
     updateUser(id: number, data: any): Observable<any> {
-        return this.http.patch<any>(`${this.baseUrl}/${id}/`, data);
+        return this.api.patch<any>(`users/${id}/`, data);
     }
 
     deleteUser(id: number): Observable<any> {
-        return this.http.delete<any>(`${this.baseUrl}/${id}/`);
+        return this.api.delete<any>(`users/${id}/`);
     }
 }

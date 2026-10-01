@@ -1,23 +1,19 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { BaseApiService } from './base-api.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class PublicationApiService {
-    private baseUrl = 'http://127.0.0.1:8000/api/publications';
-
-    constructor(private http: HttpClient) {}
+    constructor(private api: BaseApiService) {}
 
     getPublication(id: number): Observable<any> {
-        return this.http.get<any>(`${this.baseUrl}/${id}/`);
+        return this.api.get<any>(`publications/${id}/`);
     }
 
     getByForum(forumId: number): Observable<any> {
-        return this.http.get<any>(
-            `${this.baseUrl}/?forum_id=${forumId}`
-        );
+        return this.api.get<any>(`publications/?forum_id=${forumId}`);
     }
 
     createPublication(
@@ -36,15 +32,10 @@ export class PublicationApiService {
             body.forum = forumId;
         }
 
-        return this.http.post<any>(
-            `${this.baseUrl}/`,
-            body
-        );
+        return this.api.post<any>('publications/', body);
     }
 
     deletePublication(id: number): Observable<any> {
-        return this.http.delete<any>(
-            `${this.baseUrl}/${id}/`
-        );
+        return this.api.delete<any>(`publications/${id}/`);
     }
 }

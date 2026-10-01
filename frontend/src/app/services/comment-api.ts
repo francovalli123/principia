@@ -1,40 +1,29 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { BaseApiService } from './base-api.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class CommentApiService {
-    private baseUrl = 'http://127.0.0.1:8000/api/comments';
-
-    constructor(private http: HttpClient) {}
+    constructor(private api: BaseApiService) {}
 
     getComments(publicationId: number): Observable<any> {
-        return this.http.get<any>(
-            `${this.baseUrl}/?publication_id=${publicationId}`
-        );
+        return this.api.get<any>(`comments/?publication_id=${publicationId}`);
     }
 
     getComment(id: number): Observable<any> {
-        return this.http.get<any>(
-            `${this.baseUrl}/${id}/`
-        );
+        return this.api.get<any>(`comments/${id}/`);
     }
 
     createComment(publicationId: number, content: string): Observable<any> {
-        return this.http.post<any>(
-            `${this.baseUrl}/`,
-            {
-                publication: publicationId,
-                content: content
-            }
-        );
+        return this.api.post<any>('comments/', {
+            publication: publicationId,
+            content: content
+        });
     }
 
     deleteComment(id: number): Observable<any> {
-        return this.http.delete<any>(
-            `${this.baseUrl}/${id}/`
-        );
+        return this.api.delete<any>(`comments/${id}/`);
     }
 }

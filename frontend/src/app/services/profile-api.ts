@@ -1,30 +1,28 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { BaseApiService } from './base-api.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class ProfileApiService {
-    private baseUrl = 'http://127.0.0.1:8000/api/users/profile';
-
-    constructor(private http: HttpClient) {}
+    constructor(private api: BaseApiService) {}
 
     getProfile(): Observable<any> {
-        return this.http.get<any>(`${this.baseUrl}/`);
+        return this.api.get<any>('users/profile/');
     }
 
     updateProfile(data: any): Observable<any> {
-        return this.http.patch<any>(`${this.baseUrl}/`, data);
+        return this.api.patch<any>('users/profile/', data);
     }
 
     replaceProfile(data: any): Observable<any> {
-        return this.http.put<any>(`${this.baseUrl}/`, data);
+        return this.api.put<any>('users/profile/', data);
     }
 
     getSimulationsByPhenomenon(phenomenonType: string): Observable<any> {
-        return this.http.get<any>(
-            `${this.baseUrl}/?phenomenon_type=${encodeURIComponent(phenomenonType)}`
+        return this.api.get<any>(
+            `users/profile/?phenomenon_type=${encodeURIComponent(phenomenonType)}`
         );
     }
 }

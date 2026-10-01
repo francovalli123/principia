@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { WASM_REGISTRY } from '../wasmRegistry';
+import { BaseApiService } from '../../services/base-api.service';
 
 @Injectable({
     providedIn: 'root'
@@ -9,12 +9,10 @@ import { WASM_REGISTRY } from '../wasmRegistry';
 // WasmSetupService gets the simulation configuration and loads
 // the corresponding WebAssembly module.
 export class WasmSetupService {
-    constructor(private http: HttpClient) {}
-
-    configUrl = "http://127.0.0.1:8000/api/phenomenonConfig";
+    constructor(private api: BaseApiService) {}
 
     getConfig(simulationId: number): Observable<any> {
-        return this.http.get<any>(`${this.configUrl}/${simulationId}/`);
+        return this.api.get<any>(`phenomenonConfig/${simulationId}/`);
     }
 
     async setupWasmModule(obj: any): Promise<any> {

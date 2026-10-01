@@ -1,58 +1,54 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { BaseApiService } from './base-api.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class ForumApiService {
-    private baseUrl = 'http://127.0.0.1:8000/api/forums';
-
-    constructor(private http: HttpClient) {}
+    constructor(private api: BaseApiService) {}
 
     getForums(): Observable<any> {
-        return this.http.get<any>(`${this.baseUrl}/`);
+        return this.api.get<any>('forums/');
     }
 
     getForum(id: number): Observable<any> {
-        return this.http.get<any>(`${this.baseUrl}/${id}/`);
+        return this.api.get<any>(`forums/${id}/`);
     }
 
     createForum(data: any): Observable<any> {
-        return this.http.post<any>(`${this.baseUrl}/`, data);
+        return this.api.post<any>('forums/', data);
     }
 
     deleteForum(id: number): Observable<any> {
-        return this.http.delete<any>(`${this.baseUrl}/${id}/`);
+        return this.api.delete<any>(`forums/${id}/`);
     }
 
     joinForum(id: number): Observable<any> {
-        return this.http.post<any>(`${this.baseUrl}/${id}/join/`, {});
+        return this.api.post<any>(`forums/${id}/join/`, {});
     }
 
     leaveForum(id: number): Observable<any> {
-        return this.http.delete<any>(`${this.baseUrl}/${id}/leave/`);
+        return this.api.delete<any>(`forums/${id}/leave/`);
     }
 
     getMembers(id: number): Observable<any> {
-        return this.http.get<any>(`${this.baseUrl}/${id}/members/`);
+        return this.api.get<any>(`forums/${id}/members/`);
     }
 
     kickMember(id: number, userId: number): Observable<any> {
-        return this.http.delete<any>(
-            `${this.baseUrl}/${id}/members/${userId}/`
-        );
+        return this.api.delete<any>(`forums/${id}/members/${userId}/`);
     }
 
     getPublicationsByTitle(id: number, title: string): Observable<any> {
-        return this.http.get<any>(
-            `${this.baseUrl}/${id}/?publication_title=${encodeURIComponent(title)}`
+        return this.api.get<any>(
+            `forums/${id}/?publication_title=${encodeURIComponent(title)}`
         );
     }
 
     getPublicationsByPhenomenon(id: number, phenomenonType: string): Observable<any> {
-        return this.http.get<any>(
-            `${this.baseUrl}/${id}/?phenomenon_type=${encodeURIComponent(phenomenonType)}`
+        return this.api.get<any>(
+            `forums/${id}/?phenomenon_type=${encodeURIComponent(phenomenonType)}`
         );
     }
 }
