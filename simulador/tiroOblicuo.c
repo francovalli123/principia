@@ -20,12 +20,20 @@ float calculatePositionY(float y0, float v0y, float g, float t);
 /* Estado global de la simulación */
 float t = 0;
 bool pause = true;
+bool completed = false;
+float simX = 0;
+float simY = 0;
+float simInitialY = 0;
+int simStatus = 0; // 0: pausada, 1: en ejecución, 2: completada
 
 /* Funciones accesibles desde WebAssembly */
 
 EMSCRIPTEN_KEEPALIVE
 void pauseSim() {
-    pause = !pause;
+    if (!completed) {
+        pause = !pause;
+        simStatus = pause ? 0 : 1;
+    }
 }
 
 
@@ -33,6 +41,30 @@ EMSCRIPTEN_KEEPALIVE
 void resetSim() {
     t = 0;
     pause = true;
+    completed = false;
+    simX = 0;
+    simY = simInitialY;
+    simStatus = 0;
+}
+
+EMSCRIPTEN_KEEPALIVE
+float getSimTime() {
+    return t;
+}
+
+EMSCRIPTEN_KEEPALIVE
+float getSimX() {
+    return simX;
+}
+
+EMSCRIPTEN_KEEPALIVE
+float getSimY() {
+    return simY;
+}
+
+EMSCRIPTEN_KEEPALIVE
+int getSimStatus() {
+    return simStatus;
 }
 
 int main(int argc, char *argv[]) {
@@ -44,6 +76,11 @@ int main(int argc, char *argv[]) {
     float y0 = atof(argv[1]);
     float angle = atof(argv[2]) * M_PI / 180.0;
     float v0 = atof(argv[3]);
+
+    simInitialY = y0;
+
+    simX = 0;
+    simY = y0;
 
     // Para testear
     /*
@@ -94,13 +131,14 @@ int main(int argc, char *argv[]) {
 
         // PAUSE / RESUME
         if (IsKeyPressed(KEY_SPACE)) {
-            pause = !pause;
+            pauseSim();
         }
 
         // RESET
         if (IsKeyPressed(KEY_R)) {
-            t = 0;
+            resetSim();
             pause = false;
+            simStatus = 1;
         }
 
         // REWIND
@@ -119,13 +157,17 @@ int main(int argc, char *argv[]) {
 
         x = calculatePositionX(vx, t);
         y = calculatePositionY(y0, vy, G, t);
+        if (y <= 0 && t >= 0.1f) {
+            y = 0;
+            pause = true;
+            completed = true;
+            simStatus = 2;
+        }
+        simX = x;
+        simY = y;
 
         xScreen = originX + x * SCALE;
         yScreen = originY - y * SCALE;
-
-        if (yScreen >= originY - radius && t >= 0.1f) {
-            pause = true;
-        }
 
         BeginDrawing();
 

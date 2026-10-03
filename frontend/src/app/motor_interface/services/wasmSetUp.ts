@@ -1,55 +1,65 @@
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Injectable } from '@angular/core'; 
+import { Observable } from 'rxjs'; // Types the backend request as an observable
+import { BaseApiService } from '../../services/base-api.service'; 
 import { WASM_REGISTRY } from '../wasmRegistry';
-import { BaseApiService } from '../../services/base-api.service';
+import {
+    SimulationDescriptor, 
+    SimulationEngine
+} from './wasm.types'; 
+
+// Describes a successful backend configuration envelope
+interface ConfigResponse { 
+    status: 'success'; 
+    data: unknown; // Leaves phenomenon-specific validation to its adapter
+}
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root' // Shares one setup-service instance across the application (Singleton)
 })
-// WasmSetupService gets the simulation configuration and loads
-// the corresponding WebAssembly module.
-export class WasmSetupService {
-    constructor(private api: BaseApiService) {}
 
-    getConfig(simulationId: number): Observable<any> {
-        return this.api.get<any>(`phenomenonConfig/${simulationId}/`);
+// Loads configuration and delegates engine setup
+export class WasmSetupService { 
+    constructor(private readonly api: BaseApiService) {} // Injects the shared HTTP service
+
+    getConfig(simulationId: number): Observable<unknown> { // Requests one simulation's saved parameters
+        return this.api.get<unknown>(`phenomenonConfig/${simulationId}/`); // Leaves phenomenon payload validation to its adapter
     }
 
-    async setupWasmModule(obj: any): Promise<any> {
-        const phenomenonType = obj.simulation.phenomenon_type as keyof typeof WASM_REGISTRY;
-        const config = WASM_REGISTRY[phenomenonType];
+    async loadEngine(
+        simulation: SimulationDescriptor, // Provides the phenomenon used for adapter lookup
+        response: unknown 
+    ): Promise<SimulationEngine> {
+        const config = parseConfigResponse(response);
+        const adapter = Object.prototype.hasOwnProperty.call(
+            WASM_REGISTRY,
+            simulation.phenomenon_type
+        )
+            ? WASM_REGISTRY[
+                  simulation.phenomenon_type as keyof typeof WASM_REGISTRY
+              ]
+            : undefined;
 
-        if (!config) {
-            throw new Error(`Unsupported phenomenon type: ${phenomenonType}`);
+        if (!adapter) {
+            throw new Error(
+                `Unsupported phenomenon type: ${simulation.phenomenon_type}`
+            );
         }
 
-        const params = config.getParams(obj);
-        const importedModule = await config.load();
-        const createModule = importedModule.default;
-
-        const wasmModule = await createModule({
-            arguments: params
-        });
-
-        return wasmModule;
+        return adapter.load(config.data); // Lets the selected adapter validate its own parameters
     }
 }
 
-
-// This is the class responsible for communicating with the simulation.
-// For this to work, the simulation code must export the functions to WASM.
-export class SimController {
-    private wasmModule: any;
-
-    constructor(wasmModule: any) {
-        this.wasmModule = wasmModule;
+// Checks the shared backend response shape at runtime
+function parseConfigResponse(response: unknown): ConfigResponse { 
+    if (
+        typeof response !== 'object' ||
+        response === null ||
+        !('status' in response) ||
+        response.status !== 'success' ||
+        !('data' in response)
+    ) {
+        throw new Error('The simulation configuration response is invalid'); 
     }
 
-    pause(): void {
-        this.wasmModule._pauseSim();
-    }
-
-    reset(): void {
-        this.wasmModule._resetSim();
-    }
+    return { status: 'success', data: response.data }; 
 }

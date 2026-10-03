@@ -1,10 +1,8 @@
-export const WASM_REGISTRY = {
-    "Oblique Projectile Motion": {
-        load: () => import("../../wasm/obliqueProjectile/index.js"),
-        getParams: (obj: any) => [
-            obj.initial_velocity,
-            obj.angle,
-            obj.initial_height
-        ]
+import { createObliqueProjectileEngine } from './engines/oblique-projectile.engine'; 
+import { SimulationEngineAdapter } from './services/wasm.types'; 
+
+export const WASM_REGISTRY = { 
+    'Oblique Projectile Motion': {
+        load: createObliqueProjectileEngine
     }
-};
+} satisfies Record<string, SimulationEngineAdapter>;

@@ -1,1 +1,46 @@
-<p>motor-control works!</p>
+<!-- Renders the latest engine state whenever the observable emits a value. -->
+@if (state$ | async; as state) {
+  <!-- Announces updates and groups the simulation information and controls. -->
+  <section aria-live="polite" class="motor-control">
+    <h2>Estado de la simulación</h2>
+
+    <!-- Selects the template for loading, error, or valid engine states. -->
+    @switch (state.status) {
+      @case ('loading') {
+        <p role="status">Cargando motor…</p>
+      }
+      @case ('error') {
+        <p role="alert">No se pudo recibir el estado: {{ state.message }}</p>
+      }
+      <!-- Renders common state details for every successfully loaded engine. -->
+      @default {
+        <!-- Converts the shared status code into its localized display label. -->
+        <p>Estado: {{ statusLabel(state.status) }}</p>
+        <!-- Groups the dynamic result names and values semantically. -->
+        <dl>
+          <!-- Renders any number of adapter-provided metrics. -->
+          @for (metric of state.metrics; track metric.id) {
+            <!-- Displays the stable metric label. -->
+            <dt>{{ metric.label }}</dt>
+            <dd>
+              {{ metric.value | number: '1.0-2' }}{{ metric.unit ? ' ' + metric.unit : '' }}
+            </dd>
+          }
+        </dl>
+
+        <!-- Renders only the controls supported by the active engine. -->
+        @for (control of controls; track control.id) {
+          <!-- Uses each adapter's metadata to present and constrain its action. -->
+          <button
+            type="button"
+            [disabled]="control.disabledWhenCompleted && state.status === 'completed'"
+            (click)="executeControl(control.id)"
+          >
+            <!-- Updates labels according to the engine status when configured. -->
+            {{ controlLabel(control, state.status) }}
+          </button>
+        }
+      }
+    }
+  </section>
+}
