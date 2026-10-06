@@ -1,0 +1,95 @@
+<header class="topbar">
+  <a class="brand" routerLink="/" aria-label="Principia, inicio">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path d="M12 3 22 12 12 21 2 12 12 3Z" />
+      </svg>
+    </span>
+    <span>Principia</span>
+  </a>
+
+  <label class="search">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"></circle>
+      <path d="m16 16 4 4"></path>
+    </svg>
+    <input
+      type="search"
+      [(ngModel)]="searchTerm"
+      [ngModelOptions]="{ standalone: true }"
+      placeholder="Buscar en Principia"
+      aria-label="Buscar foros"
+    />
+  </label>
+
+  <button class="logout" type="button" (click)="logout()">Cerrar sesión</button>
+</header>
+
+<main class="home">
+  <section class="welcome" aria-labelledby="welcome-title">
+    <h1 id="welcome-title">¡Hola de nuevo!</h1>
+    <p>
+      Bienvenido a la comunidad académica de simulaciones de Física. Accedé a tus foros activos o
+      descubrí nuevos para seguir aprendiendo.
+    </p>
+  </section>
+
+  <section class="forum-section" aria-labelledby="my-forums-title">
+    <div class="section-heading">
+      <div class="title-group">
+        <h2 id="my-forums-title">Mis foros</h2>
+        <span class="count">{{ visibleMyForums.length }} activos</span>
+      </div>
+    </div>
+
+    <div class="forum-grid">
+      @for (forum of visibleMyForums; track forum.name) {
+        <article class="forum-card">
+          <span class="forum-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M12 3 22 12 12 21 2 12 12 3Z" />
+            </svg>
+          </span>
+          <div class="forum-info">
+            <h3>{{ forum.name }}</h3>
+            <p>
+              {{ forum.members }} miembros <span aria-hidden="true">•</span> Último post:
+              {{ forum.latestPost }}
+            </p>
+          </div>
+          @if (forum.isNew) {
+            <span class="new-badge">Nuevo</span>
+          }
+          <span class="open-mark" aria-hidden="true">›</span>
+        </article>
+      } @empty {
+        <p class="empty-state">No encontramos foros con esa búsqueda.</p>
+      }
+    </div>
+  </section>
+
+  <section class="forum-section suggested" aria-labelledby="suggested-title">
+    <div class="section-heading">
+      <h2 id="suggested-title">Descubrir foros sugeridos</h2>
+    </div>
+
+    <div class="suggested-grid">
+      @for (forum of visibleSuggestedForums; track forum.name) {
+        <article class="suggested-card">
+          <span class="forum-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M12 3 22 12 12 21 2 12 12 3Z" />
+            </svg>
+          </span>
+          <h3>{{ forum.name }}</h3>
+          <p>
+            {{ forum.members }} miembros <span aria-hidden="true">•</span> Último post:
+            {{ forum.latestPost }}
+          </p>
+        </article>
+      } @empty {
+        <p class="empty-state">No encontramos foros con esa búsqueda.</p>
+      }
+    </div>
+  </section>
+</main>

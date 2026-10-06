@@ -1,0 +1,132 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.register-page {
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+  place-items: center;
+  background: #f3f6fa;
+}
+
+.register-card {
+  width: min(100%, 480px);
+  padding: 36px 40px;
+  border: 1px solid #dce4ee;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 36px rgb(20 45 75 / 8%);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 26px;
+  color: #09629f;
+  font-size: 20px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: #09629f;
+  place-items: center;
+}
+
+.brand-mark svg {
+  width: 22px;
+  fill: #fff;
+}
+
+h1 {
+  margin: 0;
+  color: #121a2c;
+  font-size: 28px;
+}
+
+.intro {
+  margin: 10px 0 20px;
+  color: #52627a;
+  line-height: 1.5;
+}
+
+form {
+  display: grid;
+  gap: 9px;
+}
+
+label {
+  margin-top: 6px;
+  color: #26354c;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #d5deea;
+  border-radius: 9px;
+  color: #121a2c;
+  font: inherit;
+}
+
+input:focus {
+  border-color: #09629f;
+  outline: 3px solid rgb(9 98 159 / 14%);
+}
+
+.field-hint {
+  margin: -3px 0 0;
+  color: #61738e;
+  font-size: 12px;
+}
+
+button {
+  min-height: 48px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 9px;
+  background: #09629f;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.error-message {
+  margin: 5px 0 0;
+  color: #b42318;
+  font-size: 14px;
+}
+
+.login-link {
+  margin: 20px 0 0;
+  color: #52627a;
+  font-size: 14px;
+  text-align: center;
+}
+
+.login-link a {
+  color: #09629f;
+  font-weight: 650;
+}
+
+@media (max-width: 480px) {
+  .register-card {
+    padding: 28px 22px;
+  }
+}

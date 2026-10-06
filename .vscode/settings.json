@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "D:/Desarrollo de software/principia/tools/raylib"
+    "cmake.sourceDirectory": "D:/Desarrollo de software/principia/tools/raylib",
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }

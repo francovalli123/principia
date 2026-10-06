@@ -1,0 +1,238 @@
+<div class="landing">
+  <header class="topbar">
+    <a class="brand" routerLink="/" aria-label="Principia, inicio">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M12 3 22 12 12 21 2 12 12 3Z" />
+        </svg>
+      </span>
+      <span>Principia</span>
+    </a>
+
+    <nav aria-label="Navegación principal">
+      <a href="#beneficios">Beneficios</a>
+      <a href="#comunidad">La experiencia</a>
+      <a href="#preguntas">Preguntas</a>
+    </nav>
+
+    <a class="button button-small button-primary" routerLink="/registro">Empezar gratis</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <span class="eyebrow"
+          ><span class="eyebrow-dot"></span> Física para explorar, no solo memorizar</span
+        >
+        <h1>
+          Entendé la física.<br />
+          <span>Explorá lo posible.</span>
+        </h1>
+        <p class="hero-copy">
+          Convertí conceptos en experiencias: experimentá con simulaciones y aprendé junto a una
+          comunidad que comparte tu curiosidad.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-primary" routerLink="/registro"
+            >Crear cuenta gratis <span aria-hidden="true">↗</span></a
+          >
+          <a class="button button-outline" routerLink="/login">Iniciar sesión</a>
+        </div>
+        <p class="hero-note">Un espacio para aprender, experimentar y compartir.</p>
+      </div>
+
+      <div class="visual" role="group" aria-label="Ilustración de una trayectoria parabólica">
+        <div class="visual-label label-top">Movimiento de un proyectil</div>
+        <svg
+          class="trajectory"
+          viewBox="0 0 520 330"
+          role="img"
+          aria-label="Trayectoria parabólica con ejes x e y, punto de altura máxima y vector de velocidad inicial"
+        >
+          <defs>
+            <linearGradient id="trajectory-gradient" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stop-color="#45a4d5" />
+              <stop offset="1" stop-color="#09629f" />
+            </linearGradient>
+            <marker
+              id="axis-arrowhead"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto"
+            >
+              <path d="M0 0 10 5 0 10Z" fill="#8292a7" />
+            </marker>
+            <marker
+              id="vector-arrowhead"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="7"
+              markerHeight="7"
+              orient="auto"
+            >
+              <path d="M0 0 10 5 0 10Z" fill="#09629f" />
+            </marker>
+          </defs>
+          <line
+            class="trajectory-axis"
+            x1="58"
+            y1="260"
+            x2="480"
+            y2="260"
+            marker-end="url(#axis-arrowhead)"
+          />
+          <line
+            class="trajectory-axis"
+            x1="58"
+            y1="260"
+            x2="58"
+            y2="38"
+            marker-end="url(#axis-arrowhead)"
+          />
+          <path class="trajectory-path" d="M58 260 Q260 -100 462 260" />
+          <line
+            class="vector"
+            x1="58"
+            y1="260"
+            x2="112"
+            y2="164"
+            marker-end="url(#vector-arrowhead)"
+          />
+          <circle class="trajectory-point" cx="58" cy="260" r="7" />
+          <circle class="trajectory-point point-peak" cx="260" cy="80" r="6" />
+          <circle class="trajectory-point point-end" cx="462" cy="260" r="7" />
+          <text class="trajectory-label axis-label" x="484" y="266">x (m)</text>
+          <text class="trajectory-label axis-label" transform="rotate(-90 23 153)" x="23" y="153">
+            y (m)
+          </text>
+          <text class="trajectory-label" x="75" y="202">v₀</text>
+          <text class="trajectory-label" x="276" y="62">h máx.</text>
+        </svg>
+        <div class="visual-caption">
+          <span class="caption-icon">↗</span>
+          <span
+            ><strong>Probá, observá, comprendé.</strong><br />La física cobra sentido cuando la
+            ponés en movimiento.</span
+          >
+        </div>
+      </div>
+    </section>
+
+    <section class="benefits section-wrap" id="beneficios">
+      <div class="section-intro">
+        <span class="eyebrow">Aprender haciendo</span>
+        <h2>La curiosidad es el<br /><span>mejor punto de partida.</span></h2>
+        <p>
+          Principia une herramientas y personas para que puedas aprender física de una forma más
+          activa.
+        </p>
+      </div>
+
+      <div class="benefit-grid">
+        <article class="benefit-card">
+          <span class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M13 2 3 14h8l-1 8 11-12h-8l1-8Z" />
+            </svg>
+          </span>
+          <span class="card-number">01</span>
+          <h3>Experimentá con simulaciones</h3>
+          <p>
+            Explorá fenómenos físicos, cambiá condiciones iniciales y observá cómo evoluciona cada
+            sistema.
+          </p>
+          <span class="card-arrow" aria-hidden="true">↗</span>
+        </article>
+        <article class="benefit-card">
+          <span class="card-icon icon-blue" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path
+                d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m12-13a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm6 13v-2a4 4 0 0 0-3-3.87m1-11.13a4 4 0 0 1 0 7.75"
+              />
+            </svg>
+          </span>
+          <span class="card-number">02</span>
+          <h3>Aprendé en comunidad</h3>
+          <p>
+            Encontrá espacios de intercambio para conversar, preguntar y construir conocimiento en
+            conjunto.
+          </p>
+          <span class="card-arrow" aria-hidden="true">↗</span>
+        </article>
+        <article class="benefit-card">
+          <span class="card-icon icon-pink" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="m12 3.5 2.2 6.3 6.3 2.2-6.3 2.2-2.2 6.3-2.2-6.3L3.5 12l6.3-2.2L12 3.5Z" />
+              <path d="M19 3v4m2-2h-4" />
+            </svg>
+          </span>
+          <span class="card-number">03</span>
+          <h3>Compartí tus ideas</h3>
+          <p>
+            Publicá tus simulaciones y explicaciones para que otras personas puedan descubrirlas y
+            aprender.
+          </p>
+          <span class="card-arrow" aria-hidden="true">↗</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="community" id="comunidad">
+      <div class="community-copy">
+        <span class="eyebrow">Una nueva forma de aprender</span>
+        <h2>No te quedes con la fórmula.<br /><span>Descubrí qué hay detrás.</span></h2>
+        <p>
+          En Principia, la física se convierte en algo que podés probar. Unite a foros, explorá simulaciones,
+          conectá tus ideas con las de otras personas y seguí aprendiendo a tu ritmo.
+        </p>
+        <a class="text-link" href="#beneficios"
+          >Descubrí cómo funciona <span aria-hidden="true">→</span></a
+        >
+      </div>
+    </section>
+
+    <section class="faq section-wrap" id="preguntas">
+      <div class="faq-intro">
+        <span class="eyebrow">¿Tenés dudas?</span>
+        <h2>Un buen comienzo<br /><span>empieza con una pregunta.</span></h2>
+      </div>
+      <div class="faq-list">
+        <details>
+          <summary>¿Qué es Principia?</summary>
+          <p>
+            Principia es una plataforma educativa interactiva diseñada para la enseñanza y el aprendizaje de la Física. Permite a estudiantes y docentes crear, ejecutar y compartir simulaciones físicas mediante un entorno intuitivo basado en formularios parametrizados, eliminando la necesidad de conocimientos de programación.
+          </p>
+        </details>
+        <details>
+          <summary>¿Cómo puedo unirme?</summary>
+          <p>Creá una cuenta gratis para acceder a la comunidad y comenzar a explorar Principia.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <span class="eyebrow">Tu próxima idea empieza acá</span>
+      <h2>La física está llena de preguntas.<br /><span>Vamos a explorarlas.</span></h2>
+      <a class="button button-primary" routerLink="/registro"
+        >Empezar gratis <span aria-hidden="true">↗</span></a
+      >
+    </section>
+  </main>
+
+  <footer class="footer">
+    <a class="brand" routerLink="/" aria-label="Principia, inicio">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M12 3 22 12 12 21 2 12 12 3Z" />
+        </svg>
+      </span>
+      <span>Principia</span>
+    </a>
+    <p>Aprender física, explorando.</p>
+    <a routerLink="/login">Iniciar sesión</a>
+  </footer>
+</div>

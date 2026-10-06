@@ -1,10 +1,29 @@
 from django.db import IntegrityError, connection, transaction
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.users.models import User
 from apps.users.security import hash_lookup_value
+
+
+class CorsPreflightTests(TestCase):
+    @override_settings(CORS_ALLOWED_ORIGINS=["http://localhost:4200"])
+    def test_login_preflight_allows_local_frontend_origin(self):
+        response = self.client.options(
+            "/api/login/",
+            HTTP_ORIGIN="http://localhost:4200",
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD="POST",
+            HTTP_ACCESS_CONTROL_REQUEST_HEADERS="content-type",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response["Access-Control-Allow-Origin"],
+            "http://localhost:4200",
+        )
+        self.assertIn("POST", response["Access-Control-Allow-Methods"])
+        self.assertIn("content-type", response["Access-Control-Allow-Headers"])
 
 
 class SensitiveDataSecurityTests(TestCase):
