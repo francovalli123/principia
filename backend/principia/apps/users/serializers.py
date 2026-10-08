@@ -78,6 +78,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         validators=[validate_password]
     )
     username = serializers.CharField(max_length = 150)
+    first_name = serializers.CharField(max_length = 150)
+    last_name = serializers.CharField(max_length = 150)
     email = serializers.EmailField(
         # Mensajes de error
         error_messages = {
@@ -91,7 +93,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         # Indica que este serializer trabaja con el modelo User.
         model = User
         # Expone únicamente los datos necesarios para registrar una cuenta.
-        fields = ("username", "email", "password")
+        fields = ("username", "first_name", "last_name", "email", "password")
 
     def validate_email(self, value):
         # Como el email está cifrado, se calcula el mismo HMAC y se compara con email_lookup_hash
