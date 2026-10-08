@@ -2,10 +2,9 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import type { Forum } from '../../../models/forum';
 
-interface ForumCard {
-  name: string;
-  members: string;
+interface ForumCard extends Pick<Forum, 'name' | 'member_count'> {
   latestPost: string;
   isNew?: boolean;
 }
@@ -22,24 +21,24 @@ export class PrincipiaHome {
   readonly myForums: ForumCard[] = [
     {
       name: 'Física 2 - Simulaciones',
-      members: '1,120',
+      member_count: 1120,
       latestPost: 'Prof. Lucía Torres',
       isNew: true,
     },
-    { name: 'MRUV y Caída Libre', members: '960', latestPost: 'Mateo Sosa' },
+    { name: 'MRUV y Caída Libre', member_count: 960, latestPost: 'Mateo Sosa' },
     {
       name: 'Dinámica y Leyes de Newton',
-      members: '1,150',
+      member_count: 1150,
       latestPost: 'Dr. Eliana Varela',
       isNew: true,
     },
-    { name: 'Torque y Momento de Fuerza', members: '820', latestPost: 'Valentina Pérez' },
+    { name: 'Torque y Momento de Fuerza', member_count: 820, latestPost: 'Valentina Pérez' },
   ];
 
   readonly suggestedForums: ForumCard[] = [
-    { name: 'Electromagnetismo', members: '740', latestPost: 'Santiago Díaz' },
-    { name: 'Óptica y Ondas', members: '685', latestPost: 'Camila Romero' },
-    { name: 'Termodinámica', members: '530', latestPost: 'Julieta Silva' },
+    { name: 'Electromagnetismo', member_count: 740, latestPost: 'Santiago Díaz' },
+    { name: 'Óptica y Ondas', member_count: 685, latestPost: 'Camila Romero' },
+    { name: 'Termodinámica', member_count: 530, latestPost: 'Julieta Silva' },
   ];
 
   constructor(

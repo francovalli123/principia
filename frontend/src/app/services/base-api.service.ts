@@ -7,12 +7,12 @@ import { Observable } from 'rxjs';
 // Defines an optional structure for requests
 export interface ApiRequestOptions {
     // It allows you send customized headers or query params in the urls whenever you need it
-    headers?: HttpHeaders;  
+    headers?: HttpHeaders;
     params?: HttpParams;
 }
 
 @Injectable({
-    // It registers the service with the root injector making this service a singleton 
+    // It registers the service with the root injector making this service a singleton
     providedIn: 'root'
 })
 
@@ -21,7 +21,7 @@ export class BaseApiService {
 
     // Injects Angular's native HttpClient module, which is responsible for making requests to the server
     constructor(private readonly http: HttpClient) {}
-    
+
     // Joins the base URL with the specific path you pass to it (e.g. users)
     getUrl(path: string): string {
         return `${this.baseUrl}/${path.replace(/^\/+/, '')}`;   // Removes duplicate slash if any (e.g. ./api//users)

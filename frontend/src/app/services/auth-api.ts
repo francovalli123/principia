@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BaseApiService } from './base-api.service';
+import type { User } from '../../models/user';
 //Communicates with the backend API for authentication-related operations
 
 export interface LoginResponse {
@@ -9,10 +10,7 @@ export interface LoginResponse {
   refresh: string;
 }
 
-export interface SignupResponse {
-  username: string;
-  email: string;
-}
+export type SignupResponse = Pick<User, 'username' | 'email'>;
 
 @Injectable({
   providedIn: 'root',

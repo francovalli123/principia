@@ -1,8 +1,7 @@
+import type { Simulation } from '../../../models/simulation';
+
 // Identifies the saved simulation selected by the UI
-export interface SimulationDescriptor { 
-    id: number; 
-    phenomenon_type: string; 
-}
+export type SimulationDescriptor = Pick<Simulation, 'id' | 'phenomenon_type'>;
 
 export type EngineStatus = 'paused' | 'running' | 'completed'; 
 
