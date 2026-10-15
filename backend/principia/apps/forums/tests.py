@@ -28,6 +28,16 @@ class ForumMembersTests(APITestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data["data"]), 2)
 
+	def test_owner_can_list_forums_without_membership_row(self):
+		legacy_forum = Forum.objects.create(name="Legacy forum", owner=self.owner)
+		self.client.force_authenticate(user=self.owner)
+
+		response = self.client.get("/api/forums/mine/")
+
+		self.assertEqual(response.status_code, 200)
+		forum_ids = [forum["id"] for forum in response.data["data"]["results"]]
+		self.assertIn(legacy_forum.id, forum_ids)
+
 	def test_only_owner_can_expel_member(self):
 		self.client.force_authenticate(user=self.member)
 

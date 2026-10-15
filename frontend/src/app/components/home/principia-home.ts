@@ -3,9 +3,10 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import type { Forum } from '../../../models/forum';
+import { ForumApiService } from '../../services/forum-api';
 
 interface ForumCard extends Pick<Forum, 'name' | 'member_count'> {
-  latestPost: string;
+  latestPost?: string;
   isNew?: boolean;
 }
 
@@ -18,22 +19,18 @@ interface ForumCard extends Pick<Forum, 'name' | 'member_count'> {
 export class PrincipiaHome {
   searchTerm = '';
 
-  readonly myForums: ForumCard[] = [
-    {
-      name: 'Física 2 - Simulaciones',
-      member_count: 1120,
-      latestPost: 'Prof. Lucía Torres',
-      isNew: true,
+  myForums: ForumCard[] = [];
+  ngOnInit(): void {
+     this.forumApi.getMyForums().subscribe({
+    next: (forums) => {
+      this.myForums = forums;
     },
-    { name: 'MRUV y Caída Libre', member_count: 960, latestPost: 'Mateo Sosa' },
-    {
-      name: 'Dinámica y Leyes de Newton',
-      member_count: 1150,
-      latestPost: 'Dr. Eliana Varela',
-      isNew: true,
-    },
-    { name: 'Torque y Momento de Fuerza', member_count: 820, latestPost: 'Valentina Pérez' },
-  ];
+    error: (error) => {
+      console.error('Error loading forums', error);
+    }
+  });
+    
+  }
 
   readonly suggestedForums: ForumCard[] = [
     { name: 'Electromagnetismo', member_count: 740, latestPost: 'Santiago Díaz' },
@@ -44,6 +41,7 @@ export class PrincipiaHome {
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router,
+    private readonly forumApi: ForumApiService
   ) {}
 
   get visibleMyForums(): ForumCard[] {

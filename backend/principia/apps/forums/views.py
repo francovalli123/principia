@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.db.models import Q
 
 from rest_framework.views import APIView 
 from rest_framework import status
@@ -108,6 +109,18 @@ class ForumView(PaginatedAPIView):
             status=status.HTTP_204_NO_CONTENT
         )
 
+class MyForumsView(PaginatedAPIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+        forums = Forum.objects.filter(
+            Q(members=request.user) | Q(owner=request.user)
+        ).distinct().order_by("id")
+        page = self.paginate_queryset(forums, request)
+        serializer = ForumSerializer(page if page is not None else forums, many=True)
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
+        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+    
 class JoinForumView(APIView):
     #Only authenticated users can join forums
     permission_classes = [IsAuthenticated]

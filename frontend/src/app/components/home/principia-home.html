@@ -53,8 +53,10 @@
           <div class="forum-info">
             <h3>{{ forum.name }}</h3>
             <p>
-              {{ forum.member_count }} miembros <span aria-hidden="true">•</span> Último post:
-              {{ forum.latestPost }}
+              {{ forum.member_count }} miembros
+              @if (forum.latestPost) {
+                <span aria-hidden="true">•</span> Último post: {{ forum.latestPost }}
+              }
             </p>
           </div>
           @if (forum.isNew) {
@@ -83,8 +85,10 @@
           </span>
           <h3>{{ forum.name }}</h3>
           <p>
-            {{ forum.member_count }} miembros <span aria-hidden="true">•</span> Último post:
-            {{ forum.latestPost }}
+            {{ forum.member_count }} miembros
+            @if (forum.latestPost) {
+              <span aria-hidden="true">•</span> Último post: {{ forum.latestPost }}
+            }
           </p>
         </article>
       } @empty {

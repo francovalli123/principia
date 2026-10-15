@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { Forum } from '../../models/forum';
 import { BaseApiService } from './base-api.service';
 
 @Injectable({
@@ -11,9 +12,11 @@ export class ForumApiService {
     getForums(): Observable<any> {
         return this.api.get<any>('forums/');
     }
-
-    getForum(id: number): Observable<any> {
-        return this.api.get<any>(`forums/${id}/`);
+    getMyForums(): Observable<Forum[]> {
+        return this.api.get<Forum[]>('forums/mine/');
+    }
+    getForum(id: number): Observable<Forum> {
+        return this.api.get<Forum>(`forums/${id}/`);
     }
 
     createForum(data: any): Observable<any> {
