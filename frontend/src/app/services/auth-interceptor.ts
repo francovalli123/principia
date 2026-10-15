@@ -11,6 +11,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     const authService = inject(AuthService);
     const authApi = inject(AuthApiService);
 
+    // Public auth endpoints must not trigger token renewal. In particular, a
+    // stale refresh token in localStorage must not turn a signup 401 into a
+    // refresh request (or cause refresh to intercept itself).
+    const url = new URL(req.url, globalThis.location?.origin ?? 'http://localhost');
+    const isPublicAuthRequest = /\/api\/(signup|login|token\/refresh)\/?$/.test(url.pathname);
+
+    if (isPublicAuthRequest) {
+        return next(req);
+    }
+
     const access = authService.getAccessToken();
 
     if (access) {

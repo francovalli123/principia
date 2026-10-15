@@ -24,6 +24,8 @@ describe('RegisterPage', () => {
     authApi.signup.mockReturnValue(of({ username: 'carla', email: 'carla@example.com' }));
     const component = TestBed.createComponent(RegisterPage).componentInstance;
     component.form.setValue({
+      first_name: 'Carla',
+      last_name: 'Pérez',
       username: 'carla',
       email: 'carla@example.com',
       password: 'Physics2026!',
@@ -32,7 +34,9 @@ describe('RegisterPage', () => {
 
     component.submit();
 
-    expect(authApi.signup).toHaveBeenCalledWith('carla', 'carla@example.com', 'Physics2026!');
+    expect(authApi.signup).toHaveBeenCalledWith(
+      'Carla', 'Pérez', 'carla', 'carla@example.com', 'Physics2026!',
+    );
     expect(router.navigate).toHaveBeenCalledWith(['/login'], {
       queryParams: { registered: '1' },
     });
@@ -41,6 +45,8 @@ describe('RegisterPage', () => {
   it('does not send a registration if passwords do not match', () => {
     const component = TestBed.createComponent(RegisterPage).componentInstance;
     component.form.setValue({
+      first_name: 'Carla',
+      last_name: 'Pérez',
       username: 'carla',
       email: 'carla@example.com',
       password: 'Physics2026!',
@@ -70,6 +76,8 @@ describe('RegisterPage', () => {
     );
     const component = TestBed.createComponent(RegisterPage).componentInstance;
     component.form.setValue({
+      first_name: 'Carla',
+      last_name: 'Pérez',
       username: 'carla',
       email: 'carla@example.com',
       password: 'Physics2026!',

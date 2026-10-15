@@ -13,6 +13,14 @@ import { AuthApiService } from '../../services/auth-api';
 })
 export class RegisterPage {
   readonly form = new FormGroup({
+    first_name: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(150)],
+    }),
+    last_name: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(150)],
+    }),
     username: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(150)],
@@ -45,7 +53,7 @@ export class RegisterPage {
       return;
     }
 
-    const { username, email, password, passwordConfirmation } = this.form.getRawValue();
+    const { first_name, last_name, username, email, password, passwordConfirmation } = this.form.getRawValue();
     if (password !== passwordConfirmation) {
       this.errorMessage = 'Las contraseñas no coinciden.';
       return;
@@ -54,7 +62,7 @@ export class RegisterPage {
     this.errorMessage = '';
     this.submitting = true;
     this.authApi
-      .signup(username, email, password)
+      .signup(first_name, last_name, username, email, password)
       .pipe(finalize(() => (this.submitting = false)))
       .subscribe({
         next: () => {

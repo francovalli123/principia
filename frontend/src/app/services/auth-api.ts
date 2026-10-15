@@ -28,8 +28,16 @@ export class AuthApiService {
     });
   }
 
-  signup(username: string, email: string, password: string): Observable<SignupResponse> {
+  signup(
+    first_name: string,
+    last_name: string,
+    username: string,
+    email: string,
+    password: string,
+  ): Observable<SignupResponse> {
     return this.http.post<SignupResponse>(this.api.getUrl('signup/'), {
+      first_name,
+      last_name,
       username,
       email,
       password,

@@ -78,8 +78,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         validators=[validate_password]
     )
     username = serializers.CharField(max_length = 150)
-    first_name = serializers.CharField(max_length = 150)
-    last_name = serializers.CharField(max_length = 150)
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
     email = serializers.EmailField(
         # Mensajes de error
         error_messages = {
