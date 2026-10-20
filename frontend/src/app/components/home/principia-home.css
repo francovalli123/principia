@@ -30,8 +30,7 @@
   text-decoration: none;
 }
 
-.brand-mark,
-.forum-mark {
+.brand-mark {
   display: grid;
   flex: 0 0 auto;
   place-items: center;
@@ -166,102 +165,12 @@ p {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.forum-card,
-.suggested-card {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 16px;
-  padding: 18px;
-  border: 1px solid #dce4ee;
-  border-radius: 13px;
-  background: #fff;
-  box-shadow: 0 3px 10px rgb(20 45 75 / 3%);
-}
-
-.forum-mark {
-  width: 48px;
-  height: 48px;
-  border-radius: 13px;
-  background: #edf2f7;
-}
-
-.forum-mark svg {
-  width: 24px;
-  fill: #09629f;
-}
-
-.forum-info {
-  min-width: 0;
-  flex: 1;
-}
-
-.forum-info h3,
-.suggested-card h3 {
-  overflow: hidden;
-  color: #172137;
-  font-size: 16px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.forum-info p,
-.suggested-card p {
-  overflow: hidden;
-  margin-top: 5px;
-  color: #61738e;
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.forum-info p span,
-.suggested-card p span {
-  padding: 0 8px;
-}
-
-.new-badge {
-  padding: 3px 9px;
-  border-radius: 12px;
-  background: #f04444;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.open-mark {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  flex: 0 0 auto;
-  border-radius: 9px;
-  background: #f3f6fa;
-  color: #52627a;
-  font-size: 24px;
-  line-height: 1;
-  place-items: center;
-}
-
 .suggested {
   margin-top: 42px;
 }
 
 .suggested-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.suggested-card {
-  min-height: 104px;
-  flex-wrap: wrap;
-}
-
-.suggested-card h3 {
-  flex: 1;
-}
-
-.suggested-card p {
-  width: 100%;
-  padding-left: 64px;
 }
 
 .empty-state {
@@ -303,13 +212,3 @@ p {
   }
 }
 
-@media (max-width: 420px) {
-  .forum-card {
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .new-badge {
-    display: none;
-  }
-}

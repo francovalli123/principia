@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseApiService } from './base-api.service';
+import { User } from '../../models/user';
 
 @Injectable({
     providedIn: 'root'
@@ -8,16 +9,16 @@ import { BaseApiService } from './base-api.service';
 export class UserApiService {
     constructor(private api: BaseApiService) {}
 
-    getCurrentUser(): Observable<any> {
-        return this.api.get<any>('users/');
+    getCurrentUser(): Observable<User> {
+        return this.api.get<User>('users/');
     }
 
-    getUser(id: number): Observable<any> {
-        return this.api.get<any>(`users/${id}/`);
+    getUser(id: number): Observable<User> {
+        return this.api.get<User>(`users/${id}/`);
     }
 
-    updateUser(id: number, data: any): Observable<any> {
-        return this.api.patch<any>(`users/${id}/`, data);
+    updateUser(id: number, data: any): Observable<User> {
+        return this.api.patch<User>(`users/${id}/`, data);
     }
 
     deleteUser(id: number): Observable<any> {
