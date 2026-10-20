@@ -84,6 +84,17 @@ class UserView(PaginatedAPIView):
         result.delete()
         return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_204_NO_CONTENT)
 
+
+class CurrentUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(
+            {"status": "success", "data": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+
 class RegisterView(CreateAPIView):
     permission_classes = [AllowAny]
     #Indicates the serializer that validates and creates new accounts

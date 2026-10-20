@@ -14,6 +14,11 @@ interface PaginatedResponse<Forum> {
     };
 }
 
+export interface ForumResponse {
+    status: string;
+    data: Forum;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -34,8 +39,8 @@ export class ForumApiService {
         return this.api.get<Forum>(`forums/${id}/`);
     }
 
-    createForum(data: any): Observable<Forum> {
-        return this.api.post<Forum>('forums/', data);
+    createForum(data: Pick<Forum, 'name' | 'description'>): Observable<ForumResponse> {
+        return this.api.post<ForumResponse>('forums/', data);
     }
 
     deleteForum(id: number): Observable<Forum> {

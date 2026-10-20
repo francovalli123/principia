@@ -120,6 +120,10 @@ p {
   letter-spacing: -0.04em;
 }
 
+.first-name {
+  color: #09629f;
+}
+
 .welcome p {
   color: #465873;
   line-height: 1.6;
@@ -144,6 +148,41 @@ p {
 .section-heading h2 {
   font-size: 22px;
   letter-spacing: -0.03em;
+}
+
+.create-forum-link {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 16px;
+  border-radius: 22px;
+  background: #09629f;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+
+.create-forum-link:hover {
+  background: #074f81;
+}
+
+.create-forum-link:focus-visible {
+  outline: 3px solid rgb(9 98 159 / 28%);
+  outline-offset: 3px;
+}
+
+.create-forum-link svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.3;
 }
 
 .count {
@@ -180,6 +219,12 @@ p {
   text-align: center;
 }
 
+.empty-state h3 {
+  margin-bottom: 8px;
+  color: #172137;
+  font-size: 17px;
+}
+
 @media (max-width: 760px) {
   .topbar {
     grid-template-columns: auto 1fr;
@@ -209,6 +254,14 @@ p {
   .forum-grid,
   .suggested-grid {
     grid-template-columns: 1fr;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+  }
+
+  .create-forum-link {
+    flex: 0 0 auto;
   }
 }
 

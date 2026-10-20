@@ -12,6 +12,7 @@ class ForumSerializer(serializers.ModelSerializer):
         fields = [
             "id", 
             "name",
+            "description",
             "creation_date",
             "owner",
             "member_count",

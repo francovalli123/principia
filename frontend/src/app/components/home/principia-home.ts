@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { ForumApiService } from '../../services/forum-api';
+import { UserApiService } from '../../services/user-api';
 import { ForumCardComponent, type ForumCardData } from '../forum-card/forum-card';
 
 @Component({
@@ -13,6 +14,7 @@ import { ForumCardComponent, type ForumCardData } from '../forum-card/forum-card
 })
 export class PrincipiaHome {
   searchTerm = '';
+  firstName = '';
   //Signal is a reactive primitive in Angular
   // that allows you to create reactive state variables. It enables components
   //  to automatically update when the value of the signal changes, allowing in this case
@@ -20,6 +22,15 @@ export class PrincipiaHome {
   //  the myForums signal is updated with the new data.
   myForums = signal<ForumCardData[]>([]);
   ngOnInit(): void {
+    this.userApi.getCurrentUser().subscribe({
+      next: (user) => {
+        this.firstName = typeof user?.first_name === 'string' ? user.first_name.trim() : '';
+      },
+      error: (error) => {
+        console.error('Error loading current user', error);
+      },
+    });
+
      this.forumApi.getMyForums().subscribe({
     next: (forums) => {
       // console.log('FOROS RECIBIDOS:', forums);
@@ -42,7 +53,8 @@ export class PrincipiaHome {
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router,
-    private readonly forumApi: ForumApiService
+    private readonly forumApi: ForumApiService,
+    private readonly userApi: UserApiService,
   ) {}
 
   get visibleMyForums(): ForumCardData[] {
