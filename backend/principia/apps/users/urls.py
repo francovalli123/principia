@@ -5,10 +5,12 @@ from .views import (
     LogoutView,
     ProfileView,
     UserView,
+    CurrentUserView,
     LoginView
 )
 
 urlpatterns = [
+    path("users/me/", CurrentUserView.as_view()),
     path("users/", UserView.as_view()),
     path("users/<int:id>/", UserView.as_view()),
     path("users/profile/", ProfileView.as_view()),

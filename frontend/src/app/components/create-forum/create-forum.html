@@ -1,0 +1,75 @@
+<div class="create-forum-page">
+  <header class="topbar">
+    <a class="brand" routerLink="/inicio" aria-label="Principia, volver al inicio">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M12 3 22 12 12 21 2 12 12 3Z" />
+        </svg>
+      </span>
+      <span>Principia</span>
+    </a>
+    <div class="search-placeholder" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="m16 16 4 4"></path>
+      </svg>
+      <span>Buscar en Principia</span>
+    </div>
+    <span class="topbar-spacer" aria-hidden="true"></span>
+  </header>
+
+  <main class="content">
+    <a class="back-link" routerLink="/inicio">
+      <span aria-hidden="true">←</span>
+      Volver a Mis foros
+    </a>
+
+    <section class="intro" aria-labelledby="page-title">
+      <h1 id="page-title">Crear nuevo foro</h1>
+      <p>Ingresá el nombre para crear tu foro</p>
+    </section>
+
+    <form class="forum-form" (ngSubmit)="submit()" #forumForm="ngForm">
+      <div class="field">
+        <label for="forum-name">Nombre del foro</label>
+        <input
+          id="forum-name"
+          name="name"
+          type="text"
+          [(ngModel)]="name"
+          #forumName="ngModel"
+          placeholder="Ej: Física II - Comisión 4"
+          maxlength="255"
+          required
+          autocomplete="off"
+        />
+        @if (forumName.invalid && forumName.touched) {
+          <span class="field-error">Ingresá un nombre para el foro.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="forum-description">Descripción</label>
+        <textarea
+          id="forum-description"
+          name="description"
+          [(ngModel)]="description"
+          placeholder="Describe brevemente el propósito del foro..."
+          maxlength="2000"
+          rows="5"
+        ></textarea>
+      </div>
+
+      @if (errorMessage) {
+        <p class="form-error" role="alert">{{ errorMessage }}</p>
+      }
+
+      <div class="actions">
+        <a class="button button-cancel" routerLink="/inicio">Cancelar</a>
+        <button class="button button-submit" type="submit" [disabled]="forumForm.invalid || isSubmitting">
+          {{ isSubmitting ? 'Creando…' : 'Crear foro' }}
+        </button>
+      </div>
+    </form>
+  </main>
+</div>

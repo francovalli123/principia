@@ -120,6 +120,26 @@ class MyForumsView(PaginatedAPIView):
         if page is not None:
             return self.get_paginated_response(serializer.data)
         return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+
+
+class SuggestedForumsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        available_forums = Forum.objects.exclude(members=request.user).exclude(owner=request.user)
+        suggested_forums = available_forums.order_by("?")[:3]
+        serializer = ForumSerializer(suggested_forums, many=True)
+
+        return Response(
+            {
+                "status": "success",
+                "data": {
+                    "results": serializer.data,
+                    "total_other_forums": Forum.objects.exclude(owner=request.user).count(),
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
     
 class JoinForumView(APIView):
     #Only authenticated users can join forums

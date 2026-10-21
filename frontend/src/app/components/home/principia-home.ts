@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { ForumApiService } from '../../services/forum-api';
+import { UserApiService } from '../../services/user-api';
 import { ForumCardComponent, type ForumCardData } from '../forum-card/forum-card';
 
 @Component({
@@ -13,13 +14,40 @@ import { ForumCardComponent, type ForumCardData } from '../forum-card/forum-card
 })
 export class PrincipiaHome {
   searchTerm = '';
+  firstName = '';
   //Signal is a reactive primitive in Angular
   // that allows you to create reactive state variables. It enables components
   //  to automatically update when the value of the signal changes, allowing in this case
   //  to automatically update the list of my forums, when the get request is completed and 
   //  the myForums signal is updated with the new data.
   myForums = signal<ForumCardData[]>([]);
+  suggestedForums = signal<ForumCardData[]>([]);
+  totalOtherForums = signal(0);
+  suggestedForumsLoading = signal(true);
+  suggestedForumsError = signal(false);
   ngOnInit(): void {
+    this.userApi.getCurrentUser().subscribe({
+      next: (user) => {
+        this.firstName = typeof user?.first_name === 'string' ? user.first_name.trim() : '';
+      },
+      error: (error) => {
+        console.error('Error loading current user', error);
+      },
+    });
+
+    this.forumApi.getSuggestedForums().subscribe({
+      next: (response) => {
+        this.suggestedForums.set(response.data.results);
+        this.totalOtherForums.set(response.data.total_other_forums);
+        this.suggestedForumsLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading suggested forums', error);
+        this.suggestedForumsError.set(true);
+        this.suggestedForumsLoading.set(false);
+      },
+    });
+
      this.forumApi.getMyForums().subscribe({
     next: (forums) => {
       // console.log('FOROS RECIBIDOS:', forums);
@@ -33,16 +61,11 @@ export class PrincipiaHome {
     
   }
 
-  readonly suggestedForums: ForumCardData[] = [
-    { name: 'Electromagnetismo', member_count: 740, latestPost: 'Santiago Díaz' },
-    { name: 'Óptica y Ondas', member_count: 685, latestPost: 'Camila Romero' },
-    { name: 'Termodinámica', member_count: 530, latestPost: 'Julieta Silva' },
-  ];
-
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router,
-    private readonly forumApi: ForumApiService
+    private readonly forumApi: ForumApiService,
+    private readonly userApi: UserApiService,
   ) {}
 
   get visibleMyForums(): ForumCardData[] {
@@ -50,7 +73,7 @@ export class PrincipiaHome {
   }
 
   get visibleSuggestedForums(): ForumCardData[] {
-    return this.filterForums(this.suggestedForums);
+    return this.filterForums(this.suggestedForums());
   }
 
   logout(): void {

@@ -27,7 +27,7 @@
 
 <main class="home">
   <section class="welcome" aria-labelledby="welcome-title">
-    <h1 id="welcome-title">¡Hola de nuevo!</h1>
+    <h1 id="welcome-title">¡Hola <span class="first-name">{{ firstName || 'de nuevo' }}</span>!</h1>
     <p>
       Bienvenido a la comunidad académica de simulaciones de Física. Accedé a tus foros activos o
       descubrí nuevos para seguir aprendiendo.
@@ -38,15 +38,30 @@
     <div class="section-heading">
       <div class="title-group">
         <h2 id="my-forums-title">Mis foros</h2>
-        <span class="count">{{ visibleMyForums.length }} activos</span>
+        <span class="count">{{ myForums().length }} activos</span>
       </div>
+      <a class="create-forum-link" routerLink="/foros/crear">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 16V4m0 0L8 8m4-4 4 4" />
+          <path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
+        </svg>
+        <span>Crear foro</span>
+      </a>
     </div>
 
     <div class="forum-grid">
       @for (forum of visibleMyForums; track forum.name) {
         <app-forum-card [forum]="forum" />
       } @empty {
-        <p class="empty-state">No encontramos foros con esa búsqueda.</p>
+      <!-- Empty State for My Forums -->
+        @if (myForums().length === 0 && !searchTerm.trim()) {
+          <div class="empty-state" role="status">
+            <h3>Todavía no tenés foros</h3>
+            <p>Cuando crees o te unas a un foro, lo vas a encontrar acá.</p>
+          </div>
+        } @else {
+          <p class="empty-state">No encontramos foros con esa búsqueda.</p>
+        }
       }
     </div>
   </section>
@@ -60,7 +75,23 @@
       @for (forum of visibleSuggestedForums; track forum.name) {
         <app-forum-card [forum]="forum" variant="suggested" />
       } @empty {
-        <p class="empty-state">No encontramos foros con esa búsqueda.</p>
+        @if (suggestedForumsLoading()) {
+          <p class="empty-state" role="status">Buscando foros disponibles…</p>
+        } @else if (suggestedForumsError()) {
+          <p class="empty-state" role="alert">No pudimos cargar los foros sugeridos. Intentá nuevamente más tarde.</p>
+        } @else if (searchTerm.trim()) {
+          <p class="empty-state">No encontramos foros sugeridos con esa búsqueda.</p>
+        } @else if (totalOtherForums() === 0) {
+          <div class="empty-state" role="status">
+            <h3>Todavía no hay foros para descubrir</h3>
+            <p>Cuando otras personas creen foros, vas a poder encontrarlos acá.</p>
+          </div>
+        } @else {
+          <div class="empty-state" role="status">
+            <h3>Ya estás en todos los foros disponibles</h3>
+            <p>Cuando otras personas creen nuevos foros, van a aparecer acá.</p>
+          </div>
+        }
       }
     </div>
   </section>
