@@ -1,0 +1,162 @@
+.post-card {
+	overflow: hidden;
+	border: 1px solid #d8e1e5;
+	border-radius: 8px;
+	background: #fff;
+	color: #1d3035;
+}
+
+.post-header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 18px 20px 0;
+}
+
+.author-mark {
+	display: grid;
+	width: 38px;
+	height: 38px;
+	flex: 0 0 auto;
+	place-items: center;
+	border-radius: 50%;
+	background: #e4f1ed;
+	color: #236b56;
+	font-size: 13px;
+	font-weight: 700;
+}
+
+.post-meta {
+	display: grid;
+	gap: 3px;
+}
+
+.author-name,
+.post-meta time,
+.comment time {
+	margin: 0;
+	color: #62747a;
+	font-size: 12px;
+}
+
+.author-name {
+	color: #1d3035;
+	font-size: 13px;
+	font-weight: 700;
+}
+
+.post-content {
+	padding: 18px 20px 22px;
+}
+
+.post-content h2 {
+	margin: 0;
+	color: #193d45;
+	font-size: 20px;
+	line-height: 1.3;
+	overflow-wrap: anywhere;
+}
+
+.post-content > p {
+	margin: 10px 0 0;
+	color: #41565c;
+	font-size: 15px;
+	line-height: 1.6;
+	overflow-wrap: anywhere;
+	white-space: pre-wrap;
+}
+
+.simulation-section {
+	padding: 0 20px 20px;
+}
+
+.simulation-slot {
+	display: block;
+	min-height: 280px;
+	aspect-ratio: 16 / 9;
+	overflow: auto;
+	border: 1px dashed #b7c7c7;
+	border-radius: 6px;
+	background: #f4f7f6;
+	color: #718187;
+	font-size: 13px;
+}
+
+.comments {
+	padding: 16px 20px 18px;
+	border-top: 1px solid #e6ecee;
+	background: #f7f9f8;
+}
+
+.comments-heading-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.comments h3 {
+	margin: 0;
+	color: #28464b;
+	font-size: 14px;
+}
+
+.comment-count {
+	display: grid;
+	min-width: 22px;
+	height: 22px;
+	padding: 0 5px;
+	place-items: center;
+	border-radius: 11px;
+	background: #e4ece8;
+	color: #365f52;
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.comment-list {
+	display: grid;
+	gap: 14px;
+	margin: 15px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.comment {
+	padding-left: 12px;
+	border-left: 2px solid #c7dbd2;
+}
+
+.comment-author {
+	color: #28464b;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.comment p {
+	margin: 4px 0;
+	color: #41565c;
+	font-size: 13px;
+	line-height: 1.5;
+	overflow-wrap: anywhere;
+	white-space: pre-wrap;
+}
+
+.empty-comments {
+	margin: 12px 0 0;
+	color: #718187;
+	font-size: 13px;
+}
+
+@media (max-width: 480px) {
+	.post-header,
+	.post-content,
+	.simulation-section,
+	.comments {
+		padding-right: 15px;
+		padding-left: 15px;
+	}
+
+	.post-content h2 {
+		font-size: 18px;
+	}
+}

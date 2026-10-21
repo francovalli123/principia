@@ -1,9 +1,12 @@
+import { Forum } from "./forum";
+import { User } from "./user";
+import { Simulation } from "./simulation";
 export interface Publication {
     id: number;
     title: string;
     description: string;
-    simulation: number;
-    owner: number;
-    forum: number | null;
+    simulation: Simulation;
+    owner: User;
+    forum: Forum | null;
     creation_date: string;
 }

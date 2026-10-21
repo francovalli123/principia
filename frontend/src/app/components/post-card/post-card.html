@@ -1,0 +1,45 @@
+<article class="post-card">
+	<header class="post-header">
+		<div class="author-mark" aria-hidden="true">{{ publication.owner.username }}</div>
+		<div class="post-meta">
+			<p class="author-name">{{ publication.owner.username }}</p>
+			<time [attr.datetime]="publication.creation_date">
+				{{ publication.creation_date | date: 'medium' }}
+			</time>
+		</div>
+	</header>
+
+	<div class="post-content">
+		<h2>{{ publication.title }}</h2>
+		<p>{{ publication.description }}</p>
+	</div>
+
+	<section class="simulation-section" aria-label="Simulación">
+		<div class="simulation-slot">
+			<app-motor-control [simulation]="publication.simulation" />
+		</div>
+	</section>
+
+	<section class="comments" aria-labelledby="comments-heading">
+		<div class="comments-heading-row">
+			<h3 id="comments-heading">Comentarios</h3>
+			<span class="comment-count">{{ comments.length }}</span>
+		</div>
+
+		@if (comments.length > 0) {
+			<ul class="comment-list">
+				@for (comment of comments; track comment.id) {
+					<li class="comment">
+						<div class="comment-author">{{ comment.owner.username }}</div>
+						<p>{{ comment.content }}</p>
+						<time [attr.datetime]="comment.creation_date">
+							{{ comment.creation_date | date: 'medium' }}
+						</time>
+					</li>
+				}
+			</ul>
+		} @else {
+			<p class="empty-comments">Todavía no hay comentarios.</p>
+		}
+	</section>
+</article>
