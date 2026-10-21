@@ -75,7 +75,23 @@
       @for (forum of visibleSuggestedForums; track forum.name) {
         <app-forum-card [forum]="forum" variant="suggested" />
       } @empty {
-        <p class="empty-state">No encontramos foros con esa búsqueda.</p>
+        @if (suggestedForumsLoading()) {
+          <p class="empty-state" role="status">Buscando foros disponibles…</p>
+        } @else if (suggestedForumsError()) {
+          <p class="empty-state" role="alert">No pudimos cargar los foros sugeridos. Intentá nuevamente más tarde.</p>
+        } @else if (searchTerm.trim()) {
+          <p class="empty-state">No encontramos foros sugeridos con esa búsqueda.</p>
+        } @else if (totalOtherForums() === 0) {
+          <div class="empty-state" role="status">
+            <h3>Todavía no hay foros para descubrir</h3>
+            <p>Cuando otras personas creen foros, vas a poder encontrarlos acá.</p>
+          </div>
+        } @else {
+          <div class="empty-state" role="status">
+            <h3>Ya estás en todos los foros disponibles</h3>
+            <p>Cuando otras personas creen nuevos foros, van a aparecer acá.</p>
+          </div>
+        }
       }
     </div>
   </section>

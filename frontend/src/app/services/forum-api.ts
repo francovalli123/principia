@@ -19,6 +19,14 @@ export interface ForumResponse {
     data: Forum;
 }
 
+export interface SuggestedForumsResponse {
+    status: string;
+    data: {
+        results: Forum[];
+        total_other_forums: number;
+    };
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -34,6 +42,9 @@ export class ForumApiService {
         return this.api.get<PaginatedResponse<Forum>>('forums/mine/').pipe(
             map((response) => response.data.results)
         );
+    }
+    getSuggestedForums(): Observable<SuggestedForumsResponse> {
+        return this.api.get<SuggestedForumsResponse>('forums/suggested/');
     }
     getForum(id: number): Observable<Forum> {
         return this.api.get<Forum>(`forums/${id}/`);

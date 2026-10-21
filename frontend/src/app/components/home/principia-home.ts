@@ -21,6 +21,10 @@ export class PrincipiaHome {
   //  to automatically update the list of my forums, when the get request is completed and 
   //  the myForums signal is updated with the new data.
   myForums = signal<ForumCardData[]>([]);
+  suggestedForums = signal<ForumCardData[]>([]);
+  totalOtherForums = signal(0);
+  suggestedForumsLoading = signal(true);
+  suggestedForumsError = signal(false);
   ngOnInit(): void {
     this.userApi.getCurrentUser().subscribe({
       next: (user) => {
@@ -28,6 +32,19 @@ export class PrincipiaHome {
       },
       error: (error) => {
         console.error('Error loading current user', error);
+      },
+    });
+
+    this.forumApi.getSuggestedForums().subscribe({
+      next: (response) => {
+        this.suggestedForums.set(response.data.results);
+        this.totalOtherForums.set(response.data.total_other_forums);
+        this.suggestedForumsLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading suggested forums', error);
+        this.suggestedForumsError.set(true);
+        this.suggestedForumsLoading.set(false);
       },
     });
 
@@ -44,12 +61,6 @@ export class PrincipiaHome {
     
   }
 
-  readonly suggestedForums: ForumCardData[] = [
-    { name: 'Electromagnetismo', member_count: 740, latestPost: 'Santiago Díaz' },
-    { name: 'Óptica y Ondas', member_count: 685, latestPost: 'Camila Romero' },
-    { name: 'Termodinámica', member_count: 530, latestPost: 'Julieta Silva' },
-  ];
-
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router,
@@ -62,7 +73,7 @@ export class PrincipiaHome {
   }
 
   get visibleSuggestedForums(): ForumCardData[] {
-    return this.filterForums(this.suggestedForums);
+    return this.filterForums(this.suggestedForums());
   }
 
   logout(): void {
