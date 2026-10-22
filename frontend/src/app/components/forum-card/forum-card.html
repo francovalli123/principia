@@ -1,5 +1,5 @@
-@if (variant === 'suggested') {
-  <article class="suggested-card">
+@if (variant === 'suggested' ) {
+  <article class="suggested-card" (click)="openForum()">
     <span class="forum-mark" aria-hidden="true">
       <svg viewBox="0 0 24 24" focusable="false">
         <path d="M12 3 22 12 12 21 2 12 12 3Z" />
@@ -8,13 +8,10 @@
     <h3>{{ forum.name }}</h3>
     <p>
       {{ forum.member_count }} miembros
-      @if (forum.latestPost) {
-        <span aria-hidden="true">•</span> Último post: {{ forum.latestPost }}
-      }
     </p>
   </article>
 } @else {
-  <article class="forum-card">
+  <article class="forum-card" (click)="openForum()">
     <span class="forum-mark" aria-hidden="true">
       <svg viewBox="0 0 24 24" focusable="false">
         <path d="M12 3 22 12 12 21 2 12 12 3Z" />

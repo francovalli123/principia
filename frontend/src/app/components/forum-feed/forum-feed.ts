@@ -1,10 +1,10 @@
 import { AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, signal } from '@angular/core';
-import { Comment } from '../../models/comment';
-import { Publication } from '../../models/publication';
-import { CommentApiService } from '../services/comment-api';
-import { PublicationApiService } from '../services/publication-api';
-import { PostCard } from '../components/post-card/post-card';
-
+import { Comment } from '../../../models/comment';
+import { Publication } from '../../../models/publication';
+import { CommentApiService } from '../../services/comment-api';
+import { PublicationApiService } from '../../services/publication-api';
+import { PostCard } from '../../components/post-card/post-card';
+import { ActivatedRoute } from '@angular/router';
 interface FeedPost {
   publication: Publication;
   comments: Comment[];
@@ -19,7 +19,6 @@ interface FeedPost {
   templateUrl: './forum-feed.html',
 })
 export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
-  @Input() forumId?: number;
   @ViewChild('feedEnd') private feedEnd?: ElementRef<HTMLElement>;
 
   readonly posts = signal<FeedPost[]>([]);
@@ -30,13 +29,17 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
 
   private page = 1;
   private observer?: IntersectionObserver;
-
+  private forumId!: number;
   constructor(
     private readonly publicationApi: PublicationApiService,
     private readonly commentApi: CommentApiService,
+    private readonly route: ActivatedRoute // ActivatedRoute 
+    // permite acceder a la información de la ruta actual,
   ) {}
 
   ngOnInit(): void {
+    this.forumId = Number(this.route.snapshot.paramMap.get('id'));
+    //console.log('FORUM ID:', this.forumId);
     this.loadPublications(true);
   }
 
@@ -94,6 +97,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     const requestedPage = this.page;
     this.publicationApi.getPaginatedByForum(requestedPage, this.forumId).subscribe({
       next: (response) => {
+        console.log('PUBLICATIONS RESPONSE:', response);
         const newPosts = response.data.results.map((publication) => ({
           publication,
           comments: [],

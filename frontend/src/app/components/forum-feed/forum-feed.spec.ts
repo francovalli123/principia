@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ForumFeed } from './forum-feed';
-import { PublicationApiService } from '../services/publication-api';
-import { CommentApiService } from '../services/comment-api';
+import { PublicationApiService } from '../../services/publication-api';
+import { CommentApiService } from '../../services/comment-api';
 
 describe('ForumFeed', () => {
   let component: ForumFeed;
