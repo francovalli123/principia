@@ -38,18 +38,11 @@
   text-decoration: none;
 }
 
-.brand-mark {
-  display: grid;
+.brand-logo {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
-  background: var(--blue);
-  place-items: center;
-}
-
-.brand-mark svg {
-  width: 21px;
-  fill: #fff;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 nav {
@@ -531,14 +524,9 @@ nav a:hover,
   font-size: 17px;
 }
 
-.footer .brand-mark {
+.footer .brand-logo {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
-}
-
-.footer .brand-mark svg {
-  width: 18px;
 }
 
 .footer p {

@@ -27,19 +27,11 @@
   text-decoration: none;
 }
 
-.brand-mark {
-  display: grid;
+.brand-logo {
   width: 36px;
   height: 36px;
   flex: 0 0 auto;
-  place-items: center;
-  border-radius: 9px;
-  background: #09629f;
-}
-
-.brand-mark svg {
-  width: 22px;
-  fill: #fff;
+  object-fit: contain;
 }
 
 .search-placeholder {

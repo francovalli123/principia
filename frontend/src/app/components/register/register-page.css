@@ -31,18 +31,11 @@
   text-decoration: none;
 }
 
-.brand-mark {
-  display: grid;
+.brand-logo {
   width: 36px;
   height: 36px;
-  border-radius: 9px;
-  background: #09629f;
-  place-items: center;
-}
-
-.brand-mark svg {
-  width: 22px;
-  fill: #fff;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 h1 {
