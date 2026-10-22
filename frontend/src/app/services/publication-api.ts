@@ -2,6 +2,17 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseApiService } from './base-api.service';
 import {Publication} from '../../models/publication';
+
+export interface PaginatedPublicationsResponse {
+    status: string;
+    data: {
+        count: number;
+        next: string | null;
+        previous: string | null;
+        results: Publication[];
+    };
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -12,8 +23,9 @@ export class PublicationApiService {
         return this.api.get<Publication>(`publications/${id}/`);
     }
 
-    getByForum(forumId: number): Observable<Publication[]> {
-        return this.api.get<Publication[]>(`publications/?forum_id=${forumId}`);
+    getPaginatedByForum(page: number, forumId?: number): Observable<PaginatedPublicationsResponse> {
+        const forumParam = forumId === undefined ? '' : `&forum_id=${forumId}`;
+        return this.api.get<PaginatedPublicationsResponse>(`publications/?page=${page}${forumParam}`);
     }
 
     createPublication(

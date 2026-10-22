@@ -20,8 +20,10 @@ interface PaginatedResponse<Comment> {
 export class CommentApiService {
     constructor(private api: BaseApiService) {}
 
-    getComments(publicationId: number): Observable<PaginatedResponse<Comment>> {
-        return this.api.get<PaginatedResponse<Comment>>(`comments/?publication_id=${publicationId}`);
+    getComments(publicationId: number, page = 1): Observable<PaginatedResponse<Comment>> {
+        return this.api.get<PaginatedResponse<Comment>>(
+            `comments/?publication_id=${publicationId}&page=${page}`
+        );
     }
 
     getComment(id: number): Observable<Comment> {

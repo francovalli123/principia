@@ -1,1 +1,40 @@
-<p>forum-feed works!</p>
+<section class="forum-feed" aria-label="Publicaciones del foro">
+	@if (loading()) {
+		<p class="feed-status" role="status">Cargando publicaciones...</p>
+	} @else if (error() && posts().length === 0) {
+		<p class="feed-status" role="alert">No se pudieron cargar las publicaciones.</p>
+		<button class="retry-button" type="button" (click)="retry()">Reintentar</button>
+	} @else if (posts().length === 0) {
+		<div class="empty-feed">
+			<h2>Este foro todavía está vacío</h2>
+			<p>Cuando alguien publique algo, aparecerá aquí.</p>
+		</div>
+	} @else {
+		<div class="post-list">
+			@for (post of posts(); track post.publication.id) {
+				<app-post-card [publication]="post.publication" [comments]="post.comments" />
+				@if (post.nextCommentPage !== null) {
+					<button
+						class="more-comments"
+						type="button"
+						[disabled]="post.loadingComments"
+						(click)="loadMoreComments(post)"
+					>
+						{{ post.loadingComments ? 'Cargando comentarios...' : 'Ver más comentarios' }}
+					</button>
+				}
+			}
+		</div>
+		@if (error()) {
+			<p class="feed-status" role="alert">No se pudieron cargar más publicaciones.</p>
+			<button class="retry-button" type="button" (click)="retry()">Reintentar</button>
+		}
+		@if (loadingMore()) {
+			<p class="feed-status" role="status">Cargando más publicaciones...</p>
+		}
+		@if (!hasMore()) {
+			<p class="feed-status feed-end">Has llegado al final del foro.</p>
+		}
+	}
+	<div #feedEnd class="feed-end-marker" aria-hidden="true"></div>
+</section>

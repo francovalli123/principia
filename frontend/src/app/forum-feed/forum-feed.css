@@ -1,0 +1,68 @@
+.forum-feed {
+	width: min(100% - 2rem, 46rem);
+	margin: 0 auto;
+	padding: 1.5rem 0 3rem;
+}
+
+.post-list {
+	display: grid;
+	gap: 1.25rem;
+}
+
+.more-comments {
+	justify-self: start;
+	margin: -0.85rem 0 0.5rem 1rem;
+	border: 0;
+	padding: 0.35rem 0;
+	color: #23685d;
+	background: transparent;
+	font: inherit;
+	cursor: pointer;
+}
+
+.more-comments:disabled {
+	cursor: wait;
+	opacity: 0.65;
+}
+
+.retry-button {
+	display: block;
+	margin: 0 auto 1rem;
+	border: 1px solid #9aada6;
+	padding: 0.5rem 0.85rem;
+	color: #183a32;
+	background: #fff;
+	font: inherit;
+	cursor: pointer;
+}
+
+.empty-feed,
+.feed-status {
+	margin: 0;
+	padding: 2rem 1rem;
+	color: #465550;
+	text-align: center;
+}
+
+.empty-feed {
+	border: 1px dashed #b9c8c2;
+	background: #f5f8f6;
+}
+
+.empty-feed h2 {
+	margin: 0 0 0.5rem;
+	color: #183a32;
+	font-size: 1.2rem;
+}
+
+.empty-feed p {
+	margin: 0;
+}
+
+.feed-end {
+	padding-bottom: 0.75rem;
+}
+
+.feed-end-marker {
+	height: 1px;
+}
