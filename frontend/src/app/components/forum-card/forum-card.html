@@ -1,5 +1,5 @@
 @if (variant === 'suggested' ) {
-  <article class="suggested-card" (click)="openForum()">
+  <article class="suggested-card">
     <span class="forum-mark" aria-hidden="true">
       <svg viewBox="0 0 24 24" focusable="false">
         <path d="M12 3 22 12 12 21 2 12 12 3Z" />
@@ -9,9 +9,10 @@
     <p>
       {{ forum.member_count }} miembros
     </p>
+    <button class="open-mark" type="button" [attr.aria-label]="'Entrar al foro ' + forum.name" (click)="openForum()">&rsaquo;</button>
   </article>
 } @else {
-  <article class="forum-card" (click)="openForum()">
+  <article class="forum-card">
     <span class="forum-mark" aria-hidden="true">
       <svg viewBox="0 0 24 24" focusable="false">
         <path d="M12 3 22 12 12 21 2 12 12 3Z" />
@@ -29,6 +30,6 @@
     @if (forum.isNew) {
       <span class="new-badge">Nuevo</span>
     }
-    <span class="open-mark" aria-hidden="true">›</span>
+    <button class="open-mark" type="button" [attr.aria-label]="'Entrar al foro ' + forum.name" (click)="openForum()">&rsaquo;</button>
   </article>
 }

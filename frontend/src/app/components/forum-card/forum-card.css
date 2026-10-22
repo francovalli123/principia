@@ -73,14 +73,34 @@
   place-items: center;
   border-radius: 9px;
   background: #f3f6fa;
+  border: 0;
   color: #52627a;
+  cursor: pointer;
   font-size: 24px;
   line-height: 1;
 }
 
+.open-mark:hover {
+  background: #e8eef5;
+}
+
+.open-mark:focus-visible {
+  outline: 2px solid #09629f;
+  outline-offset: 2px;
+}
+
 .suggested-card {
+  position: relative;
   min-height: 104px;
   flex-wrap: wrap;
+  padding-right: 62px;
+}
+
+.suggested-card .open-mark {
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  transform: translateY(-50%);
 }
 
 .suggested-card h3 {
