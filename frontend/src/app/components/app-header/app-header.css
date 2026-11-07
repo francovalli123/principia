@@ -8,12 +8,16 @@
   z-index: 1;
   display: grid;
   min-height: 70px;
-  grid-template-columns: 1fr minmax(240px, 480px) 1fr;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 24px;
   padding: 12px max(32px, calc((100vw - 1260px) / 2));
   border-bottom: 1px solid #dce4ee;
   background: #fff;
+}
+
+.topbar.has-search {
+  grid-template-columns: 1fr minmax(240px, 480px) 1fr;
 }
 
 .brand {
@@ -88,7 +92,7 @@
     padding-inline: 20px;
   }
 
-  .search {
+  .topbar.has-search .search {
     grid-column: 1 / -1;
     grid-row: 2;
   }

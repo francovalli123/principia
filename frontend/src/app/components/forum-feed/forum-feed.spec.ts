@@ -72,4 +72,8 @@ describe('ForumFeed', () => {
     backButton.click();
     expect(router.navigate).toHaveBeenCalledWith(['/inicio']);
   });
+
+  it('does not render a search field outside the home page', () => {
+    expect(fixture.nativeElement.querySelector('app-header .search')).toBeNull();
+  });
 });

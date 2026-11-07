@@ -11,6 +11,7 @@ describe('SelectSimulationPage', () => {
   let fixture: ComponentFixture<SelectSimulationPage>;
   const firstSimulation = {
     id: 17,
+    title: 'Mi tiro oblicuo',
     owner: { id: 8, username: 'student', email: '', first_name: '', last_name: '' },
     phenomenon_type: 'Oblique Projectile Motion',
     visibility: 'public' as const,
@@ -68,9 +69,10 @@ describe('SelectSimulationPage', () => {
   it('continues to the publication form with the selected simulation and forum', () => {
     fixture.nativeElement.querySelector('.select-button').click();
 
-    expect(router.navigate).toHaveBeenCalledWith([
-      '/forums', 23, 'publications', 'crear', 17,
-    ]);
+    expect(router.navigate).toHaveBeenCalledWith(
+      ['/forums', 23, 'publications', 'crear', 17],
+      { queryParams: { simulationTitle: 'Mi tiro oblicuo' } },
+    );
   });
 
   it('shows the designed empty state and keeps forum context when creating a simulation', () => {

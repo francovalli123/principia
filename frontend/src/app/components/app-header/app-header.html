@@ -1,23 +1,25 @@
-<header class="topbar">
+<header class="topbar" [class.has-search]="showSearch">
   <a class="brand" aria-label="Principia, inicio" routerLink="/inicio">
     <img class="brand-logo" src="/assets/logo.png" alt="" />
     <span>Principia</span>
   </a>
 
-  <label class="search">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="11" cy="11" r="7"></circle>
-      <path d="m16 16 4 4"></path>
-    </svg>
-    <input
-      type="search"
-      [ngModel]="searchTerm"
-      (ngModelChange)="searchTermChange.emit($event)"
-      [ngModelOptions]="{ standalone: true }"
-      placeholder="Buscar en Principia"
-      aria-label="Buscar"
-    />
-  </label>
+  @if (showSearch) {
+    <label class="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="m16 16 4 4"></path>
+      </svg>
+      <input
+        type="search"
+        [ngModel]="searchTerm"
+        (ngModelChange)="searchTermChange.emit($event)"
+        [ngModelOptions]="{ standalone: true }"
+        placeholder="Buscar foros"
+        aria-label="Buscar foros"
+      />
+    </label>
+  }
 
   <button class="logout" type="button" (click)="logout()">Cerrar sesión</button>
 </header>

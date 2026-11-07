@@ -12,6 +12,7 @@ import { AuthService } from '../../services/auth';
 })
 export class AppHeader {
   @Input() searchTerm = '';
+  @Input() showSearch = false;
   @Output() readonly searchTermChange = new EventEmitter<string>();
 
   constructor(

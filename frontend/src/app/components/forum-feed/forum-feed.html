@@ -1,4 +1,4 @@
-<app-header [(searchTerm)]="searchTerm" />
+<app-header />
 <section class="forum-feed" aria-label="Publicaciones del foro">
 	<header class="feed-toolbar">
 		<div class="forum-heading">
@@ -19,14 +19,9 @@
 			<h2>Este foro todavía está vacío</h2>
 			<p>Cuando alguien publique algo, aparecerá aquí.</p>
 		</div>
-	} @else if (visiblePosts.length === 0) {
-		<div class="empty-feed">
-			<h2>No hay publicaciones que coincidan</h2>
-			<p>Probá con otro término de búsqueda.</p>
-		</div>
 	} @else {
 		<div class="post-list">
-			@for (post of visiblePosts; track post.publication.id) {
+			@for (post of posts(); track post.publication.id) {
 				<app-post-card [publication]="post.publication" [comments]="post.comments" />
 				@if (post.nextCommentPage !== null) {
 					<button

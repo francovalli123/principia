@@ -24,6 +24,9 @@ describe('PublishSimulationPage', () => {
               paramMap: {
                 get: (key: string) => key === 'forumId' ? '23' : '17',
               },
+              queryParamMap: {
+                get: (key: string) => key === 'simulationTitle' ? 'Tiro oblicuo' : null,
+              },
             },
           },
         },
@@ -48,6 +51,13 @@ describe('PublishSimulationPage', () => {
       23,
     );
     expect(router.navigate).toHaveBeenCalledWith(['/forums', 23]);
+  });
+
+  it('displays the selected simulation title instead of its id', () => {
+    expect(fixture.nativeElement.querySelector('.selected-simulation')?.textContent)
+      .toContain('Tiro oblicuo');
+    expect(fixture.nativeElement.querySelector('.selected-simulation')?.textContent)
+      .not.toContain('#17');
   });
 
   it('keeps form data and shows an error when publication fails', () => {

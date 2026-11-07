@@ -93,7 +93,9 @@ export class SelectSimulationPage implements OnInit {
       'publications',
       'crear',
       simulation.id,
-    ]);
+    ], {
+      queryParams: { simulationTitle: simulation.title || this.phenomenonLabel(simulation.phenomenon_type) },
+    });
   }
 
   createSimulation(): void {

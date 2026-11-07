@@ -13,6 +13,7 @@ import { PublicationApiService } from '../../services/publication-api';
 export class PublishSimulationPage implements OnInit {
   forumId = 0;
   simulationId = 0;
+  simulationTitle = '';
   title = '';
   description = '';
   isSubmitting = false;
@@ -28,6 +29,7 @@ export class PublishSimulationPage implements OnInit {
   ngOnInit(): void {
     this.forumId = Number(this.route.snapshot.paramMap.get('forumId'));
     this.simulationId = Number(this.route.snapshot.paramMap.get('simulationId'));
+    this.simulationTitle = this.route.snapshot.queryParamMap.get('simulationTitle')?.trim() || 'Simulación';
     if (
       !Number.isSafeInteger(this.forumId) ||
       this.forumId <= 0 ||

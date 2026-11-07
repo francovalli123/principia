@@ -35,7 +35,6 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
 
   private page = 1;
   private observer?: IntersectionObserver;
-  searchTerm = '';
   forumId!: number;
 
   constructor(
@@ -60,15 +59,6 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
       error: (error: unknown) => console.error(`Failed to load forum with ID: ${this.forumId}`, error),
     });
     this.loadPublications(true);
-  }
-
-  get visiblePosts(): FeedPost[] {
-    const query = this.searchTerm.trim().toLocaleLowerCase();
-    return query
-      ? this.posts().filter(({ publication }) =>
-          `${publication.title} ${publication.description}`.toLocaleLowerCase().includes(query)
-        )
-      : this.posts();
   }
 
   goBack(): void {

@@ -162,7 +162,7 @@ export class SimulationForm implements OnInit {
   }
 
   get successPrimaryLabel(): string {
-    return this.isCreatingForForumPublication ? 'Ir al Foro' : 'Ir al inicio';
+    return this.isCreatingForForumPublication ? 'Crear publicación' : 'Ir al inicio';
   }
 
   closeSuccessModal(): void {
@@ -178,7 +178,10 @@ export class SimulationForm implements OnInit {
     const forumId = this.forumPublicationForumId();
     this.closeSuccessModal();
     if (forumId !== null) {
-      void this.router.navigate(['/forums', forumId]);
+      void this.router.navigate(
+        ['/forums', forumId, 'publications', 'crear', this.createdSimulation?.id],
+        { queryParams: { simulationTitle: this.createdSimulation?.title } },
+      );
     } else {
       void this.router.navigateByUrl('/inicio');
     }

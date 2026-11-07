@@ -93,7 +93,11 @@ describe('SimulationForm', () => {
   });
 
   it('creates a simulation with the selected adapter parameters', () => {
-    const simulation = { id: 4, phenomenon_type: 'Oblique Projectile Motion' } as Simulation;
+    const simulation = {
+      id: 4,
+      title: 'Tiro oblicuo',
+      phenomenon_type: 'Oblique Projectile Motion',
+    } as Simulation;
     simulationApi.createSimulation.mockReturnValue(
       of({ status: 'success', data: simulation }),
     );
@@ -127,7 +131,11 @@ describe('SimulationForm', () => {
     route.snapshot.queryParamMap.get.mockImplementation((key: string) =>
       key === 'forumId' ? '23' : key === 'returnTo' ? 'forum-publication' : null,
     );
-    const simulation = { id: 4, phenomenon_type: 'Oblique Projectile Motion' } as Simulation;
+    const simulation = {
+      id: 4,
+      title: 'Tiro oblicuo',
+      phenomenon_type: 'Oblique Projectile Motion',
+    } as Simulation;
     simulationApi.createSimulation.mockReturnValue(of({ status: 'success', data: simulation }));
 
     component.selectPhenomenon('Oblique Projectile Motion');
@@ -140,11 +148,11 @@ describe('SimulationForm', () => {
     component.submit();
 
     expect(component.isSuccessModalOpen).toBe(true);
-    expect(component.successPrimaryLabel).toBe('Ir al Foro');
-    component.goToMySimulations();
+    expect(component.successPrimaryLabel).toBe('Crear publicación');
+    component.goToSuccessPrimaryAction();
     expect(router.navigate).toHaveBeenCalledWith(
-      ['/forums', 23, 'publications', 'crear', 'seleccionar'],
-      { queryParams: { createdSimulation: 4 } },
+      ['/forums', 23, 'publications', 'crear', 4],
+      { queryParams: { simulationTitle: 'Tiro oblicuo' } },
     );
     expect(router.navigateByUrl).not.toHaveBeenCalled();
   });
