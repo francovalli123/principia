@@ -80,6 +80,9 @@ describe('MotorControl', () => {
         '.simulation-action:not(.simulation-action--playback)',
       ).textContent,
     ).toContain('Reiniciar');
+    expect(
+      fixture.nativeElement.querySelector('.simulation-stage .simulation-actions'),
+    ).toBeTruthy();
     fixture.nativeElement.querySelector('.simulation-action--playback').click();
     fixture.nativeElement.querySelector('.simulation-action:not(.simulation-action--playback)').click();
     expect(engine.execute).toHaveBeenNthCalledWith(1, 'pause');

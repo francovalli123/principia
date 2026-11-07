@@ -33,27 +33,27 @@
               </div>
             }
           </dl>
-
         }
       }
+
+      @if (state.status !== 'loading' && state.status !== 'error') {
+        <div class="simulation-actions" aria-label="Controles de simulación">
+          @for (control of controls; track control.id) {
+            <button
+              class="simulation-action"
+              [class.simulation-action--playback]="control.kind === 'playback-toggle'"
+              type="button"
+              [disabled]="control.disabledWhenCompleted && state.status === 'completed'"
+              (click)="executeControl(control.id)"
+            >
+              @if (control.kind === 'playback-toggle') {
+                <span aria-hidden="true">{{ state.status === 'running' ? 'Ⅱ' : '▶' }}</span>
+              }
+              {{ controlLabel(control, state.status) }}
+            </button>
+          }
+        </div>
+      }
     </div>
-    @if (state.status !== 'loading' && state.status !== 'error') {
-      <div class="simulation-actions" aria-label="Controles de simulación">
-        @for (control of controls; track control.id) {
-          <button
-            class="simulation-action"
-            [class.simulation-action--playback]="control.kind === 'playback-toggle'"
-            type="button"
-            [disabled]="control.disabledWhenCompleted && state.status === 'completed'"
-            (click)="executeControl(control.id)"
-          >
-            @if (control.kind === 'playback-toggle') {
-              <span aria-hidden="true">{{ state.status === 'running' ? 'Ⅱ' : '▶' }}</span>
-            }
-            {{ controlLabel(control, state.status) }}
-          </button>
-        }
-      </div>
-    }
   </section>
 }

@@ -18,8 +18,11 @@
   overflow: hidden;
   display: flex;
   justify-content: center;
+  width: 100%;
+  max-width: 960px;
+  margin-inline: auto;
   border-radius: 4px;
-  background: #0b1424;
+  background: #141414;
 }
 
 .simulation-canvas {
@@ -94,10 +97,11 @@
 }
 
 .simulation-actions {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
   display: flex;
-  justify-content: flex-end;
   gap: 8px;
-  padding-top: 7px;
 }
 
 .simulation-action {
