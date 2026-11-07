@@ -1,0 +1,54 @@
+<main class="publish-page">
+  <header class="publish-heading">
+    <button class="back-link" type="button" (click)="backToSimulations()">
+      <span aria-hidden="true">←</span> Volver a simulaciones
+    </button>
+    <h1>Nueva publicación</h1>
+    <p>Compartí una simulación con este foro.</p>
+  </header>
+
+  @if (routeError) {
+    <p class="route-error" role="alert">{{ routeError }}</p>
+  } @else {
+    <form class="publication-form" (ngSubmit)="submit()" #publicationForm="ngForm">
+      <div class="field">
+        <label for="publication-title">Título</label>
+        <input
+          id="publication-title"
+          name="title"
+          type="text"
+          [(ngModel)]="title"
+          placeholder="Dale un título a tu publicación"
+          maxlength="255"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label for="publication-description">Descripción</label>
+        <textarea
+          id="publication-description"
+          name="description"
+          [(ngModel)]="description"
+          placeholder="Contá qué querés compartir sobre esta simulación"
+          maxlength="2000"
+          rows="5"
+          required
+        ></textarea>
+      </div>
+
+      <p class="selected-simulation">Simulación seleccionada <span>#{{ simulationId }}</span></p>
+
+      @if (submitError) {
+        <p class="form-error" role="alert">{{ submitError }}</p>
+      }
+
+      <footer class="form-actions">
+        <button class="cancel-button" type="button" (click)="backToSimulations()">Cancelar</button>
+        <button class="submit-button" type="submit" [disabled]="publicationForm.invalid || isSubmitting">
+          {{ isSubmitting ? 'Publicando…' : 'Publicar' }}
+        </button>
+      </footer>
+    </form>
+  }
+</main>

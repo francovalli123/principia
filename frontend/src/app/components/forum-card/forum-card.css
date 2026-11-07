@@ -33,12 +33,34 @@
 
 .forum-info h3,
 .suggested-card h3 {
-  overflow: hidden;
   margin: 0;
   color: #172137;
   font-size: 16px;
+}
+
+.forum-info h3 {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.forum-info h3:not(:has(.owner-badge)) {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.owner-badge {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: #e8f1f8;
+  color: #09629f;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .forum-info p,
@@ -80,11 +102,126 @@
   line-height: 1;
 }
 
+.membership-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #e8f1f8;
+  color: #09629f;
+  cursor: pointer;
+}
+
+.membership-mark[role='status'] {
+  cursor: default;
+}
+
+.membership-mark svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+}
+
+.membership-mark.is-member {
+  background: #e7f5ec;
+  color: #16834a;
+}
+
+.membership-mark:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.card-actions {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.actions-menu-trigger {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: #f3f6fa;
+  color: #52627a;
+  cursor: pointer;
+}
+
+.actions-menu-trigger:hover,
+.actions-menu-trigger[aria-expanded='true'] {
+  background: #e8eef5;
+}
+
+.actions-menu-trigger svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.actions-menu-trigger:focus-visible,
+.actions-menu button:focus-visible {
+  outline: 2px solid #09629f;
+  outline-offset: 2px;
+}
+
+.actions-menu {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  padding: 5px;
+  border: 1px solid #dce4ee;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgb(20 45 75 / 14%);
+}
+
+.actions-menu button {
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  padding: 9px 11px;
+  background: transparent;
+  color: #842626;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+}
+
+.actions-menu button:hover {
+  background: #fff0f0;
+}
+
+.actions-menu button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 .open-mark:hover {
   background: #e8eef5;
 }
 
+.membership-mark:not(:disabled):hover {
+  background: #d7e9f5;
+}
+
 .open-mark:focus-visible {
+  outline: 2px solid #09629f;
+  outline-offset: 2px;
+}
+
+.membership-mark:focus-visible {
   outline: 2px solid #09629f;
   outline-offset: 2px;
 }
@@ -103,8 +240,22 @@
   transform: translateY(-50%);
 }
 
+.suggested-card .membership-mark {
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  transform: translateY(-50%);
+}
+
+.suggested-card:has(.membership-mark + .open-mark) .membership-mark {
+  right: 60px;
+}
+
 .suggested-card h3 {
+  overflow: hidden;
   flex: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .suggested-card p {
@@ -113,9 +264,14 @@
 }
 
 @media (max-width: 420px) {
-  .forum-card {
+  .forum-card,
+  .suggested-card {
     gap: 10px;
     padding: 12px;
+  }
+
+  .forum-info h3 {
+    font-size: 14px;
   }
 
   .new-badge {

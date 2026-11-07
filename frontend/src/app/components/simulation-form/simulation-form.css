@@ -17,6 +17,25 @@
 	border-bottom: 1px solid var(--line);
 }
 
+.back-to-publication {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	border: 0;
+	padding: 0;
+	background: transparent;
+	color: var(--accent);
+	cursor: pointer;
+	font: inherit;
+	font-size: 13px;
+	font-weight: 650;
+}
+
+.back-to-publication:focus-visible {
+	outline: 3px solid rgb(23 107 87 / 20%);
+	outline-offset: 3px;
+}
+
 .eyebrow {
 	margin: 0 0 8px;
 	color: var(--accent);

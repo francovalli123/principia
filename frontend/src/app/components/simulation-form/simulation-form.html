@@ -1,4 +1,9 @@
 <section class="simulation-form-page" aria-labelledby="simulation-form-title">
+	@if (isCreatingForForumPublication) {
+		<button class="back-to-publication" type="button" (click)="backToForumPublication()">
+			<span aria-hidden="true">←</span> Volver a mis simulaciones
+		</button>
+	}
 	<header class="form-heading">
 		<p class="eyebrow">Laboratorio Principia</p>
 		<h1 id="simulation-form-title">Nueva simulación</h1>

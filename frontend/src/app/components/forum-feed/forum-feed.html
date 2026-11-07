@@ -1,6 +1,10 @@
+<app-header [(searchTerm)]="searchTerm" />
 <section class="forum-feed" aria-label="Publicaciones del foro">
 	<header class="feed-toolbar">
-		<h1>Publicaciones</h1>
+		<div class="forum-heading">
+			<button type="button" class="back-button" (click)="goBack()">‹ <span>Volver</span></button>
+			<h1>{{ forum()?.name || 'Publicaciones' }}</h1>
+		</div>
 		<button type="button" class="create-publication-button" (click)="createPublication()">
 			Crear publicación
 		</button>
@@ -15,9 +19,14 @@
 			<h2>Este foro todavía está vacío</h2>
 			<p>Cuando alguien publique algo, aparecerá aquí.</p>
 		</div>
+	} @else if (visiblePosts.length === 0) {
+		<div class="empty-feed">
+			<h2>No hay publicaciones que coincidan</h2>
+			<p>Probá con otro término de búsqueda.</p>
+		</div>
 	} @else {
 		<div class="post-list">
-			@for (post of posts(); track post.publication.id) {
+			@for (post of visiblePosts; track post.publication.id) {
 				<app-post-card [publication]="post.publication" [comments]="post.comments" />
 				@if (post.nextCommentPage !== null) {
 					<button

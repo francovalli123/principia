@@ -1,78 +1,33 @@
-<main class="create-publication-page">
-  <div class="page-content">
+<main class="publication-flow">
+  <header class="flow-heading">
     <button class="back-link" type="button" (click)="cancel()">
-      <span aria-hidden="true">←</span>
-      Volver al foro
+      <span aria-hidden="true">←</span> Volver al foro
     </button>
+    <h1>¿Qué querés hacer?</h1>
+    <p>Elegí si vas a crear una simulación nueva o publicar una que ya tenés guardada</p>
+  </header>
 
-    <header class="page-heading">
-      <h1>Nueva publicación</h1>
-      <p>Compartí una simulación con este foro.</p>
-    </header>
+  @if (routeError) {
+    <p class="route-error" role="alert">{{ routeError }}</p>
+  } @else {
+    <section class="choice-grid" aria-label="Opciones para crear una publicación">
+      <article class="choice-card">
+        <span class="choice-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+        </span>
+        <h2>Crear una simulación nueva</h2>
+        <p>Configurá los parámetros desde cero para el fenómeno físico que elijas.</p>
+        <button type="button" class="primary-button" (click)="createSimulation()">Comenzar</button>
+      </article>
 
-    @if (isLoadingSimulations) {
-      <p class="page-status" role="status">Cargando tus simulaciones...</p>
-    } @else if (simulationLoadError) {
-      <div class="page-message" role="alert">
-        <p>{{ simulationLoadError }}</p>
-        <button type="button" class="secondary-button" (click)="loadSimulations()">Reintentar</button>
-      </div>
-    } @else if (simulations.length === 0) {
-      <div class="page-message">
-        <p>Todavía no tenés simulaciones para compartir.</p>
-        <button type="button" class="secondary-button" (click)="createSimulation()">Crear una simulación</button>
-      </div>
-    } @else {
-      <form class="publication-form" (ngSubmit)="submit()" #publicationForm="ngForm">
-        <div class="field">
-          <label for="publication-title">Título</label>
-          <input
-            id="publication-title"
-            name="title"
-            type="text"
-            [(ngModel)]="title"
-            placeholder="Dale un título a tu publicación"
-            maxlength="255"
-            required
-          />
-        </div>
-
-        <div class="field">
-          <label for="publication-description">Descripción</label>
-          <textarea
-            id="publication-description"
-            name="description"
-            [(ngModel)]="description"
-            placeholder="Contá qué querés compartir sobre esta simulación"
-            maxlength="2000"
-            rows="5"
-            required
-          ></textarea>
-        </div>
-
-        <div class="field">
-          <label for="publication-simulation">Simulación</label>
-          <select id="publication-simulation" name="simulationId" [(ngModel)]="simulationId" required>
-            <option [ngValue]="null" disabled>Seleccioná una simulación</option>
-            @for (simulation of simulations; track simulation.id) {
-              <option [ngValue]="simulation.id">
-                {{ simulation.phenomenon_type }} · #{{ simulation.id }}
-              </option>
-            }
-          </select>
-        </div>
-
-        @if (submitError) {
-          <p class="form-error" role="alert">{{ submitError }}</p>
-        }
-
-        <div class="form-actions">
-          <button class="cancel-button" type="button" (click)="cancel()">Cancelar</button>
-          <button class="submit-button" type="submit" [disabled]="publicationForm.invalid || isSubmitting">
-            {{ isSubmitting ? 'Publicando...' : 'Publicar' }}
-          </button>
-        </div>
-      </form>
-    }
-  </div>
+      <article class="choice-card">
+        <span class="choice-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 5h14M5 12h14M5 19h14" /></svg>
+        </span>
+        <h2>Publicar una simulación existente</h2>
+        <p>Elegí una simulación que ya creaste anteriormente y compartila en el foro.</p>
+        <button type="button" class="primary-button" (click)="viewSimulations()">Ver mis simulaciones</button>
+      </article>
+    </section>
+  }
 </main>

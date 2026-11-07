@@ -6,5 +6,6 @@ export interface Forum {
 	creation_date: string;
 	owner: User;
 	member_count: number;
+	is_member: boolean;
+	is_owner: boolean;
 }
-

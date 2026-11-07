@@ -37,6 +37,16 @@ export class MotorControl implements OnInit, OnDestroy {
 
   // Starts loading configuration when Angular initializes the component
   ngOnInit(): void { 
+    if (
+      !Number.isSafeInteger(this.simulation?.id) ||
+      this.simulation.id <= 0 ||
+      typeof this.simulation.phenomenon_type !== 'string' ||
+      !this.simulation.phenomenon_type
+    ) {
+      this.showError(new Error('La simulación no tiene una configuración válida'));
+      return;
+    }
+
     this.configSubscription = this.wasmSetup
       .getConfig(this.simulation.id) // Fetches configuration using the simulation identifier.
       .subscribe({

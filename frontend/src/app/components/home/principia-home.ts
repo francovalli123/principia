@@ -1,14 +1,13 @@
 import { Component, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth';
+import { RouterLink } from '@angular/router';
 import { ForumApiService } from '../../services/forum-api';
 import { UserApiService } from '../../services/user-api';
 import { ForumCardComponent, type ForumCardData } from '../forum-card/forum-card';
+import { AppHeader } from '../app-header/app-header';
 
 @Component({
   selector: 'app-principia-home',
-  imports: [FormsModule, RouterLink, ForumCardComponent],
+  imports: [RouterLink, ForumCardComponent, AppHeader],
   templateUrl: './principia-home.html',
   styleUrl: './principia-home.css',
 })
@@ -62,8 +61,6 @@ export class PrincipiaHome {
   }
 
   constructor(
-    private readonly auth: AuthService,
-    private readonly router: Router,
     private readonly forumApi: ForumApiService,
     private readonly userApi: UserApiService,
   ) {}
@@ -76,9 +73,21 @@ export class PrincipiaHome {
     return this.filterForums(this.suggestedForums());
   }
 
-  logout(): void {
-    this.auth.clearTokens();
-    void this.router.navigate(['/']);
+  updateMembership(event: { forum: ForumCardData; isMember: boolean }): void {
+    const { forum, isMember } = event;
+    if (isMember) {
+      this.suggestedForums.update((forums) => forums.filter((item) => item.id !== forum.id));
+      this.myForums.update((forums) => [
+        { ...forum, is_member: true, member_count: forum.member_count + 1 },
+        ...forums.filter((item) => item.id !== forum.id),
+      ]);
+    } else {
+      this.myForums.update((forums) => forums.filter((item) => item.id !== forum.id));
+      this.suggestedForums.update((forums) => [
+        { ...forum, is_member: false, member_count: Math.max(0, forum.member_count - 1) },
+        ...forums.filter((item) => item.id !== forum.id),
+      ]);
+    }
   }
 
   private filterForums(forums: ForumCardData[]): ForumCardData[] {

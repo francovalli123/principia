@@ -1,8 +1,11 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Comment } from '../../../models/comment';
+import { Forum } from '../../../models/forum';
 import { Publication } from '../../../models/publication';
+import { AppHeader } from '../app-header/app-header';
 import { CommentApiService } from '../../services/comment-api';
+import { ForumApiService } from '../../services/forum-api';
 import { PublicationApiService } from '../../services/publication-api';
 import { PostCard } from '../../components/post-card/post-card';
 
@@ -14,7 +17,7 @@ interface FeedPost {
 }
 
 @Component({
-  imports: [PostCard],
+  imports: [AppHeader, PostCard],
   standalone: true,
   selector: 'app-forum-feed',
   styleUrl: './forum-feed.css',
@@ -28,12 +31,15 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
   readonly loadingMore = signal(false);
   readonly hasMore = signal(true);
   readonly error = signal(false);
+  readonly forum = signal<Forum | null>(null);
 
   private page = 1;
   private observer?: IntersectionObserver;
+  searchTerm = '';
   forumId!: number;
 
   constructor(
+    private readonly forumApi: ForumApiService,
     private readonly publicationApi: PublicationApiService,
     private readonly commentApi: CommentApiService,
     private readonly route: ActivatedRoute,
@@ -41,8 +47,32 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.forumId = Number(this.route.snapshot.paramMap.get('id'));
+    const routeForumId = Number(this.route.snapshot.paramMap.get('id'));
+    if (!Number.isSafeInteger(routeForumId) || routeForumId <= 0) {
+      this.loading.set(false);
+      this.error.set(true);
+      return;
+    }
+
+    this.forumId = routeForumId;
+    this.forumApi.getForum(this.forumId).subscribe({
+      next: (forum) => this.forum.set(forum),
+      error: (error: unknown) => console.error(`Failed to load forum with ID: ${this.forumId}`, error),
+    });
     this.loadPublications(true);
+  }
+
+  get visiblePosts(): FeedPost[] {
+    const query = this.searchTerm.trim().toLocaleLowerCase();
+    return query
+      ? this.posts().filter(({ publication }) =>
+          `${publication.title} ${publication.description}`.toLocaleLowerCase().includes(query)
+        )
+      : this.posts();
+  }
+
+  goBack(): void {
+    void this.router.navigate(['/inicio']);
   }
 
   ngAfterViewInit(): void {

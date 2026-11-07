@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Simulation } from '../../../models/simulation';
@@ -19,6 +19,14 @@ describe('SimulationForm', () => {
   };
   const router = {
     navigateByUrl: vi.fn(),
+    navigate: vi.fn(),
+  };
+  const route = {
+    snapshot: {
+      queryParamMap: {
+        get: vi.fn((_key: string) => null as string | null),
+      },
+    },
   };
 
   beforeEach(async () => {
@@ -31,6 +39,7 @@ describe('SimulationForm', () => {
       providers: [
         { provide: SimulationApiService, useValue: simulationApi },
         { provide: Router, useValue: router },
+        { provide: ActivatedRoute, useValue: route },
       ],
     }).compileComponents();
 
@@ -103,5 +112,27 @@ describe('SimulationForm', () => {
     expect(created).toHaveBeenCalledWith(simulation);
     expect(component.successMessage).toBe('Simulación creada correctamente.');
     expect(router.navigateByUrl).toHaveBeenCalledWith('/inicio');
+  });
+
+  it('returns to the forum simulation list when created from a publication flow', () => {
+    route.snapshot.queryParamMap.get.mockImplementation((key: string) =>
+      key === 'forumId' ? '23' : key === 'returnTo' ? 'forum-publication' : null,
+    );
+    const simulation = { id: 4, phenomenon_type: 'Oblique Projectile Motion' } as Simulation;
+    simulationApi.createSimulation.mockReturnValue(of({ status: 'success', data: simulation }));
+
+    component.selectPhenomenon('Oblique Projectile Motion');
+    component.parametersForm.setValue({
+      initial_velocity: 18,
+      angle: 37,
+      initial_height: 2,
+    });
+    component.submit();
+
+    expect(router.navigate).toHaveBeenCalledWith(
+      ['/forums', 23, 'publications', 'crear', 'seleccionar'],
+      { queryParams: { createdSimulation: 4 } },
+    );
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
   });
 });

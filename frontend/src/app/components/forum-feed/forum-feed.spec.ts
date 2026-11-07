@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ForumFeed } from './forum-feed';
+import { ForumApiService } from '../../services/forum-api';
 import { PublicationApiService } from '../../services/publication-api';
 import { CommentApiService } from '../../services/comment-api';
 
@@ -11,6 +12,18 @@ describe('ForumFeed', () => {
   let fixture: ComponentFixture<ForumFeed>;
   const publicationApi = {
     getPaginatedByForum: vi.fn(),
+  };
+  const forumApi = {
+    getForum: vi.fn(() => of({
+      id: 23,
+      name: 'Physics',
+      description: '',
+      creation_date: '',
+      owner: { id: 1, username: 'owner', email: '', first_name: '', last_name: '' },
+      member_count: 1,
+      is_member: true,
+      is_owner: false,
+    })),
   };
   const commentApi = { getComments: () => of({ status: 'ok', data: { count: 0, next: null, previous: null, results: [] } }) };
   const router = { navigate: vi.fn() };
@@ -23,6 +36,7 @@ describe('ForumFeed', () => {
     await TestBed.configureTestingModule({
       imports: [ForumFeed],
       providers: [
+        { provide: ForumApiService, useValue: forumApi },
         { provide: PublicationApiService, useValue: publicationApi },
         { provide: CommentApiService, useValue: commentApi },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '23' } } } },
@@ -49,5 +63,13 @@ describe('ForumFeed', () => {
     const createButton = fixture.nativeElement.querySelector('.create-publication-button') as HTMLButtonElement;
     createButton.click();
     expect(router.navigate).toHaveBeenCalledWith(['/forums', 23, 'publications', 'crear']);
+  });
+
+  it('loads the current forum and provides a return action', () => {
+    expect(forumApi.getForum).toHaveBeenCalledWith(23);
+    expect(fixture.nativeElement.textContent).toContain('Physics');
+    const backButton = fixture.nativeElement.querySelector('.back-button') as HTMLButtonElement;
+    backButton.click();
+    expect(router.navigate).toHaveBeenCalledWith(['/inicio']);
   });
 });

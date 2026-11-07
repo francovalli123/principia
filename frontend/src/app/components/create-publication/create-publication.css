@@ -1,154 +1,139 @@
 :host {
   display: block;
   min-height: 100vh;
-  background: #f3f6f5;
-  color: #183a32;
+  background: #f7f9fc;
+  color: #121a2c;
 }
 
-.page-content {
-  width: min(100% - 2rem, 48rem);
-  margin: 0 auto;
-  padding: 2rem 0 4rem;
+.flow-heading {
+  padding: 18px max(26px, calc((100vw - 1260px) / 2)) 24px;
+  border-bottom: 1px solid #dce4ee;
+  background: #fff;
 }
 
 .back-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 7px;
   border: 0;
   padding: 0;
-  color: #23685d;
   background: transparent;
-  font: inherit;
-  font-weight: 650;
+  color: #61738e;
   cursor: pointer;
+  font: inherit;
+  font-size: 13px;
 }
 
-.back-link span {
-  font-size: 1.25rem;
-  line-height: 1;
+.back-link:hover {
+  color: #09629f;
 }
 
-.page-heading {
-  margin: 2rem 0 1.5rem;
+.flow-heading h1 {
+  margin: 20px 0 6px;
+  color: #121a2c;
+  font-size: 24px;
+  letter-spacing: -0.035em;
 }
 
-.page-heading h1 {
-  margin: 0 0 0.5rem;
-  font-size: 1.8rem;
-}
-
-.page-heading p {
+.flow-heading > p {
   margin: 0;
-  color: #52635d;
+  color: #61738e;
+  font-size: 14px;
 }
 
-.publication-form,
-.page-message {
-  border: 1px solid #cbd9d3;
-  padding: clamp(1.1rem, 4vw, 2rem);
+.choice-grid {
+  display: grid;
+  width: min(100% - 32px, 808px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin: 44px auto;
+}
+
+.choice-card {
+  display: flex;
+  min-height: 206px;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px;
+  border: 1px solid #dce4ee;
+  border-radius: 12px;
   background: #fff;
 }
 
-.field + .field {
-  margin-top: 1.2rem;
+.choice-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 12px;
+  background: #09629f;
+  color: #fff;
 }
 
-.field label {
-  display: block;
-  margin-bottom: 0.45rem;
-  color: #183a32;
-  font-size: 0.9rem;
-  font-weight: 650;
+.choice-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
 }
 
-.field input,
-.field textarea,
-.field select {
-  display: block;
-  width: 100%;
-  border: 1px solid #b9c8c2;
-  border-radius: 3px;
-  padding: 0.7rem 0.75rem;
-  color: #183a32;
-  background: #fbfcfb;
-  font: inherit;
+.choice-card h2 {
+  margin: 14px 0 7px;
+  color: #172137;
+  font-size: 16px;
+  font-weight: 700;
 }
 
-.field textarea {
-  resize: vertical;
-}
-
-.field input:focus,
-.field textarea:focus,
-.field select:focus {
-  border-color: #23685d;
-  outline: 2px solid rgb(35 104 93 / 18%);
-}
-
-.page-status,
-.page-message p {
-  margin: 0;
+.choice-card p {
+  margin: 0 0 14px;
+  color: #61738e;
+  font-size: 13px;
   line-height: 1.5;
 }
 
-.page-status {
-  padding: 1.5rem 0;
-  color: #52635d;
-}
-
-.page-message p {
-  margin-bottom: 1rem;
-}
-
-.form-error {
-  margin: 0.8rem 0 0;
-  color: #a52a2a;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.65rem;
-  margin-top: 1.5rem;
-}
-
-.form-actions button,
-.secondary-button {
-  min-height: 2.5rem;
-  border: 1px solid #23685d;
-  padding: 0.45rem 0.9rem;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.cancel-button,
-.secondary-button {
-  color: #23685d;
-  background: #fff;
-}
-
-.submit-button {
+.primary-button {
+  width: 100%;
+  min-height: 40px;
+  margin-top: auto;
+  border: 0;
+  border-radius: 22px;
+  background: #09629f;
   color: #fff;
-  background: #23685d;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  transition: background-color 150ms ease;
 }
 
-.submit-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
+.primary-button:hover {
+  background: #074f81;
 }
 
-@media (max-width: 480px) {
-  .page-content {
-    padding-top: 1.25rem;
+.primary-button:focus-visible,
+.back-link:focus-visible {
+  outline: 3px solid rgb(9 98 159 / 28%);
+  outline-offset: 3px;
+}
+
+.route-error {
+  margin: 48px auto;
+  color: #842626;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .flow-heading {
+    padding: 16px 20px 20px;
   }
 
-  .page-heading {
-    margin-top: 1.5rem;
-  }
-
-  .form-actions {
-    flex-direction: column-reverse;
+  .choice-grid {
+    max-width: 420px;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 24px;
   }
 }

@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, EventEmitter, OnInit, Output } from '@ang
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Simulation } from '../../../models/simulation';
 import { ApiResponse, SimulationApiService } from '../../services/simulation-api';
-import {Router} from "@angular/router";
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   getSimulationFormAdapter,
   SimulationFormAdapter,
@@ -36,7 +36,8 @@ export class SimulationForm implements OnInit {
   constructor(
     private readonly simulationApi: SimulationApiService,
     private readonly changeDetector: ChangeDetectorRef,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
@@ -95,7 +96,15 @@ export class SimulationForm implements OnInit {
           this.successMessage = 'Simulación creada correctamente.';
           this.isSubmitting = false;
           this.form.reset({ phenomenonType: '', visibility: 'public' });
-          this.router.navigateByUrl('/inicio');
+          const forumId = this.forumPublicationForumId();
+          if (forumId !== null) {
+            void this.router.navigate(
+              ['/forums', forumId, 'publications', 'crear', 'seleccionar'],
+              { queryParams: { createdSimulation: response.data.id } },
+            );
+          } else {
+            void this.router.navigateByUrl('/inicio');
+          }
         },
         error: () => {
           this.errorMessage = 'No pudimos crear la simulación. Revisá los valores e intentá nuevamente.';
@@ -103,5 +112,22 @@ export class SimulationForm implements OnInit {
           this.form.reset({ phenomenonType: '', visibility: 'public' });
         },
       });
+  }
+
+  backToForumPublication(): void {
+    const forumId = this.forumPublicationForumId();
+    if (forumId !== null) {
+      void this.router.navigate(['/forums', forumId, 'publications', 'crear', 'seleccionar']);
+    }
+  }
+
+  get isCreatingForForumPublication(): boolean {
+    return this.forumPublicationForumId() !== null;
+  }
+
+  private forumPublicationForumId(): number | null {
+    if (this.route.snapshot.queryParamMap.get('returnTo') !== 'forum-publication') return null;
+    const forumId = Number(this.route.snapshot.queryParamMap.get('forumId'));
+    return Number.isSafeInteger(forumId) && forumId > 0 ? forumId : null;
   }
 }

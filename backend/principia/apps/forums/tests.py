@@ -38,6 +38,33 @@ class ForumMembersTests(APITestCase):
 		forum_ids = [forum["id"] for forum in response.data["data"]["results"]]
 		self.assertIn(legacy_forum.id, forum_ids)
 
+	def test_forum_lists_include_membership_state(self):
+		self.client.force_authenticate(user=self.member)
+
+		response = self.client.get("/api/forums/mine/")
+
+		self.assertEqual(response.status_code, 200)
+		serialized_forum = next(
+			forum for forum in response.data["data"]["results"]
+			if forum["id"] == self.forum.id
+		)
+		self.assertTrue(serialized_forum["is_member"])
+		self.assertFalse(serialized_forum["is_owner"])
+
+	def test_suggested_forums_are_not_memberships(self):
+		self.client.force_authenticate(user=self.owner)
+		suggested_forum = Forum.objects.create(name="Suggested")
+
+		response = self.client.get("/api/forums/suggested/")
+
+		self.assertEqual(response.status_code, 200)
+		serialized_forum = next(
+			forum for forum in response.data["data"]["results"]
+			if forum["id"] == suggested_forum.id
+		)
+		self.assertFalse(serialized_forum["is_member"])
+		self.assertFalse(serialized_forum["is_owner"])
+
 	def test_only_owner_can_expel_member(self):
 		self.client.force_authenticate(user=self.member)
 

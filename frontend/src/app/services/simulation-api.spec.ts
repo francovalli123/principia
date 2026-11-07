@@ -2,7 +2,7 @@ import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Simulation } from '../../models/simulation';
 import { BaseApiService } from './base-api.service';
-import { SimulationApiService, SimulationListResponse } from './simulation-api';
+import { SimulationApiService, SimulationFavourite, SimulationFavouriteListResponse, SimulationListResponse } from './simulation-api';
 
 describe('SimulationApiService', () => {
   const api = { get: vi.fn() };
@@ -30,5 +30,24 @@ describe('SimulationApiService', () => {
     }
 
     expect(api.get).toHaveBeenCalledWith('simulations/?owner_id=8');
+  });
+
+  it('normalizes raw, wrapped, and paginated favourite lists', () => {
+    const favourite = { id: 2, simulation: 17, marked_date: '2026-11-01T10:00:00Z' };
+    const responses: SimulationFavouriteListResponse[] = [
+      [favourite],
+      { data: [favourite] },
+      { data: { results: [favourite] } },
+      { results: [favourite] },
+    ];
+
+    for (const response of responses) {
+      api.get.mockReturnValueOnce(of(response));
+      let actual: SimulationFavourite[] = [];
+      service.getFavourites().subscribe((favourites) => actual = favourites);
+      expect(actual).toEqual([favourite]);
+    }
+
+    expect(api.get).toHaveBeenCalledWith('simulations/favourites/');
   });
 });

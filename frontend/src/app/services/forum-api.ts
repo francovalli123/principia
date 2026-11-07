@@ -47,7 +47,9 @@ export class ForumApiService {
         return this.api.get<SuggestedForumsResponse>('forums/suggested/');
     }
     getForum(id: number): Observable<Forum> {
-        return this.api.get<Forum>(`forums/${id}/`);
+        return this.api.get<ForumResponse>(`forums/${id}/`).pipe(
+            map((response) => response.data)
+        );
     }
 
     createForum(data: Pick<Forum, 'name' | 'description'>): Observable<ForumResponse> {

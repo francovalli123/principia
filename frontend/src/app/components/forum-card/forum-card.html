@@ -5,11 +5,30 @@
         <path d="M12 3 22 12 12 21 2 12 12 3Z" />
       </svg>
     </span>
-    <h3>{{ forum.name }}</h3>
-    <p>
-      {{ forum.member_count }} miembros
-    </p>
-    <button class="open-mark" type="button" [attr.aria-label]="'Entrar al foro ' + forum.name" (click)="openForum()">&rsaquo;</button>
+    <h3>
+      {{ forum.name }}
+      @if (forum.is_owner) {
+        <span class="owner-badge">Propietario</span>
+      }
+    </h3>
+    <p>{{ forum.member_count }} miembros</p>
+    <button
+      class="membership-mark"
+      type="button"
+      [disabled]="updatingMembership()"
+      [attr.aria-label]="isMember() ? 'Salir del foro ' + forum.name : 'Unirse al foro ' + forum.name"
+      [attr.title]="isMember() ? 'Salir del foro' : 'Unirse al foro'"
+      (click)="toggleMembership($event)"
+    >
+      @if (isMember()) {
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+      } @else {
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+      }
+    </button>
+    @if (isMember()) {
+      <button class="open-mark" type="button" [attr.aria-label]="'Abrir foro ' + forum.name" (click)="openForum()">&rsaquo;</button>
+    }
   </article>
 } @else {
   <article class="forum-card">
@@ -19,7 +38,12 @@
       </svg>
     </span>
     <div class="forum-info">
-      <h3>{{ forum.name }}</h3>
+      <h3>
+        {{ forum.name }}
+        @if (forum.is_owner) {
+          <span class="owner-badge">Propietario</span>
+        }
+      </h3>
       <p>
         {{ forum.member_count }} miembros
         @if (forum.latestPost) {
@@ -30,6 +54,48 @@
     @if (forum.isNew) {
       <span class="new-badge">Nuevo</span>
     }
-    <button class="open-mark" type="button" [attr.aria-label]="'Entrar al foro ' + forum.name" (click)="openForum()">&rsaquo;</button>
+    @if (!isMember()) {
+      <button
+        class="membership-mark"
+        type="button"
+        [disabled]="updatingMembership()"
+        [attr.aria-label]="'Unirse al foro ' + forum.name"
+        title="Unirse al foro"
+        (click)="toggleMembership($event)"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+      </button>
+    }
+    @if (isMember() && !forum.is_owner) {
+      <div class="card-actions">
+        <button
+          class="actions-menu-trigger"
+          type="button"
+          [attr.aria-label]="'Más opciones para ' + forum.name"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="actionsMenuOpen()"
+          (click)="toggleActionsMenu($event)"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="5" r="1.5" />
+            <circle cx="12" cy="12" r="1.5" />
+            <circle cx="12" cy="19" r="1.5" />
+          </svg>
+        </button>
+        @if (actionsMenuOpen()) {
+          <div class="actions-menu" role="menu" [attr.aria-label]="'Opciones de ' + forum.name">
+            <button
+              type="button"
+              role="menuitem"
+              [disabled]="updatingMembership()"
+              (click)="toggleMembership($event)"
+            >
+              Salir del foro
+            </button>
+          </div>
+        }
+      </div>
+    }
+    <button class="open-mark" type="button" [attr.aria-label]="'Abrir foro ' + forum.name" (click)="openForum()">&rsaquo;</button>
   </article>
 }

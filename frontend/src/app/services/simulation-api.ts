@@ -13,6 +13,17 @@ export type SimulationListResponse = Simulation[] | {
     results?: Simulation[];
 };
 
+export interface SimulationFavourite {
+    id: number;
+    simulation: number;
+    marked_date: string;
+}
+
+export type SimulationFavouriteListResponse = SimulationFavourite[] | {
+    data?: SimulationFavourite[] | { results?: SimulationFavourite[] } | null;
+    results?: SimulationFavourite[];
+};
+
 @Injectable({
     providedIn: 'root'
 })
@@ -55,8 +66,14 @@ export class SimulationApiService {
         });
     }
 
-    getFavourites(): Observable<Simulation[]> {
-        return this.api.get<Simulation[]>('simulations/favourites/');
+    getFavourites(): Observable<SimulationFavourite[]> {
+        return this.api.get<SimulationFavouriteListResponse>('simulations/favourites/').pipe(
+            map((response) => {
+                if (Array.isArray(response)) return response;
+                const payload = response.data ?? response;
+                return Array.isArray(payload) ? payload : payload.results ?? [];
+            }),
+        );
     }
 
     getFavourite(simulationId: number): Observable<Simulation> {

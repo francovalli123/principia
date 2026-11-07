@@ -1,0 +1,17 @@
+<div class="toast-container" aria-label="Notificaciones">
+  @for (toast of toastService.messages(); track toast.id) {
+    <div
+      class="toast"
+      [class.toast-success]="toast.type === 'success'"
+      [class.toast-error]="toast.type === 'error'"
+      [class.toast-exiting]="toast.exiting"
+      [attr.role]="toast.type === 'error' ? 'alert' : 'status'"
+      [attr.aria-live]="toast.type === 'error' ? 'assertive' : 'polite'"
+    >
+      <span>{{ toast.message }}</span>
+      <button type="button" [attr.aria-label]="'Cerrar notificación'" (click)="toastService.dismiss(toast.id)">
+        ×
+      </button>
+    </div>
+  }
+</div>

@@ -34,7 +34,11 @@ class ForumView(PaginatedAPIView):
             forums = Forum.objects.all().order_by("id")
             # La página se calcula sobre el queryset completo para conservar el count.
             page = self.paginate_queryset(forums, request)
-            serializer = ForumSerializer(page if page is not None else forums, many=True)
+            serializer = ForumSerializer(
+                page if page is not None else forums,
+                many=True,
+                context={"request": request},
+            )
             if page is not None:
                 return self.get_paginated_response(serializer.data)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
@@ -69,7 +73,7 @@ class ForumView(PaginatedAPIView):
                 return self.get_paginated_response(serializer.data)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
-        serializer = ForumSerializer(forum)
+        serializer = ForumSerializer(forum, context={"request": request})
         return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
    
     @transaction.atomic 
@@ -93,7 +97,7 @@ class ForumView(PaginatedAPIView):
         return Response(
             {
                 "status": "success",
-                "data": ForumSerializer(forum).data,
+                "data": ForumSerializer(forum, context={"request": request}).data,
             },
             status=status.HTTP_201_CREATED,
         )
@@ -116,7 +120,11 @@ class MyForumsView(PaginatedAPIView):
             Q(members=request.user) | Q(owner=request.user)
         ).distinct().order_by("id")
         page = self.paginate_queryset(forums, request)
-        serializer = ForumSerializer(page if page is not None else forums, many=True)
+        serializer = ForumSerializer(
+            page if page is not None else forums,
+            many=True,
+            context={"request": request},
+        )
         if page is not None:
             return self.get_paginated_response(serializer.data)
         return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
@@ -128,7 +136,11 @@ class SuggestedForumsView(APIView):
     def get(self, request):
         available_forums = Forum.objects.exclude(members=request.user).exclude(owner=request.user)
         suggested_forums = available_forums.order_by("?")[:3]
-        serializer = ForumSerializer(suggested_forums, many=True)
+        serializer = ForumSerializer(
+            suggested_forums,
+            many=True,
+            context={"request": request},
+        )
 
         return Response(
             {

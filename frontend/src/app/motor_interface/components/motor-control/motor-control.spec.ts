@@ -76,4 +76,19 @@ describe('MotorControl', () => {
       expect.objectContaining({ status: 'success' }) 
     );
   });
+
+  it('does not request configuration when the simulation ID is missing', () => {
+    setup.getConfig.mockClear();
+    const invalidFixture = TestBed.createComponent(MotorControl);
+    invalidFixture.componentRef.setInput('simulation', {
+      phenomenon_type: 'Oblique Projectile Motion',
+    });
+    invalidFixture.detectChanges();
+
+    expect(setup.getConfig).not.toHaveBeenCalled();
+    expect(invalidFixture.nativeElement.textContent).toContain(
+      'La simulación no tiene una configuración válida',
+    );
+    invalidFixture.destroy();
+  });
 });

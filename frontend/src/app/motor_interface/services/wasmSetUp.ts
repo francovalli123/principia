@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core'; 
-import { Observable } from 'rxjs'; // Types the backend request as an observable
+import { Observable, throwError } from 'rxjs'; // Types the backend request as an observable
 import { BaseApiService } from '../../services/base-api.service'; 
 import { WASM_REGISTRY } from '../wasmRegistry';
 import {
@@ -22,6 +22,9 @@ export class WasmSetupService {
     constructor(private readonly api: BaseApiService) {} // Injects the shared HTTP service
 
     getConfig(simulationId: number): Observable<unknown> { // Requests one simulation's saved parameters
+        if (!Number.isSafeInteger(simulationId) || simulationId <= 0) {
+            return throwError(() => new Error('A valid simulation ID is required to load its configuration'));
+        }
         return this.api.get<unknown>(`phenomenonConfig/${simulationId}/`); // Leaves phenomenon payload validation to its adapter
     }
 
