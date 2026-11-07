@@ -102,24 +102,16 @@ int main(int argc, char *argv[]) {
 
     int radius = 20;
 
-    InitWindow(800, 600, "Principia");
-
-    // Tamaño de ventana
-    int monitor = GetCurrentMonitor();
-    int screenWidth = GetMonitorWidth(monitor);
-    int screenHeight = GetMonitorHeight(monitor);
+    InitWindow(960, 540, "Principia");
 
     // Determinar escala
     float flightTime = (vy + sqrt(vy * vy + 2 * G * y0)) / G;
     float maxRange = vx * flightTime;
     float maxHeight = y0 + (vy * vy) / (2 * G);
 
-    float scaleX = (screenWidth - 200) / maxRange;
-    float scaleY = (screenHeight - 200) / maxHeight;
+    float scaleX = (GetScreenWidth() - 200) / maxRange;
+    float scaleY = (GetScreenHeight() - 200) / maxHeight;
     float const SCALE = fmin(scaleX, scaleY);
-
-    SetWindowSize(screenWidth, screenHeight);
-    SetWindowPosition(0, 0);
 
     SetTargetFPS(60);
 
@@ -172,10 +164,6 @@ int main(int argc, char *argv[]) {
         BeginDrawing();
 
         ClearBackground(WHITE);
-
-        DrawText(TextFormat("t = %.2f s", t), 20, 20, 20, BLACK);
-        DrawText(TextFormat("x = %.2f m", x), 20, 50, 20, BLACK);
-        DrawText(TextFormat("y = %.2f m", y), 20, 80, 20, BLACK);
 
         // Piso
         DrawLine(0, originY, GetScreenWidth(), originY, BLACK);

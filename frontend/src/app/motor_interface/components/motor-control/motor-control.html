@@ -7,8 +7,8 @@
         #simulationCanvas
         class="simulation-canvas"
         [id]="canvasId"
-        width="800"
-        height="450"
+        width="960"
+        height="540"
         tabindex="0"
         (keydown)="preventSpaceScroll($event)"
         aria-label="Visualización de la simulación"
@@ -34,35 +34,24 @@
             }
           </dl>
 
-          @for (control of controls; track control.id) {
-            @if (control.kind === 'playback-toggle') {
-              <button
-                class="playback-button"
-                type="button"
-                [disabled]="control.disabledWhenCompleted && state.status === 'completed'"
-                (click)="executeControl(control.id)"
-              >
-                <span aria-hidden="true">{{ state.status === 'running' ? 'Ⅱ' : '▶' }}</span>
-                {{ controlLabel(control, state.status) }}
-              </button>
-            }
-          }
         }
       }
     </div>
     @if (state.status !== 'loading' && state.status !== 'error') {
       <div class="simulation-actions" aria-label="Controles de simulación">
         @for (control of controls; track control.id) {
-          @if (control.kind !== 'playback-toggle') {
-            <button
-              class="simulation-action"
-              type="button"
-              [disabled]="control.disabledWhenCompleted && state.status === 'completed'"
-              (click)="executeControl(control.id)"
-            >
-              {{ controlLabel(control, state.status) }}
-            </button>
-          }
+          <button
+            class="simulation-action"
+            [class.simulation-action--playback]="control.kind === 'playback-toggle'"
+            type="button"
+            [disabled]="control.disabledWhenCompleted && state.status === 'completed'"
+            (click)="executeControl(control.id)"
+          >
+            @if (control.kind === 'playback-toggle') {
+              <span aria-hidden="true">{{ state.status === 'running' ? 'Ⅱ' : '▶' }}</span>
+            }
+            {{ controlLabel(control, state.status) }}
+          </button>
         }
       </div>
     }

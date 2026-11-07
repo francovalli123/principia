@@ -72,14 +72,16 @@ describe('MotorControl', () => {
     expect(fixture.nativeElement.textContent).toContain('Pausada'); 
     expect(fixture.nativeElement.textContent).toContain('1.25 s'); 
     expect(fixture.nativeElement.textContent).toContain('8.5 m'); 
-    expect(fixture.nativeElement.querySelector('.playback-button').textContent).toContain(
+    expect(fixture.nativeElement.querySelector('.simulation-action--playback').textContent).toContain(
       'Ejecutar simulación',
     );
-    expect(fixture.nativeElement.querySelector('.simulation-action').textContent).toContain(
-      'Reiniciar',
-    );
-    fixture.nativeElement.querySelector('.playback-button').click();
-    fixture.nativeElement.querySelector('.simulation-action').click();
+    expect(
+      fixture.nativeElement.querySelector(
+        '.simulation-action:not(.simulation-action--playback)',
+      ).textContent,
+    ).toContain('Reiniciar');
+    fixture.nativeElement.querySelector('.simulation-action--playback').click();
+    fixture.nativeElement.querySelector('.simulation-action:not(.simulation-action--playback)').click();
     expect(engine.execute).toHaveBeenNthCalledWith(1, 'pause');
     expect(engine.execute).toHaveBeenNthCalledWith(2, 'reset');
     expect(setup.getConfig).toHaveBeenCalledWith(7); 

@@ -16,6 +16,8 @@
 .simulation-stage {
   position: relative;
   overflow: hidden;
+  display: flex;
+  justify-content: center;
   border-radius: 4px;
   background: #0b1424;
 }
@@ -23,7 +25,9 @@
 .simulation-canvas {
   display: block;
   width: 100%;
-  height: clamp(180px, 16vw, 220px);
+  max-width: 960px;
+  height: auto;
+  aspect-ratio: 16 / 9;
   background: #0b1424;
   filter: invert(0.92);
   outline: none;
@@ -45,7 +49,7 @@
   gap: 2px;
   margin: 0;
   color: #e8f1fa;
-  font-size: 14px;
+  font-size: 16px;
   pointer-events: none;
 }
 
@@ -59,29 +63,31 @@
   margin: 0;
 }
 
-.playback-button {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  display: inline-flex;
-  min-height: 28px;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid #00cce5;
-  border-radius: 16px;
-  padding: 4px 10px;
+.simulation-action--playback {
+  border-color: #08729b;
   color: #fff;
   background: #075278;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 650;
 }
 
-.playback-button:hover:not(:disabled) {
+.simulation-action--playback:hover:not(:disabled) {
   background: #08729b;
 }
 
-.playback-button:disabled,
+.simulation-action:focus-visible {
+  outline: 2px solid #08729b;
+  outline-offset: 2px;
+}
+
+.simulation-action--playback:focus-visible {
+  outline-color: #00cce5;
+}
+
+.simulation-action--playback span {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
 .simulation-action:disabled {
   cursor: not-allowed;
   opacity: 0.55;
