@@ -9,6 +9,8 @@ class Simulation(models.Model):
         related_name="simulations",
     )
     phenomenon_type = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, default="")
+    description = models.TextField(blank=True, default="")
     #json_configuration = models.JSONField()
     visibility = models.CharField(
         max_length=50,
@@ -19,6 +21,7 @@ class Simulation(models.Model):
         ],
         default="public",
     )
+    allow_cloning = models.BooleanField(default=True)
     creation_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

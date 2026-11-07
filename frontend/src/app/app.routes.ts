@@ -17,6 +17,7 @@ export const routes: Routes = [
   { path: 'inicio', component: PrincipiaHome, canActivate: [authGuard] },
   { path: 'foros/crear', component: CreateForumPage, canActivate: [authGuard] },
   { path: 'simulaciones/crear', component: SimulationForm, canActivate: [authGuard] },
+  { path: 'simulaciones/mis', component: SelectSimulationPage, canActivate: [authGuard] },
   { path: 'forums/:forumId/publications/crear/seleccionar', component: SelectSimulationPage, canActivate: [authGuard] },
   { path: 'forums/:forumId/publications/crear/:simulationId', component: PublishSimulationPage, canActivate: [authGuard] },
   { path: 'forums/:forumId/publications/crear', component: CreatePublicationPage, canActivate: [authGuard] },

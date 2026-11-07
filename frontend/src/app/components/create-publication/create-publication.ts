@@ -26,7 +26,7 @@ export class CreatePublicationPage implements OnInit {
 
   createSimulation(): void {
     void this.router.navigate(['/simulaciones/crear'], {
-      queryParams: { forumId: this.forumId, returnTo: 'forum-publication' },
+      queryParams: { forumId: this.forumId, returnTo: 'forum-publication', returnPage: 'choice' },
     });
   }
 

@@ -8,6 +8,8 @@ export interface ApiResponse<T> {
     data: T;
 }
 
+export type SimulationCreationResponse = ApiResponse<Simulation> | Simulation;
+
 export type SimulationListResponse = Simulation[] | {
     data?: Simulation[] | { results?: Simulation[] } | null;
     results?: Simulation[];
@@ -55,14 +57,20 @@ export class SimulationApiService {
     }
 
     createSimulation(
+        title: string,
+        description: string,
         phenomenonType: string,
         visibility: string,
-        parameters: any
-    ): Observable<ApiResponse<Simulation>> {
-        return this.api.post<ApiResponse<Simulation>>('simulations/', {
+        allowCloning: boolean,
+        parameters: Record<string, number>,
+    ): Observable<SimulationCreationResponse> {
+        return this.api.post<SimulationCreationResponse>('simulations/', {
+            title,
+            description,
             phenomenon_type: phenomenonType,
-            visibility: visibility,
-            parameters: parameters
+            visibility,
+            allow_cloning: allowCloning,
+            parameters,
         });
     }
 

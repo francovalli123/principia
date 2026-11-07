@@ -40,8 +40,11 @@ describe('PostCard', () => {
           first_name: 'Test',
           last_name: 'User',
         },
+        title: 'Tiro oblicuo',
+        description: '',
         phenomenon_type: 'Oblique Projectile Motion',
         visibility: 'public',
+        allow_cloning: true,
         creation_date: '2026-10-21T10:00:00Z',
       },
       owner: {
@@ -84,7 +87,7 @@ describe('PostCard', () => {
       content: 'Useful comment',
       creation_date: '2026-10-21T11:00:00Z',
     };
-    component.comments = [comment];
+    fixture.componentRef.setInput('comments', [comment]);
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Comentarios');

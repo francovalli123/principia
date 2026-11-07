@@ -74,8 +74,22 @@ class SimulationView(PaginatedAPIView):
         )
     def post(self, request, *args, **kwargs):
         phenomenon_type = request.data.get("phenomenon_type")
+        title = request.data.get("title", "")
+        if not isinstance(title, str):
+            return Response(
+                {"status": "error", "message": "title must be a string"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        title = title.strip()
+        description = request.data.get("description", "")
         parameters = request.data.get("parameters", {})
         visibility = request.data.get("visibility", "public")
+        allow_cloning = request.data.get("allow_cloning", True)
+        if not title:
+            return Response(
+                {"status": "error", "message": "title is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         config = PHENOMENON_SERIALIZERS.get(phenomenon_type)
         if config is None:
             return Response({"status": "error","message": "Invalid phenomenon_type"},status=status.HTTP_400_BAD_REQUEST,)
@@ -85,7 +99,13 @@ class SimulationView(PaginatedAPIView):
         if not phenomenon_serializer.is_valid():
             return Response({"status": "error","message": phenomenon_serializer.errors},status=status.HTTP_400_BAD_REQUEST,)
 
-        simulation_serializer = SimulationSerializer(data={"phenomenon_type": phenomenon_type, "visibility": visibility})
+        simulation_serializer = SimulationSerializer(data={
+            "title": title,
+            "description": description,
+            "phenomenon_type": phenomenon_type,
+            "visibility": visibility,
+            "allow_cloning": allow_cloning,
+        })
 
         if not simulation_serializer.is_valid():
             return Response({"status": "error","message": simulation_serializer.errors},status=status.HTTP_400_BAD_REQUEST,)

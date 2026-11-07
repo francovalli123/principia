@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { NEVER, Observable, of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Simulation } from '../../../models/simulation';
+import { AuthService } from '../../services/auth';
 import { SimulationApiService } from '../../services/simulation-api';
 import { SimulationForm } from './simulation-form';
 import {
@@ -21,6 +22,7 @@ describe('SimulationForm', () => {
     navigateByUrl: vi.fn(),
     navigate: vi.fn(),
   };
+  const auth = { clearTokens: vi.fn() };
   const route = {
     snapshot: {
       queryParamMap: {
@@ -31,6 +33,7 @@ describe('SimulationForm', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    route.snapshot.queryParamMap.get.mockImplementation((_key: string) => null);
     simulationApi.getPhenomena.mockReturnValue(
       of({ status: 'success', data: ['Oblique Projectile Motion'] }),
     );
@@ -38,6 +41,7 @@ describe('SimulationForm', () => {
       imports: [SimulationForm],
       providers: [
         { provide: SimulationApiService, useValue: simulationApi },
+        { provide: AuthService, useValue: auth },
         { provide: Router, useValue: router },
         { provide: ActivatedRoute, useValue: route },
       ],
@@ -97,6 +101,7 @@ describe('SimulationForm', () => {
     component.simulationCreated.subscribe(created);
 
     component.selectPhenomenon('Oblique Projectile Motion');
+    component.form.controls.title.setValue('Tiro oblicuo');
     component.parametersForm.setValue({
       initial_velocity: 18,
       angle: 37,
@@ -105,16 +110,20 @@ describe('SimulationForm', () => {
     component.submit();
 
     expect(simulationApi.createSimulation).toHaveBeenCalledWith(
+      'Tiro oblicuo',
+      '',
       'Oblique Projectile Motion',
       'public',
+      true,
       { initial_velocity: 18, angle: 37, initial_height: 2 },
     );
     expect(created).toHaveBeenCalledWith(simulation);
     expect(component.successMessage).toBe('Simulación creada correctamente.');
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/inicio');
+    expect(component.isSuccessModalOpen).toBe(true);
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
   });
 
-  it('returns to the forum simulation list when created from a publication flow', () => {
+  it('shows contextual modal actions when created from a publication flow', () => {
     route.snapshot.queryParamMap.get.mockImplementation((key: string) =>
       key === 'forumId' ? '23' : key === 'returnTo' ? 'forum-publication' : null,
     );
@@ -122,6 +131,7 @@ describe('SimulationForm', () => {
     simulationApi.createSimulation.mockReturnValue(of({ status: 'success', data: simulation }));
 
     component.selectPhenomenon('Oblique Projectile Motion');
+    component.form.controls.title.setValue('Tiro oblicuo');
     component.parametersForm.setValue({
       initial_velocity: 18,
       angle: 37,
@@ -129,10 +139,141 @@ describe('SimulationForm', () => {
     });
     component.submit();
 
+    expect(component.isSuccessModalOpen).toBe(true);
+    expect(component.successPrimaryLabel).toBe('Ir al Foro');
+    component.goToMySimulations();
     expect(router.navigate).toHaveBeenCalledWith(
       ['/forums', 23, 'publications', 'crear', 'seleccionar'],
       { queryParams: { createdSimulation: 4 } },
     );
     expect(router.navigateByUrl).not.toHaveBeenCalled();
+  });
+
+  it('closes the success modal on backdrop clicks and Escape without navigating', () => {
+    const simulation = { id: 4, phenomenon_type: 'Oblique Projectile Motion' } as Simulation;
+    simulationApi.createSimulation.mockReturnValue(of({ status: 'success', data: simulation }));
+    component.selectPhenomenon('Oblique Projectile Motion');
+    component.form.controls.title.setValue('Tiro oblicuo');
+    component.parametersForm.setValue({
+      initial_velocity: 18,
+      angle: 37,
+      initial_height: 2,
+    });
+    component.submit();
+    fixture.detectChanges();
+
+    const backdrop = fixture.nativeElement.querySelector('.modal-backdrop') as HTMLElement | null;
+    backdrop?.click();
+    expect(component.isSuccessModalOpen).toBe(false);
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+
+    component.isSuccessModalOpen = true;
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(component.isSuccessModalOpen).toBe(false);
+  });
+
+  it('requires a title before submitting', () => {
+    component.selectPhenomenon('Oblique Projectile Motion');
+    component.parametersForm.setValue({
+      initial_velocity: 18,
+      angle: 37,
+      initial_height: 2,
+    });
+
+    component.submit();
+
+    expect(simulationApi.createSimulation).not.toHaveBeenCalled();
+    expect(component.form.controls.title.touched).toBe(true);
+  });
+
+  it('uses mutually exclusive visibility chips and describes the active choice', () => {
+    const visibilityRadios = fixture.nativeElement.querySelectorAll(
+      'input[type="radio"][formControlName="visibility"]',
+    ) as NodeListOf<HTMLInputElement>;
+    expect(visibilityRadios).toHaveLength(3);
+    expect(visibilityRadios[0].checked).toBe(true);
+
+    visibilityRadios[1].click();
+    fixture.detectChanges();
+    expect(component.selectedVisibility).toBe('private');
+    expect(visibilityRadios[0].checked).toBe(false);
+    expect(visibilityRadios[1].checked).toBe(true);
+    expect(component.visibilityDescription).toContain('Solo vos');
+
+    visibilityRadios[2].click();
+    fixture.detectChanges();
+    expect(component.selectedVisibility).toBe('hidden');
+    expect(visibilityRadios[1].checked).toBe(false);
+    expect(visibilityRadios[2].checked).toBe(true);
+    expect(component.visibilityDescription).toContain('en el foro');
+  });
+
+  it('releases the submit button when the create request does not complete', () => {
+    vi.useFakeTimers();
+    simulationApi.createSimulation.mockReturnValue(NEVER);
+    component.selectPhenomenon('Oblique Projectile Motion');
+    component.form.controls.title.setValue('Tiro oblicuo');
+    component.parametersForm.setValue({
+      initial_velocity: 18,
+      angle: 37,
+      initial_height: 2,
+    });
+
+    component.submit();
+    expect(component.isSubmitting).toBe(true);
+    vi.advanceTimersByTime(15001);
+    fixture.detectChanges();
+
+    expect(component.isSubmitting).toBe(false);
+    expect(component.errorMessage).toContain('no respondió a tiempo');
+    vi.useRealTimers();
+  });
+
+  it('opens the modal and releases the button after the first response even if the stream stays open', () => {
+    const simulation = { id: 21, phenomenon_type: 'Oblique Projectile Motion' } as Simulation;
+    simulationApi.createSimulation.mockReturnValue(
+      new Observable((subscriber) => subscriber.next({ status: 'success', data: simulation })),
+    );
+    component.selectPhenomenon('Oblique Projectile Motion');
+    component.form.controls.title.setValue('Tiro oblicuo');
+    component.parametersForm.setValue({
+      initial_velocity: 18,
+      angle: 37,
+      initial_height: 2,
+    });
+
+    component.submit();
+    fixture.detectChanges();
+
+    expect(component.isSubmitting).toBe(false);
+    expect(component.createdSimulation).toBe(simulation);
+    expect(fixture.nativeElement.querySelector('.success-modal')).toBeTruthy();
+  });
+
+  it('returns to the correct page when cancelling from the publication flow', () => {
+    route.snapshot.queryParamMap.get.mockImplementation((key: string) =>
+      key === 'forumId' ? '23' : key === 'returnTo' ? 'forum-publication' : key === 'returnPage' ? 'choice' : null,
+    );
+    component.cancel();
+    expect(router.navigate).toHaveBeenCalledWith(['/forums', 23, 'publications', 'crear']);
+
+    router.navigate.mockClear();
+    route.snapshot.queryParamMap.get.mockImplementation((key: string) =>
+      key === 'forumId' ? '23' : key === 'returnTo' ? 'forum-publication' : key === 'returnPage' ? 'selection' : null,
+    );
+    component.cancel();
+    expect(router.navigate).toHaveBeenCalledWith([
+      '/forums', 23, 'publications', 'crear', 'seleccionar',
+    ]);
+  });
+
+  it('routes standalone creation actions to home and the generic simulations list', () => {
+    component.goToSuccessPrimaryAction();
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/inicio');
+
+    router.navigateByUrl.mockClear();
+    component.goToMySimulations();
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/simulaciones/mis');
   });
 });

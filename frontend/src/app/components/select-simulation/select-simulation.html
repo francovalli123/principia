@@ -3,8 +3,8 @@
     <button class="back-link" type="button" (click)="cancel()">
       <span aria-hidden="true">←</span> Volver
     </button>
-    <h1>Elegí una simulación</h1>
-    <p>Seleccioná una simulación que ya creaste para publicarla en el foro</p>
+    <h1>{{ pageTitle }}</h1>
+    <p>{{ pageDescription }}</p>
   </header>
 
   @if (isLoading) {
@@ -19,16 +19,18 @@
       <span class="empty-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M5 5h14M5 12h14M5 19h14" /></svg>
       </span>
-      <h2 id="empty-title">Todavía no creaste ninguna simulación</h2>
-      <p>Cuando crees una simulación, vas a poder encontrarla acá para publicarla las veces que quieras.</p>
-      <button type="button" class="primary-button" (click)="createSimulation()">Crear mi primera simulación</button>
+      <h2 id="empty-title">{{ emptyTitle }}</h2>
+      <p>{{ emptyDescription }}</p>
+      <button type="button" class="primary-button" (click)="createSimulation()">
+        {{ isForumPublicationFlow ? 'Crear mi primera simulación' : 'Crear una simulación' }}
+      </button>
     </section>
   } @else {
     <section class="simulation-list" aria-label="Mis simulaciones">
       @for (simulation of simulations; track simulation.id) {
         <article class="simulation-item">
           <div class="simulation-info">
-            <h2>{{ phenomenonLabel(simulation.phenomenon_type) }}</h2>
+            <h2>{{ simulation.title || phenomenonLabel(simulation.phenomenon_type) }}</h2>
             <div class="simulation-meta">
               <span class="phenomenon-badge">{{ phenomenonLabel(simulation.phenomenon_type) }}</span>
               <span class="visibility-badge" [class]="simulation.visibility">{{ visibilityLabel(simulation.visibility) }}</span>
@@ -45,13 +47,17 @@
               <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" />
             </svg>
           </span>
-          <button type="button" class="select-button" (click)="selectSimulation(simulation)">Seleccionar</button>
+          @if (isForumPublicationFlow) {
+            <button type="button" class="select-button" (click)="selectSimulation(simulation)">Seleccionar</button>
+          }
         </article>
       }
     </section>
-    <p class="create-another">
-      ¿No encontrás la que buscás?
-      <button type="button" (click)="createSimulation()">Crear una simulación nueva</button>
-    </p>
+    @if (isForumPublicationFlow) {
+      <p class="create-another">
+        ¿No encontrás la que buscás?
+        <button type="button" (click)="createSimulation()">Crear una simulación nueva</button>
+      </p>
+    }
   }
 </main>

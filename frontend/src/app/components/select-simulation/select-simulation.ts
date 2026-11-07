@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, switchMap, throwIfEmpty, timeout } from 'rxjs';
 import { Simulation } from '../../../models/simulation';
@@ -12,7 +13,8 @@ import { UserApiService } from '../../services/user-api';
   styleUrl: './select-simulation.css',
 })
 export class SelectSimulationPage implements OnInit {
-  forumId = 0;
+  forumId: number | null = null;
+  isForumPublicationFlow = false;
   simulations: Simulation[] = [];
   favouriteIds = new Set<number>();
   isLoading = true;
@@ -27,11 +29,16 @@ export class SelectSimulationPage implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.forumId = Number(this.route.snapshot.paramMap.get('forumId'));
-    if (!Number.isSafeInteger(this.forumId) || this.forumId <= 0) {
-      this.isLoading = false;
-      this.loadError = 'No pudimos identificar el foro.';
-      return;
+    const forumIdParameter = this.route.snapshot.paramMap.get('forumId');
+    this.isForumPublicationFlow = forumIdParameter !== null;
+    if (this.isForumPublicationFlow) {
+      const forumId = Number(forumIdParameter);
+      if (!Number.isSafeInteger(forumId) || forumId <= 0) {
+        this.isLoading = false;
+        this.loadError = 'No pudimos identificar el foro.';
+        return;
+      }
+      this.forumId = forumId;
     }
 
     this.loadSimulations();
@@ -68,8 +75,10 @@ export class SelectSimulationPage implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: (error: unknown) => {
-        console.error('Failed to load simulations for forum publication', error);
-        this.loadError = 'No pudimos cargar tus simulaciones. Revisá tu conexión e intentá nuevamente.';
+        console.error('Failed to load the current user simulations', error);
+        this.loadError = error instanceof HttpErrorResponse && error.status === 0
+          ? 'No pudimos conectar con el servidor. Verificá que Django esté iniciado en 127.0.0.1:8000 y volvé a intentar.'
+          : 'No pudimos cargar tus simulaciones. Revisá tu conexión e intentá nuevamente.';
         this.isLoading = false;
         this.changeDetector.markForCheck();
       },
@@ -77,6 +86,7 @@ export class SelectSimulationPage implements OnInit {
   }
 
   selectSimulation(simulation: Simulation): void {
+    if (this.forumId === null) return;
     void this.router.navigate([
       '/forums',
       this.forumId,
@@ -87,13 +97,47 @@ export class SelectSimulationPage implements OnInit {
   }
 
   createSimulation(): void {
+    if (this.forumId === null) {
+      void this.router.navigate(['/simulaciones/crear']);
+      return;
+    }
     void this.router.navigate(['/simulaciones/crear'], {
-      queryParams: { forumId: this.forumId, returnTo: 'forum-publication' },
+      queryParams: {
+        forumId: this.forumId,
+        returnTo: 'forum-publication',
+        returnPage: 'selection',
+      },
     });
   }
 
   cancel(): void {
-    void this.router.navigate(['/forums', this.forumId]);
+    if (this.forumId !== null) {
+      void this.router.navigate(['/forums', this.forumId]);
+    } else {
+      void this.router.navigateByUrl('/inicio');
+    }
+  }
+
+  get pageTitle(): string {
+    return this.isForumPublicationFlow ? 'Elegí una simulación' : 'Mis simulaciones';
+  }
+
+  get pageDescription(): string {
+    return this.isForumPublicationFlow
+      ? 'Seleccioná una simulación que ya creaste para publicarla en el foro'
+      : 'Consultá las simulaciones que creaste';
+  }
+
+  get emptyTitle(): string {
+    return this.isForumPublicationFlow
+      ? 'Todavía no creaste ninguna simulación'
+      : 'Todavía no tenés simulaciones';
+  }
+
+  get emptyDescription(): string {
+    return this.isForumPublicationFlow
+      ? 'Cuando crees una simulación, vas a poder encontrarla acá para publicarla las veces que quieras.'
+      : 'Cuando crees una simulación, vas a poder encontrarla acá.';
   }
 
   phenomenonLabel(phenomenonType: string): string {

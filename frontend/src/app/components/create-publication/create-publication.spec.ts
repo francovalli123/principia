@@ -33,7 +33,7 @@ describe('CreatePublicationPage', () => {
       fixture.nativeElement.querySelector('.primary-button').click();
 
       expect(router.navigate).toHaveBeenCalledWith(['/simulaciones/crear'], {
-        queryParams: { forumId: 23, returnTo: 'forum-publication' },
+        queryParams: { forumId: 23, returnTo: 'forum-publication', returnPage: 'choice' },
       });
   });
 

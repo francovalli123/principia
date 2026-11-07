@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EMPTY, NEVER, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -21,6 +22,7 @@ describe('SelectSimulationPage', () => {
   };
   const userApi = { getCurrentUser: vi.fn() };
   const router = { navigate: vi.fn() };
+  let routeForumId: string | null = '23';
 
   afterEach(() => {
     vi.useRealTimers();
@@ -28,6 +30,7 @@ describe('SelectSimulationPage', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    routeForumId = '23';
     userApi.getCurrentUser.mockReturnValue(of({ id: 8 }));
     simulationApi.getByOwner.mockReturnValue(of([firstSimulation]));
     simulationApi.getFavourites.mockReturnValue(of([{ id: 2, simulation: 17, marked_date: '' }]));
@@ -39,7 +42,12 @@ describe('SelectSimulationPage', () => {
         { provide: UserApiService, useValue: userApi },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: { get: () => '23' } } },
+          useValue: {
+            snapshot: {
+              paramMap: { get: () => routeForumId },
+              routeConfig: { path: 'forums/:forumId/publications/crear/seleccionar' },
+            },
+          },
         },
         { provide: Router, useValue: router },
       ],
@@ -73,8 +81,19 @@ describe('SelectSimulationPage', () => {
     expect(fixture.nativeElement.textContent).toContain('Todavía no creaste ninguna simulación');
     fixture.nativeElement.querySelector('.primary-button').click();
     expect(router.navigate).toHaveBeenCalledWith(['/simulaciones/crear'], {
-      queryParams: { forumId: 23, returnTo: 'forum-publication' },
+      queryParams: { forumId: 23, returnTo: 'forum-publication', returnPage: 'selection' },
     });
+  });
+
+  it('loads the generic my simulations page without forum actions', async () => {
+    routeForumId = null;
+    const genericFixture = TestBed.createComponent(SelectSimulationPage);
+    genericFixture.detectChanges();
+
+    expect(genericFixture.componentInstance.isForumPublicationFlow).toBe(false);
+    expect(genericFixture.nativeElement.textContent).toContain('Mis simulaciones');
+    expect(genericFixture.nativeElement.querySelector('.select-button')).toBeNull();
+    expect(genericFixture.nativeElement.textContent).not.toContain('Crear una simulación nueva');
   });
 
   it('shows an error and retry action when simulations cannot be loaded', () => {
@@ -84,6 +103,20 @@ describe('SelectSimulationPage', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('No pudimos cargar tus simulaciones');
+    expect(fixture.nativeElement.querySelector('.primary-button')?.textContent).toContain('Reintentar');
+  });
+
+  it('stops loading and explains when the backend cannot be reached', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    userApi.getCurrentUser.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 0, statusText: 'Unknown Error' })),
+    );
+
+    fixture.componentInstance.loadSimulations();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.isLoading).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('Verificá que Django esté iniciado');
     expect(fixture.nativeElement.querySelector('.primary-button')?.textContent).toContain('Reintentar');
   });
 

@@ -1,15 +1,17 @@
-import { ChangeDetectorRef, Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, HostListener, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Simulation } from '../../../models/simulation';
 import { ApiResponse, SimulationApiService } from '../../services/simulation-api';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TimeoutError, finalize, take, throwIfEmpty, timeout } from 'rxjs';
 import {
   getSimulationFormAdapter,
   SimulationFormAdapter,
 } from './simulation-form.adapter';
+import { AppHeader } from '../app-header/app-header';
 
 @Component({
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AppHeader],
   selector: 'app-simulation-form',
   styleUrl: './simulation-form.css',
   templateUrl: './simulation-form.html',
@@ -18,11 +20,17 @@ export class SimulationForm implements OnInit {
   @Output() readonly simulationCreated = new EventEmitter<Simulation>();
 
   readonly form = new FormGroup({
+    title: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern(/\S/), Validators.maxLength(255)],
+    }),
+    description: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(2000)] }),
     phenomenonType: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     visibility: new FormControl<'public' | 'hidden' | 'private'>('public', {
       nonNullable: true,
       validators: [Validators.required],
     }),
+    allowCloning: new FormControl(true, { nonNullable: true }),
   });
   parametersForm = new FormGroup<Record<string, FormControl<number>>>({});
 
@@ -32,6 +40,8 @@ export class SimulationForm implements OnInit {
   isSubmitting = false;
   errorMessage = '';
   successMessage = '';
+  isSuccessModalOpen = false;
+  createdSimulation?: Simulation;
 
   constructor(
     private readonly simulationApi: SimulationApiService,
@@ -77,57 +87,133 @@ export class SimulationForm implements OnInit {
 
   submit(): void {
     const adapter = this.selectedAdapter;
-    if (!adapter || this.form.invalid || this.parametersForm.invalid || this.isSubmitting) return;
+    if (!adapter || this.form.invalid || this.parametersForm.invalid || this.isSubmitting) {
+      this.form.markAllAsTouched();
+      this.parametersForm.markAllAsTouched();
+      return;
+    }
 
     this.isSubmitting = true;
     this.errorMessage = '';
     this.successMessage = '';
     const parameters = adapter.toParameters(this.parametersForm.getRawValue());
+    const formValue = this.form.getRawValue();
 
     this.simulationApi
       .createSimulation(
+        formValue.title.trim(),
+        formValue.description.trim(),
         adapter.phenomenonType,
-        this.form.controls.visibility.value,
+        formValue.visibility,
+        formValue.allowCloning,
         parameters,
       )
+      .pipe(
+        timeout(15000),
+        take(1),
+        throwIfEmpty(() => new Error('La solicitud terminó sin devolver la simulación creada.')),
+        finalize(() => {
+          this.isSubmitting = false;
+          this.changeDetector.detectChanges();
+        }),
+      )
       .subscribe({
-        next: (response: ApiResponse<Simulation>) => {
-          this.simulationCreated.emit(response.data);
-          this.successMessage = 'Simulación creada correctamente.';
-          this.isSubmitting = false;
-          this.form.reset({ phenomenonType: '', visibility: 'public' });
-          const forumId = this.forumPublicationForumId();
-          if (forumId !== null) {
-            void this.router.navigate(
-              ['/forums', forumId, 'publications', 'crear', 'seleccionar'],
-              { queryParams: { createdSimulation: response.data.id } },
-            );
-          } else {
-            void this.router.navigateByUrl('/inicio');
+        next: (response) => {
+          const simulation = response && 'data' in response ? response.data : response;
+          if (!simulation || !Number.isSafeInteger(simulation.id)) {
+            this.errorMessage = 'El servidor confirmó la solicitud, pero no devolvió un identificador de simulación válido.';
+            this.changeDetector.detectChanges();
+            return;
           }
-        },
-        error: () => {
-          this.errorMessage = 'No pudimos crear la simulación. Revisá los valores e intentá nuevamente.';
           this.isSubmitting = false;
-          this.form.reset({ phenomenonType: '', visibility: 'public' });
+          this.successMessage = 'Simulación creada correctamente.';
+          this.createdSimulation = simulation;
+          this.isSuccessModalOpen = true;
+          this.changeDetector.detectChanges();
+          this.simulationCreated.emit(simulation);
+        },
+        error: (error: unknown) => {
+          console.error('Failed to create simulation', error);
+          this.errorMessage = error instanceof TimeoutError
+            ? 'El servidor guardó la solicitud pero no respondió a tiempo. Revisá tus simulaciones antes de volver a crearla.'
+            : error instanceof Error && error.message === 'La solicitud terminó sin devolver la simulación creada.'
+              ? error.message
+              : 'No pudimos crear la simulación. Revisá los valores e intentá nuevamente.';
+          this.changeDetector.detectChanges();
         },
       });
   }
 
-  backToForumPublication(): void {
+  cancel(): void {
     const forumId = this.forumPublicationForumId();
     if (forumId !== null) {
-      void this.router.navigate(['/forums', forumId, 'publications', 'crear', 'seleccionar']);
+      if (this.route.snapshot.queryParamMap.get('returnPage') === 'choice') {
+        void this.router.navigate(['/forums', forumId, 'publications', 'crear']);
+      } else {
+        void this.router.navigate(['/forums', forumId, 'publications', 'crear', 'seleccionar']);
+      }
+      return;
     }
+    void this.router.navigateByUrl('/inicio');
   }
 
   get isCreatingForForumPublication(): boolean {
     return this.forumPublicationForumId() !== null;
   }
 
+  get successPrimaryLabel(): string {
+    return this.isCreatingForForumPublication ? 'Ir al Foro' : 'Ir al inicio';
+  }
+
+  closeSuccessModal(): void {
+    this.isSuccessModalOpen = false;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isSuccessModalOpen) this.closeSuccessModal();
+  }
+
+  goToSuccessPrimaryAction(): void {
+    const forumId = this.forumPublicationForumId();
+    this.closeSuccessModal();
+    if (forumId !== null) {
+      void this.router.navigate(['/forums', forumId]);
+    } else {
+      void this.router.navigateByUrl('/inicio');
+    }
+  }
+
+  goToMySimulations(): void {
+    const forumId = this.forumPublicationForumId();
+    this.closeSuccessModal();
+    if (forumId !== null) {
+      void this.router.navigate(['/forums', forumId, 'publications', 'crear', 'seleccionar'], {
+        queryParams: { createdSimulation: this.createdSimulation?.id },
+      });
+    } else {
+      void this.router.navigateByUrl('/simulaciones/mis');
+    }
+  }
+
   private forumPublicationForumId(): number | null {
     if (this.route.snapshot.queryParamMap.get('returnTo') !== 'forum-publication') return null;
     const forumId = Number(this.route.snapshot.queryParamMap.get('forumId'));
     return Number.isSafeInteger(forumId) && forumId > 0 ? forumId : null;
+  }
+
+  get selectedVisibility(): 'public' | 'hidden' | 'private' {
+    return this.form.controls.visibility.value;
+  }
+
+  get visibilityDescription(): string {
+    switch (this.selectedVisibility) {
+      case 'private':
+        return 'Solo vos podés ver esta simulación. No aparecerá en tu perfil público.';
+      case 'hidden':
+        return 'No aparecerá en búsquedas ni en el foro, pero podrás compartirla con un enlace directo.';
+      default:
+        return 'Será visible en tu perfil y podrá aparecer en el foro.';
+    }
   }
 }
