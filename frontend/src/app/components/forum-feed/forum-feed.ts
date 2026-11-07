@@ -3,10 +3,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Comment } from '../../../models/comment';
 import { Forum } from '../../../models/forum';
 import { Publication } from '../../../models/publication';
+import { Profile } from '../../../models/user';
 import { AppHeader } from '../app-header/app-header';
 import { CommentApiService } from '../../services/comment-api';
 import { ForumApiService } from '../../services/forum-api';
 import { PublicationApiService } from '../../services/publication-api';
+import { ProfileApiService } from '../../services/profile-api';
 import { UserApiService } from '../../services/user-api';
 import { PostCard } from '../../components/post-card/post-card';
 
@@ -33,6 +35,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
   readonly hasMore = signal(true);
   readonly error = signal(false);
   readonly forum = signal<Forum | null>(null);
+  readonly profile = signal<Profile | null>(null);
   currentUserId: number | null = null;
 
   private page = 1;
@@ -43,6 +46,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     private readonly forumApi: ForumApiService,
     private readonly publicationApi: PublicationApiService,
     private readonly commentApi: CommentApiService,
+    private readonly profileApi: ProfileApiService,
     private readonly userApi: UserApiService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
@@ -66,6 +70,10 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
         }
       },
       error: (error: unknown) => console.error('Failed to load the current user for comment actions', error),
+    });
+    this.profileApi.getProfile().subscribe({
+      next: (profile) => this.profile.set(profile),
+      error: (error: unknown) => console.error('Failed to load the current user profile for the publication composer', error),
     });
     this.forumApi.getForum(this.forumId).subscribe({
       next: (forum) => this.forum.set(forum),

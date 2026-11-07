@@ -7,6 +7,7 @@ import { ForumApiService } from '../../services/forum-api';
 import { PublicationApiService } from '../../services/publication-api';
 import { CommentApiService } from '../../services/comment-api';
 import { UserApiService } from '../../services/user-api';
+import { ProfileApiService } from '../../services/profile-api';
 
 describe('ForumFeed', () => {
   let component: ForumFeed;
@@ -27,6 +28,16 @@ describe('ForumFeed', () => {
     })),
   };
   const commentApi = { getComments: () => of({ status: 'ok', data: { count: 0, next: null, previous: null, results: [] } }) };
+  const profileApi = {
+    getProfile: vi.fn(() => of({
+      id: 8,
+      user: 12,
+      bio: null,
+      visible_name: null,
+      profile_picture: 'https://example.test/profile.jpg',
+      creation_date: '',
+    })),
+  };
   const userApi = { getCurrentUser: vi.fn(() => of({ id: 12 })) };
   const router = { navigate: vi.fn() };
 
@@ -41,6 +52,7 @@ describe('ForumFeed', () => {
         { provide: ForumApiService, useValue: forumApi },
         { provide: PublicationApiService, useValue: publicationApi },
         { provide: CommentApiService, useValue: commentApi },
+        { provide: ProfileApiService, useValue: profileApi },
         { provide: UserApiService, useValue: userApi },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '23' } } } },
         { provide: Router, useValue: router },
@@ -63,9 +75,19 @@ describe('ForumFeed', () => {
   });
 
   it('links to the publication form page for the current forum', () => {
+    const composer = fixture.nativeElement.querySelector('.publication-composer') as HTMLElement;
+    composer.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(router.navigate).not.toHaveBeenCalled();
+
     const createButton = fixture.nativeElement.querySelector('.create-publication-button') as HTMLButtonElement;
     createButton.click();
     expect(router.navigate).toHaveBeenCalledWith(['/forums', 23, 'publications', 'crear']);
+  });
+
+  it('shows the current user profile picture beside the publish button', () => {
+    const avatar = fixture.nativeElement.querySelector('.composer-avatar') as HTMLImageElement;
+    expect(avatar.src).toBe('https://example.test/profile.jpg');
+    expect(fixture.nativeElement.querySelector('.publication-composer .create-publication-button')).toBeTruthy();
   });
 
   it('loads the current forum and provides a return action', () => {

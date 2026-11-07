@@ -1,16 +1,30 @@
 <app-header />
 <section class="forum-feed" aria-label="Publicaciones del foro">
 	<header class="forum-intro">
-		<button type="button" class="back-button" (click)="goBack()">‹ <span>Volver al inicio</span></button>
 		<div class="forum-heading">
 			<h1>{{ forum()?.name || 'Foro' }} - Simulaciones</h1>
 			<p>{{ forum()?.description || 'Sube y comparte simulaciones para repasar conceptos y ejercicios.' }}</p>
 		</div>
+		<button type="button" class="back-button" (click)="goBack()">‹ <span>Volver al inicio</span></button>
 	</header>
-	<button type="button" class="create-publication-button" (click)="createPublication()">
-		<span class="composer-avatar" aria-hidden="true">+</span>
-		<span>Publicar simulación</span>
-	</button>
+	<div class="publication-composer">
+		@if (profile()?.profile_picture; as profilePicture) {
+			<img class="composer-avatar" [src]="profilePicture" alt="" />
+		} @else {
+			<span class="composer-avatar composer-avatar-fallback" aria-hidden="true">
+				<svg viewBox="0 0 24 24" focusable="false">
+					<circle cx="12" cy="8" r="3.5" />
+					<path d="M5 21c.4-4.1 2.8-6.2 7-6.2s6.6 2.1 7 6.2" />
+				</svg>
+			</span>
+		}
+		<button type="button" class="create-publication-button" (click)="createPublication()">
+			<svg viewBox="0 0 24 24" aria-hidden="true">
+				<path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" />
+			</svg>
+			<span>Publicar simulación</span>
+		</button>
+	</div>
 	@if (loading()) {
 		<p class="feed-status" role="status">Cargando publicaciones...</p>
 	} @else if (error() && posts().length === 0) {
