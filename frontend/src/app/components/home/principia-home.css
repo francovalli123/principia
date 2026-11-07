@@ -134,6 +134,13 @@ p {
   margin-bottom: 22px;
 }
 
+.section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .section-heading h2 {
   font-size: 22px;
   letter-spacing: -0.03em;
@@ -238,6 +245,14 @@ p {
 
   .welcome {
     padding: 24px;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+  }
+
+  .section-actions {
+    gap: 8px;
   }
 
   .forum-grid,

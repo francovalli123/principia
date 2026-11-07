@@ -4,6 +4,44 @@
 	padding: 1.5rem 0 3rem;
 }
 
+.feed-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1.25rem;
+}
+
+.feed-toolbar h1 {
+	margin: 0;
+	color: #183a32;
+	font-size: 1.35rem;
+}
+
+.create-publication-button {
+	display: inline-flex;
+	align-items: center;
+	text-decoration: none;
+	min-height: 2.5rem;
+	border: 1px solid #23685d;
+	padding: 0.45rem 0.85rem;
+	color: #fff;
+	background: #23685d;
+	font: inherit;
+	cursor: pointer;
+}
+
+.create-publication-button:hover {
+	background: #194f47;
+}
+
+@media (max-width: 420px) {
+	.feed-toolbar {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+}
+
 .post-list {
 	display: grid;
 	gap: 1.25rem;

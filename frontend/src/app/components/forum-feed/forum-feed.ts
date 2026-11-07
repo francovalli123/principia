@@ -1,10 +1,11 @@
-import { AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Comment } from '../../../models/comment';
 import { Publication } from '../../../models/publication';
 import { CommentApiService } from '../../services/comment-api';
 import { PublicationApiService } from '../../services/publication-api';
 import { PostCard } from '../../components/post-card/post-card';
-import { ActivatedRoute } from '@angular/router';
+
 interface FeedPost {
   publication: Publication;
   comments: Comment[];
@@ -14,6 +15,7 @@ interface FeedPost {
 
 @Component({
   imports: [PostCard],
+  standalone: true,
   selector: 'app-forum-feed',
   styleUrl: './forum-feed.css',
   templateUrl: './forum-feed.html',
@@ -29,17 +31,17 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
 
   private page = 1;
   private observer?: IntersectionObserver;
-  private forumId!: number;
+  forumId!: number;
+
   constructor(
     private readonly publicationApi: PublicationApiService,
     private readonly commentApi: CommentApiService,
-    private readonly route: ActivatedRoute // ActivatedRoute 
-    // permite acceder a la información de la ruta actual,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
     this.forumId = Number(this.route.snapshot.paramMap.get('id'));
-    //console.log('FORUM ID:', this.forumId);
     this.loadPublications(true);
   }
 
@@ -64,6 +66,10 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
 
   retry(): void {
     if (!this.loading() && !this.loadingMore()) this.loadPublications(this.posts().length === 0);
+  }
+
+  createPublication(): void {
+    void this.router.navigate(['/forums', this.forumId, 'publications', 'crear']);
   }
 
   loadMoreComments(post: FeedPost): void {
@@ -97,7 +103,6 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     const requestedPage = this.page;
     this.publicationApi.getPaginatedByForum(requestedPage, this.forumId).subscribe({
       next: (response) => {
-        console.log('PUBLICATIONS RESPONSE:', response);
         const newPosts = response.data.results.map((publication) => ({
           publication,
           comments: [],
@@ -136,6 +141,4 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
       post.publication.id === publicationId ? update(post) : post
     ));
   }
-
-
 }

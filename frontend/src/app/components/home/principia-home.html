@@ -36,17 +36,25 @@
         <h2 id="my-forums-title">Mis foros</h2>
         <span class="count">{{ myForums().length }} activos</span>
       </div>
-      <a class="create-forum-link" routerLink="/foros/crear">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M12 16V4m0 0L8 8m4-4 4 4" />
-          <path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
-        </svg>
-        <span>Crear foro</span>
-      </a>
+      <div class="section-actions">
+        <a class="create-forum-link" routerLink="/simulaciones/crear">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span>Crear simulación</span>
+        </a>
+        <a class="create-forum-link" routerLink="/foros/crear">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 16V4m0 0L8 8m4-4 4 4" />
+            <path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
+          </svg>
+          <span>Crear foro</span>
+        </a>
+      </div>
     </div>
 
     <div class="forum-grid">
-      @for (forum of visibleMyForums; track forum.name) {
+      @for (forum of visibleMyForums; track forum.id) {
         <app-forum-card [forum]="forum" />
       } @empty {
       <!-- Empty State for My Forums -->
@@ -68,7 +76,7 @@
     </div>
 
     <div class="suggested-grid">
-      @for (forum of visibleSuggestedForums; track forum.name) {
+      @for (forum of visibleSuggestedForums; track forum.id) {
         <app-forum-card [forum]="forum" variant="suggested" />
       } @empty {
         @if (suggestedForumsLoading()) {

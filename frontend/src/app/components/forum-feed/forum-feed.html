@@ -1,4 +1,10 @@
 <section class="forum-feed" aria-label="Publicaciones del foro">
+	<header class="feed-toolbar">
+		<h1>Publicaciones</h1>
+		<button type="button" class="create-publication-button" (click)="createPublication()">
+			Crear publicación
+		</button>
+	</header>
 	@if (loading()) {
 		<p class="feed-status" role="status">Cargando publicaciones...</p>
 	} @else if (error() && posts().length === 0) {

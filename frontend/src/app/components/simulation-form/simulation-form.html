@@ -1,1 +1,97 @@
-<p>simulation-form works!</p>
+<section class="simulation-form-page" aria-labelledby="simulation-form-title">
+	<header class="form-heading">
+		<p class="eyebrow">Laboratorio Principia</p>
+		<h1 id="simulation-form-title">Nueva simulación</h1>
+		<p class="intro">Elegí un fenómeno y configurá sus condiciones iniciales.</p>
+	</header>
+
+	@if (isLoading) {
+		<p class="status-message" role="status">Cargando fenómenos…</p>
+	} @else {
+		<form [formGroup]="form" (ngSubmit)="submit()" class="simulation-form">
+			<div class="field">
+				<label for="phenomenon">Fenómeno</label>
+				<select
+					id="phenomenon"
+					[value]="form.controls.phenomenonType.value"
+					(change)="selectPhenomenon($any($event.target).value)"
+					required
+				>
+					<option value="" disabled>Seleccioná un fenómeno</option>
+					@for (phenomenon of phenomena; track phenomenon) {
+						<option [value]="phenomenon">{{ phenomenon }}</option>
+					}
+				</select>
+			</div>
+
+			@if (selectedAdapter; as adapter) {
+				<section class="parameter-section" aria-labelledby="parameter-title">
+					<div class="section-heading">
+						<div>
+							<p class="eyebrow">Parámetros</p>
+							<h2 id="parameter-title">{{ adapter.title }}</h2>
+							<p>{{ adapter.description }}</p>
+						</div>
+						<span class="field-count">{{ adapter.fields.length }} variables</span>
+					</div>
+
+					<div class="parameter-grid" [formGroup]="parametersForm">
+						@for (field of adapter.fields; track field.name) {
+							<div class="field parameter-field">
+								<label [for]="field.name">{{ field.label }}</label>
+								<div class="number-input">
+									<input
+										[id]="field.name"
+										[formControlName]="field.name"
+										type="number"
+										[min]="field.min"
+										[max]="field.max ?? null"
+										[step]="field.step"
+										required
+									/>
+									<span>{{ field.unit }}</span>
+								</div>
+								@if (parametersForm.controls[field.name].invalid && parametersForm.controls[field.name].touched) {
+									<span class="field-error">
+										Ingresá un valor válido{{ field.max !== undefined ? ' entre ' + field.min + ' y ' + field.max : ' mayor o igual a ' + field.min }}.
+									</span>
+								}
+							</div>
+						}
+					</div>
+				</section>
+			} @else if (form.controls.phenomenonType.value) {
+				<p class="unsupported-message" role="status">
+					Este fenómeno todavía no tiene un adaptador de parámetros disponible.
+				</p>
+			}
+
+			<div class="field visibility-field">
+				<label for="visibility">Visibilidad</label>
+				<select id="visibility" formControlName="visibility">
+					<option value="public">Pública</option>
+					<option value="hidden">Oculta</option>
+					<option value="private">Privada</option>
+				</select>
+			</div>
+
+			@if (errorMessage) {
+				<p class="form-error" role="alert">{{ errorMessage }}</p>
+			}
+			@if (successMessage) {
+				<p class="form-success" role="status">{{ successMessage }}</p>
+			}
+
+			<footer class="form-actions">
+				<button
+					class="submit-button"
+					type="submit"
+					[disabled]="!selectedAdapter || form.invalid || parametersForm.invalid || isSubmitting"
+				>
+					{{ isSubmitting ? 'Creando…' : 'Crear simulación' }}
+					<span aria-hidden="true">→</span>
+				</button>
+			</footer>
+		</form>
+	}
+</section>

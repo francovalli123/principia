@@ -1,15 +1,26 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { BaseApiService } from './base-api.service';
 import { Simulation } from '../../models/simulation';
+
+export interface ApiResponse<T> {
+    status: string;
+    data: T;
+}
+
+export type SimulationListResponse = Simulation[] | {
+    data?: Simulation[] | { results?: Simulation[] } | null;
+    results?: Simulation[];
+};
+
 @Injectable({
     providedIn: 'root'
 })
 export class SimulationApiService {
     constructor(private api: BaseApiService) {}
 
-    getPhenomena(): Observable<any> {
-        return this.api.get<any>('phenomena/');
+    getPhenomena(): Observable<ApiResponse<string[]> | string[]> {
+        return this.api.get<ApiResponse<string[]> | string[]>('phenomena/');
     }
 
     getPhenomenonConfig(simulationId: number): Observable<any> {
@@ -23,15 +34,21 @@ export class SimulationApiService {
     }
 
     getByOwner(ownerId: number): Observable<Simulation[]> {
-        return this.api.get<Simulation[]>(`simulations/?owner_id=${ownerId}`);
+        return this.api.get<SimulationListResponse>(`simulations/?owner_id=${ownerId}`).pipe(
+            map((response) => {
+                if (Array.isArray(response)) return response;
+                const payload = response.data ?? response;
+                return Array.isArray(payload) ? payload : payload.results ?? [];
+            }),
+        );
     }
 
     createSimulation(
         phenomenonType: string,
         visibility: string,
         parameters: any
-    ): Observable<Simulation> {
-        return this.api.post<Simulation>('simulations/', {
+    ): Observable<ApiResponse<Simulation>> {
+        return this.api.post<ApiResponse<Simulation>>('simulations/', {
             phenomenon_type: phenomenonType,
             visibility: visibility,
             parameters: parameters
