@@ -1,12 +1,13 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { catchError, throwError } from 'rxjs';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req).pipe(
         catchError((error: HttpErrorResponse) => {
             switch (error.status) {
-                //401 Unauthorized is handled by the authInterceptor, so we can ignore it here
+                case 401:
+                    // Login failures and exhausted refresh attempts are handled by their callers.
+                    break;
                 case 400:
                     // Handle bad request error (e.g., show a message)
                     console.error('Bad request - please check your input.');

@@ -108,6 +108,13 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  addComment(post: FeedPost, comment: Comment): void {
+    this.updatePost(post.publication.id, (current) => ({
+      ...current,
+      comments: [...current.comments, comment],
+    }));
+  }
+
   private loadPublications(initial: boolean): void {
     if (initial) {
       this.loading.set(true);

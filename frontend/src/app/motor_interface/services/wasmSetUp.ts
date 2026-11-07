@@ -30,7 +30,8 @@ export class WasmSetupService {
 
     async loadEngine(
         simulation: SimulationDescriptor, // Provides the phenomenon used for adapter lookup
-        response: unknown 
+        response: unknown,
+        canvas: HTMLCanvasElement,
     ): Promise<SimulationEngine> {
         const config = parseConfigResponse(response);
         const adapter = Object.prototype.hasOwnProperty.call(
@@ -48,7 +49,7 @@ export class WasmSetupService {
             );
         }
 
-        return adapter.load(config.data); // Lets the selected adapter validate its own parameters
+        return adapter.load(config.data, canvas); // Lets the selected adapter validate its parameters and bind its rendering surface
     }
 }
 

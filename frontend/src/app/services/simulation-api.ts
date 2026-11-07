@@ -8,6 +8,8 @@ export interface ApiResponse<T> {
     data: T;
 }
 
+export type SimulationResponse = ApiResponse<Simulation> | Simulation;
+
 export type SimulationCreationResponse = ApiResponse<Simulation> | Simulation;
 
 export type SimulationListResponse = Simulation[] | {
@@ -41,8 +43,19 @@ export class SimulationApiService {
     }
 
     getByPublication(publicationId: number): Observable<Simulation> {
-        return this.api.get<Simulation>(
+        return this.api.get<SimulationResponse>(
             `simulations/?publication_id=${publicationId}`
+        ).pipe(
+            map((response) => {
+                if (
+                    typeof response === 'object' &&
+                    response !== null &&
+                    'data' in response
+                ) {
+                    return response.data;
+                }
+                return response;
+            }),
         );
     }
 

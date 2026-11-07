@@ -13,10 +13,12 @@ describe('MotorControl', () => {
     controls: [ 
       {
         id: 'pause', // Gives the test control a stable command identifier.
-        label: 'Reanudar', // Sets the paused-state button text.
-        labelWhenRunning: 'Pausar', // Sets the running-state button text.
+        label: 'Ejecutar simulación', // Sets the paused-state button text.
+        labelWhenRunning: 'Pausar simulación', // Sets the running-state button text.
+        kind: 'playback-toggle' as const,
         disabledWhenCompleted: true // Specifies completion behavior for this control.
-      }
+      },
+      { id: 'reset', label: 'Reiniciar', kind: 'action' as const }
     ],
     // Returns a sample generic engine snapshot.
     readSnapshot: () => ({
@@ -70,11 +72,31 @@ describe('MotorControl', () => {
     expect(fixture.nativeElement.textContent).toContain('Pausada'); 
     expect(fixture.nativeElement.textContent).toContain('1.25 s'); 
     expect(fixture.nativeElement.textContent).toContain('8.5 m'); 
+    expect(fixture.nativeElement.querySelector('.playback-button').textContent).toContain(
+      'Ejecutar simulación',
+    );
+    expect(fixture.nativeElement.querySelector('.simulation-action').textContent).toContain(
+      'Reiniciar',
+    );
+    fixture.nativeElement.querySelector('.playback-button').click();
+    fixture.nativeElement.querySelector('.simulation-action').click();
+    expect(engine.execute).toHaveBeenNthCalledWith(1, 'pause');
+    expect(engine.execute).toHaveBeenNthCalledWith(2, 'reset');
     expect(setup.getConfig).toHaveBeenCalledWith(7); 
     expect(setup.loadEngine).toHaveBeenCalledWith( 
       { id: 7, phenomenon_type: 'Oblique Projectile Motion' }, 
-      expect.objectContaining({ status: 'success' }) 
+      expect.objectContaining({ status: 'success' }),
+      fixture.nativeElement.querySelector('canvas'),
     );
+    expect(fixture.nativeElement.querySelector('canvas').id).toMatch(/^simulation-canvas-/);
+  });
+
+  it('prevents the space key from scrolling the forum while the simulation canvas is focused', () => {
+    const event = new KeyboardEvent('keydown', { code: 'Space', cancelable: true });
+
+    component.preventSpaceScroll(event);
+
+    expect(event.defaultPrevented).toBe(true);
   });
 
   it('does not request configuration when the simulation ID is missing', () => {
@@ -83,6 +105,7 @@ describe('MotorControl', () => {
     invalidFixture.componentRef.setInput('simulation', {
       phenomenon_type: 'Oblique Projectile Motion',
     });
+    invalidFixture.detectChanges();
     invalidFixture.detectChanges();
 
     expect(setup.getConfig).not.toHaveBeenCalled();

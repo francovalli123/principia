@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { BaseApiService } from './base-api.service';
 import { Comment } from '../../models/comment';
 
@@ -11,6 +11,11 @@ interface PaginatedResponse<Comment> {
         previous: string | null;
         results: Comment[];
     };
+}
+
+interface CommentResponse {
+    status: string;
+    data: Comment;
 }
 
 @Injectable({
@@ -31,10 +36,10 @@ export class CommentApiService {
     }
 
     createComment(publicationId: number, content: string): Observable<Comment> {
-        return this.api.post<Comment>('comments/', {
+        return this.api.post<CommentResponse>('comments/', {
             publication: publicationId,
             content: content
-        });
+        }).pipe(map((response) => response.data));
     }
 
     deleteComment(id: number): Observable<any> {

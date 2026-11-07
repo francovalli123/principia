@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, EventEmitter, HostListener, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Simulation } from '../../../models/simulation';
 import { ApiResponse, SimulationApiService } from '../../services/simulation-api';
@@ -167,11 +167,6 @@ export class SimulationForm implements OnInit {
 
   closeSuccessModal(): void {
     this.isSuccessModalOpen = false;
-  }
-
-  @HostListener('document:keydown.escape')
-  onEscape(): void {
-    if (this.isSuccessModalOpen) this.closeSuccessModal();
   }
 
   goToSuccessPrimaryAction(): void {

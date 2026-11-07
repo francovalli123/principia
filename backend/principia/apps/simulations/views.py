@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import status
@@ -187,7 +188,13 @@ class PhenomenonTypeView(APIView):
         
         serializer_class = config["serializer"]
         related_name = config["related_name"]
-        phenomenon = getattr(simulation, related_name)
+        try:
+            phenomenon = getattr(simulation, related_name)
+        except ObjectDoesNotExist:
+            return Response(
+                {"status": "error", "message": "Simulation configuration not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         serializer = serializer_class(phenomenon)
         return Response(
             {"status": "success", "data": serializer.data},

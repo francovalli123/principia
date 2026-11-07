@@ -9,7 +9,11 @@ export class AuthService {
         localStorage.setItem('refresh_token', refresh);
     }
     setAccessToken(access: string): void {
-    localStorage.setItem('access_token', access);
+        localStorage.setItem('access_token', access);
+    }
+
+    setRefreshToken(refresh: string): void {
+        localStorage.setItem('refresh_token', refresh);
     }
     getAccessToken(): string | null {
         return localStorage.getItem('access_token');

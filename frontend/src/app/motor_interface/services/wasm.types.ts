@@ -30,6 +30,7 @@ export interface EngineControl {
     id: string; 
     label: string; // Defines the default button text
     labelWhenRunning?: string; // Optionally changes button text while the engine runs
+    kind?: 'playback-toggle' | 'action';
     disabledWhenCompleted?: boolean; 
 }
 
@@ -43,5 +44,5 @@ export interface SimulationEngine {
 
 // Defines how one phenomenon creates its engine
 export interface SimulationEngineAdapter { 
-    load(parameters: unknown): Promise<SimulationEngine>; // Validates its own parameters and initializes its runtime
+    load(parameters: unknown, canvas: HTMLCanvasElement): Promise<SimulationEngine>; // Validates parameters and initializes the runtime on its canvas
 }

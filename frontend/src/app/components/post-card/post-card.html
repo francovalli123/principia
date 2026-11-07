@@ -1,8 +1,8 @@
 <article class="post-card">
 	<header class="post-header">
-		<div class="author-mark" aria-hidden="true">{{ publication.owner.username }}</div>
+		<div class="author-mark" aria-hidden="true">{{ authorInitials(publication.owner) }}</div>
 		<div class="post-meta">
-			<p class="author-name">{{ publication.owner.username }}</p>
+			<p class="author-name">{{ authorName(publication.owner) }}</p>
 			<time [attr.datetime]="publication.creation_date">
 				{{ publication.creation_date | date: 'medium' }}
 			</time>
@@ -16,7 +16,13 @@
 
 	<section class="simulation-section" aria-label="Simulación">
 		<div class="simulation-slot">
-			<app-motor-control [simulation]="publication.simulation" />
+			@if (simulation) {
+				<app-motor-control [simulation]="simulation" />
+			} @else if (simulationError) {
+				<p role="alert">{{ simulationError }}</p>
+			} @else {
+				<p role="status">Cargando configuración de la simulación…</p>
+			}
 		</div>
 	</section>
 
@@ -30,7 +36,7 @@
 			<ul class="comment-list">
 				@for (comment of comments; track comment.id) {
 					<li class="comment">
-						<div class="comment-author">{{ comment.owner.username }}</div>
+						<div class="comment-author">{{ authorName(comment.owner) }}</div>
 						<p>{{ comment.content }}</p>
 						<time [attr.datetime]="comment.creation_date">
 							{{ comment.creation_date | date: 'medium' }}
@@ -40,6 +46,23 @@
 			</ul>
 		} @else {
 			<p class="empty-comments">Todavía no hay comentarios.</p>
+		}
+		<form class="comment-composer" (ngSubmit)="submitComment()">
+			<input
+				type="text"
+				name="comment"
+				[(ngModel)]="commentDraft"
+				[ngModelOptions]="{ standalone: true }"
+				[disabled]="submittingComment"
+				placeholder="Escribir comentario..."
+				aria-label="Escribir comentario"
+			/>
+			<button type="submit" [disabled]="submittingComment || !commentDraft.trim()">
+				{{ submittingComment ? 'Enviando...' : 'Enviar' }}
+			</button>
+		</form>
+		@if (commentError) {
+			<p class="comment-error" role="alert">{{ commentError }}</p>
 		}
 	</section>
 </article>

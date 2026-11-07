@@ -7086,7 +7086,7 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       },
   };
   
-  var _emscripten_set_window_title = (title) => document.title = UTF8ToString(title);
+  var _emscripten_set_window_title = (_title) => document.title = 'Principia';
 
   var _emscripten_sleep = function(ms) {
     let innerFunc =  () => new Promise((resolve) => setTimeout(resolve, ms));
@@ -10620,4 +10620,3 @@ for (const prop of Object.keys(Module)) {
 
 // Export using a UMD style export, or ES6 exports if selected
 export default Module;
-

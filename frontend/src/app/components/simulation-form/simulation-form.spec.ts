@@ -157,7 +157,7 @@ describe('SimulationForm', () => {
     expect(router.navigateByUrl).not.toHaveBeenCalled();
   });
 
-  it('closes the success modal on backdrop clicks and Escape without navigating', () => {
+  it('keeps the success modal open on backdrop clicks and Escape', () => {
     const simulation = { id: 4, phenomenon_type: 'Oblique Projectile Motion' } as Simulation;
     simulationApi.createSimulation.mockReturnValue(of({ status: 'success', data: simulation }));
     component.selectPhenomenon('Oblique Projectile Motion');
@@ -172,13 +172,15 @@ describe('SimulationForm', () => {
 
     const backdrop = fixture.nativeElement.querySelector('.modal-backdrop') as HTMLElement | null;
     backdrop?.click();
-    expect(component.isSuccessModalOpen).toBe(false);
+    expect(component.isSuccessModalOpen).toBe(true);
     expect(router.navigate).not.toHaveBeenCalled();
     expect(router.navigateByUrl).not.toHaveBeenCalled();
 
-    component.isSuccessModalOpen = true;
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    expect(component.isSuccessModalOpen).toBe(false);
+    fixture.detectChanges();
+    expect(component.isSuccessModalOpen).toBe(true);
+    expect(fixture.nativeElement.querySelector('.modal-close')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.modal-actions button')).toHaveLength(2);
   });
 
   it('requires a title before submitting', () => {

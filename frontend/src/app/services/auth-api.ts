@@ -10,6 +10,11 @@ export interface LoginResponse {
   refresh: string;
 }
 
+export interface RefreshTokenResponse {
+  access: string;
+  refresh?: string;
+}
+
 export type SignupResponse = Pick<User, 'username' | 'email'>;
 
 @Injectable({
@@ -44,8 +49,8 @@ export class AuthApiService {
     });
   }
 
-  refreshToken(refresh: string): Observable<any> {
-    return this.http.post<any>(this.api.getUrl('token/refresh/'), {
+  refreshToken(refresh: string): Observable<RefreshTokenResponse> {
+    return this.http.post<RefreshTokenResponse>(this.api.getUrl('token/refresh/'), {
       refresh,
     });
   }

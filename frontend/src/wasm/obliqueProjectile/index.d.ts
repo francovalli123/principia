@@ -2,6 +2,7 @@ import type { ObliqueProjectileWasmRuntime } from '../../app/motor_interface/eng
 
 declare function createModule(options: { 
     arguments: string[]; 
+    canvas: HTMLCanvasElement;
 }): Promise<ObliqueProjectileWasmRuntime>; 
 
 export default createModule; 

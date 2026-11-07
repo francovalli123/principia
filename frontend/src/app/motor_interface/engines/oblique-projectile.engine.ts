@@ -26,6 +26,8 @@ interface ProjectileParameters {
 // Describes the Emscripten module initialization options
 interface ProjectileModuleOptions { 
     arguments: string[]; 
+    canvas: HTMLCanvasElement;
+    locateFile(path: string, prefix: string): string;
 }
 
 export type ProjectileModuleFactory = (
@@ -36,15 +38,17 @@ export type ProjectileModuleFactory = (
 export const OBLIQUE_PROJECTILE_CONTROLS: readonly EngineControl[] = [ 
     {
         id: 'pause', 
-        label: 'Reanudar', 
-        labelWhenRunning: 'Pausar', 
+        label: 'Ejecutar simulación',
+        labelWhenRunning: 'Pausar simulación',
+        kind: 'playback-toggle',
         disabledWhenCompleted: true // Prevents pausing or resuming after completion
     },
-    { id: 'reset', label: 'Reiniciar' } // Offers a reset command in every state
+    { id: 'reset', label: 'Reiniciar', kind: 'action' } // Offers a reset command in every state
 ];
 
 export async function createObliqueProjectileEngine(
-    parameters: unknown // Accepts untrusted backend data for adapter-specific validation.
+    parameters: unknown, // Accepts untrusted backend data for adapter-specific validation.
+    canvas: HTMLCanvasElement,
 ): Promise<SimulationEngine> {
     const validatedParameters = parseProjectileParameters(parameters);
     const importedModule = await import(
@@ -56,13 +60,21 @@ export async function createObliqueProjectileEngine(
     }
 
     const runtime = await (createModule as ProjectileModuleFactory)({
+        canvas,
         arguments: [ // Uses the positional order expected by the C program
             validatedParameters.initial_height, 
             validatedParameters.angle, 
             validatedParameters.initial_velocity 
-        ].map(String) // Converts command-line arguments to strings
+        ].map(String), // Converts command-line arguments to strings
+        locateFile: (path) =>
+            path.endsWith('.wasm')
+                ? new URL('/wasm/obliqueProjectile/index.wasm', document.baseURI).href
+                : path
     }); 
     validateProjectileRuntime(runtime); 
+    if (runtime._getSimStatus() === 1) {
+        runtime._pauseSim();
+    }
 
     return new ObliqueProjectileEngine(runtime); 
 }

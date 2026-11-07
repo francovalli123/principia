@@ -1,5 +1,5 @@
 import { AsyncPipe, DecimalPipe } from '@angular/common'; 
-import { Component, Input, OnDestroy, OnInit } from '@angular/core'; 
+import { AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs'; // Manages state publication and HTTP subscriptions
 import { SimController } from '../../services/simulation-engine.controller'; 
 import { WasmSetupService } from '../../services/wasmSetUp'; 
@@ -18,8 +18,13 @@ import {
 })
 
 // Loads an engine and renders its generic state
-export class MotorControl implements OnInit, OnDestroy { 
+export class MotorControl implements OnInit, AfterViewInit, OnDestroy {
+  private static nextCanvasId = 0;
+
   @Input({ required: true }) simulation!: SimulationDescriptor; 
+  @ViewChild('simulationCanvas')
+  private readonly simulationCanvas!: ElementRef<HTMLCanvasElement>;
+  readonly canvasId = `simulation-canvas-${MotorControl.nextCanvasId++}`;
 
   // Keeps an explicit loading state until engine initialization completes
   private readonly stateSubject = new BehaviorSubject<EngineState>({
@@ -31,12 +36,12 @@ export class MotorControl implements OnInit, OnDestroy {
   private controllerStateSubscription?: Subscription; 
   private controller?: SimController; // Holds the active engine controller
   private destroyed = false; 
+  private validSimulation = false;
   controls: readonly EngineControl[] = []; // Holds controls defined by the selected adapter
 
   constructor(private readonly wasmSetup: WasmSetupService) {} // Injects the shared engine setup service
 
-  // Starts loading configuration when Angular initializes the component
-  ngOnInit(): void { 
+  ngOnInit(): void {
     if (
       !Number.isSafeInteger(this.simulation?.id) ||
       this.simulation.id <= 0 ||
@@ -46,13 +51,19 @@ export class MotorControl implements OnInit, OnDestroy {
       this.showError(new Error('La simulación no tiene una configuración válida'));
       return;
     }
+    this.validSimulation = true;
+  }
+
+  // Starts loading after the canvas element is available to the WASM runtime.
+  ngAfterViewInit(): void {
+    if (!this.validSimulation) return;
 
     this.configSubscription = this.wasmSetup
       .getConfig(this.simulation.id) // Fetches configuration using the simulation identifier.
       .subscribe({
       next: (response) => { // Passes the backend payload to the selected adapter
         void this.wasmSetup
-        .loadEngine(this.simulation, response) 
+        .loadEngine(this.simulation, response, this.simulationCanvas.nativeElement)
         .then((engine) => { 
           const controller = new SimController(engine); 
           if (this.destroyed) {
@@ -84,6 +95,12 @@ export class MotorControl implements OnInit, OnDestroy {
   // Sends a rendered control action to the controller
   executeControl(controlId: string): void { 
     this.controller?.execute(controlId); 
+  }
+
+  preventSpaceScroll(event: KeyboardEvent): void {
+    if (event.code === 'Space') {
+      event.preventDefault();
+    }
   }
 
   // Converts stable status codes to localized labels

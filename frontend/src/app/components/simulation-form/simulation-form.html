@@ -142,13 +142,12 @@
 </section>
 
 @if (isSuccessModalOpen && createdSimulation) {
-	<div class="modal-backdrop" (click)="closeSuccessModal()">
+	<div class="modal-backdrop">
 		<section
 			class="success-modal"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="success-title"
-			(click)="$event.stopPropagation()"
 		>
 			<span class="success-icon" aria-hidden="true">
 				<svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg>
@@ -161,7 +160,6 @@
 					{{ successPrimaryLabel }}
 				</button>
 			</div>
-			<button class="modal-close" type="button" aria-label="Cerrar" (click)="closeSuccessModal()">×</button>
 		</section>
 	</div>
 }

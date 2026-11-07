@@ -1,14 +1,16 @@
 <app-header />
 <section class="forum-feed" aria-label="Publicaciones del foro">
-	<header class="feed-toolbar">
+	<header class="forum-intro">
+		<button type="button" class="back-button" (click)="goBack()">‹ <span>Volver al inicio</span></button>
 		<div class="forum-heading">
-			<button type="button" class="back-button" (click)="goBack()">‹ <span>Volver</span></button>
-			<h1>{{ forum()?.name || 'Publicaciones' }}</h1>
+			<h1>{{ forum()?.name || 'Foro' }} - Simulaciones</h1>
+			<p>{{ forum()?.description || 'Sube y comparte simulaciones para repasar conceptos y ejercicios.' }}</p>
 		</div>
-		<button type="button" class="create-publication-button" (click)="createPublication()">
-			Crear publicación
-		</button>
 	</header>
+	<button type="button" class="create-publication-button" (click)="createPublication()">
+		<span class="composer-avatar" aria-hidden="true">+</span>
+		<span>Publicar simulación</span>
+	</button>
 	@if (loading()) {
 		<p class="feed-status" role="status">Cargando publicaciones...</p>
 	} @else if (error() && posts().length === 0) {
@@ -22,7 +24,11 @@
 	} @else {
 		<div class="post-list">
 			@for (post of posts(); track post.publication.id) {
-				<app-post-card [publication]="post.publication" [comments]="post.comments" />
+				<app-post-card
+					[publication]="post.publication"
+					[comments]="post.comments"
+					(commentAdded)="addComment(post, $event)"
+				/>
 				@if (post.nextCommentPage !== null) {
 					<button
 						class="more-comments"

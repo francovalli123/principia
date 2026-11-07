@@ -1,0 +1,125 @@
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.motor-control {
+  min-height: 100px;
+  color: #e8f1fa;
+}
+
+.simulation-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #0b1424;
+}
+
+.simulation-canvas {
+  display: block;
+  width: 100%;
+  height: clamp(180px, 16vw, 220px);
+  background: #0b1424;
+  filter: invert(0.92);
+  outline: none;
+}
+
+.simulation-status {
+  position: absolute;
+  top: 8px;
+  right: 9px;
+  color: #9fb3cb;
+  font-size: 13px;
+}
+
+.simulation-metrics {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  color: #e8f1fa;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.simulation-metric {
+  display: flex;
+  gap: 4px;
+}
+
+.simulation-metric dt,
+.simulation-metric dd {
+  margin: 0;
+}
+
+.playback-button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #00cce5;
+  border-radius: 16px;
+  padding: 4px 10px;
+  color: #fff;
+  background: #075278;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.playback-button:hover:not(:disabled) {
+  background: #08729b;
+}
+
+.playback-button:disabled,
+.simulation-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.simulation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 7px;
+}
+
+.simulation-action {
+  min-height: 26px;
+  border: 1px solid #bccbd9;
+  border-radius: 4px;
+  padding: 3px 9px;
+  color: #34506a;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.simulation-action:hover:not(:disabled) {
+  background: #edf4fa;
+}
+
+.simulation-message {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  max-width: calc(100% - 24px);
+  margin: 8px 0;
+  transform: translateY(-50%);
+  color: #52677d;
+  font-size: 14px;
+}
+
+.simulation-error {
+  color: #a22d36;
+}

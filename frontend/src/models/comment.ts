@@ -1,8 +1,8 @@
 import { Publication } from "./publication";
-import { User } from "./user";
+import { Author } from "./user";
 export interface Comment {
 	id: number;
-	owner: User;
+	owner: Author | number;
 	publication: Publication["id"];
 	content: string;
 	creation_date: string;

@@ -51,6 +51,23 @@ class SimulationCreationTests(TestCase):
             ).exists()
         )
 
+        config_response = self.client.get(
+            f"/api/phenomenonConfig/{simulation.id}/"
+        )
+
+        self.assertEqual(config_response.status_code, 200)
+        self.assertEqual(
+            config_response.data,
+            {
+                "status": "success",
+                "data": {
+                    "initial_velocity": 18.0,
+                    "angle": 37.0,
+                    "initial_height": 2.0,
+                },
+            },
+        )
+
     def test_rejects_non_string_title_without_server_error(self):
         response = self.client.post(
             "/api/simulations/",

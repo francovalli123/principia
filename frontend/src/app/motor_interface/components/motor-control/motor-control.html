@@ -1,46 +1,70 @@
 <!-- Renders the latest engine state whenever the observable emits a value. -->
 @if (state$ | async; as state) {
-  <!-- Announces updates and groups the simulation information and controls. -->
-  <section aria-live="polite" class="motor-control">
-    <h2>Estado de la simulación</h2>
+  <section aria-label="Estado y controles de la simulación" class="motor-control">
+    <h2 class="visually-hidden">Estado de la simulación</h2>
+    <div class="simulation-stage">
+      <canvas
+        #simulationCanvas
+        class="simulation-canvas"
+        [id]="canvasId"
+        width="800"
+        height="450"
+        tabindex="0"
+        (keydown)="preventSpaceScroll($event)"
+        aria-label="Visualización de la simulación"
+      ></canvas>
 
-    <!-- Selects the template for loading, error, or valid engine states. -->
-    @switch (state.status) {
-      @case ('loading') {
-        <p role="status">Cargando motor…</p>
-      }
-      @case ('error') {
-        <p role="alert">No se pudo recibir el estado: {{ state.message }}</p>
-      }
-      <!-- Renders common state details for every successfully loaded engine. -->
-      @default {
-        <!-- Converts the shared status code into its localized display label. -->
-        <p>Estado: {{ statusLabel(state.status) }}</p>
-        <!-- Groups the dynamic result names and values semantically. -->
-        <dl>
-          <!-- Renders any number of adapter-provided metrics. -->
-          @for (metric of state.metrics; track metric.id) {
-            <!-- Displays the stable metric label. -->
-            <dt>{{ metric.label }}</dt>
-            <dd>
-              {{ metric.value | number: '1.0-2' }}{{ metric.unit ? ' ' + metric.unit : '' }}
-            </dd>
+      @switch (state.status) {
+        @case ('loading') {
+          <p class="simulation-message" role="status">Cargando simulación…</p>
+        }
+        @case ('error') {
+          <p class="simulation-message simulation-error" role="alert">
+            No se pudo recibir el estado: {{ state.message }}
+          </p>
+        }
+        @default {
+          <span class="simulation-status">{{ statusLabel(state.status) }}</span>
+          <dl class="simulation-metrics">
+            @for (metric of state.metrics; track metric.id) {
+              <div class="simulation-metric">
+                <dt>{{ metric.label }}</dt>
+                <dd>{{ metric.value | number: '1.0-2' }}{{ metric.unit ? ' ' + metric.unit : '' }}</dd>
+              </div>
+            }
+          </dl>
+
+          @for (control of controls; track control.id) {
+            @if (control.kind === 'playback-toggle') {
+              <button
+                class="playback-button"
+                type="button"
+                [disabled]="control.disabledWhenCompleted && state.status === 'completed'"
+                (click)="executeControl(control.id)"
+              >
+                <span aria-hidden="true">{{ state.status === 'running' ? 'Ⅱ' : '▶' }}</span>
+                {{ controlLabel(control, state.status) }}
+              </button>
+            }
           }
-        </dl>
-
-        <!-- Renders only the controls supported by the active engine. -->
-        @for (control of controls; track control.id) {
-          <!-- Uses each adapter's metadata to present and constrain its action. -->
-          <button
-            type="button"
-            [disabled]="control.disabledWhenCompleted && state.status === 'completed'"
-            (click)="executeControl(control.id)"
-          >
-            <!-- Updates labels according to the engine status when configured. -->
-            {{ controlLabel(control, state.status) }}
-          </button>
         }
       }
+    </div>
+    @if (state.status !== 'loading' && state.status !== 'error') {
+      <div class="simulation-actions" aria-label="Controles de simulación">
+        @for (control of controls; track control.id) {
+          @if (control.kind !== 'playback-toggle') {
+            <button
+              class="simulation-action"
+              type="button"
+              [disabled]="control.disabledWhenCompleted && state.status === 'completed'"
+              (click)="executeControl(control.id)"
+            >
+              {{ controlLabel(control, state.status) }}
+            </button>
+          }
+        }
+      </div>
     }
   </section>
 }

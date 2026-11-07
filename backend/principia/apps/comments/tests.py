@@ -41,6 +41,28 @@ class CommentAccessTests(APITestCase):
 		self.assertEqual(response.status_code, 403)
 		self.assertFalse(Comment.objects.exists())
 
+	def test_comment_response_includes_safe_owner_details(self):
+		forum = Forum.objects.create(name="Physics", owner=self.user)
+		ForumMembership.objects.create(forum=forum, user=self.user)
+		self.publication.forum = forum
+		self.publication.save(update_fields=["forum"])
+		comment = Comment.objects.create(
+			owner=self.user,
+			publication=self.publication,
+			content="A comment",
+		)
+		self.client.force_authenticate(user=self.user)
+
+		response = self.client.get(
+			f"/api/comments/?publication_id={self.publication.id}"
+		)
+
+		self.assertEqual(response.status_code, 200)
+		owner = response.data["data"]["results"][0]["owner"]
+		self.assertEqual(owner["id"], self.user.id)
+		self.assertEqual(owner["username"], self.user.username)
+		self.assertNotIn("email", owner)
+
 	def test_comment_owner_cannot_delete_after_leaving_forum(self):
 		forum = Forum.objects.create(name="Physics", owner=self.user)
 		ForumMembership.objects.create(forum=forum, user=self.user)

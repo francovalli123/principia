@@ -6,6 +6,8 @@ export interface User {
     last_name: string;
 }
 
+export type Author = Pick<User, 'id' | 'username' | 'first_name' | 'last_name'>;
+
 export interface UpdateUser {
     username?: string;
     email?: string;

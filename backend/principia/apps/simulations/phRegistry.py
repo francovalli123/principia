@@ -6,6 +6,6 @@ from .serializers import (
 PHENOMENON_SERIALIZERS = {
     "Oblique Projectile Motion": {
         "serializer": ObliqueProjectileMotionSerializer,
-        "related_name": "oblique_projectile_motion"
+        "related_name": "obliqueprojectilemotion"
     },
 }

@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 
     int radius = 20;
 
-    InitWindow(800, 600, "Tiro oblicuo");
+    InitWindow(800, 600, "Principia");
 
     // Tamaño de ventana
     int monitor = GetCurrentMonitor();

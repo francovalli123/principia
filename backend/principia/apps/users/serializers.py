@@ -52,6 +52,13 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
+class PublicUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "username", "first_name", "last_name")
+        read_only_fields = fields
+
 # Serializador del perfil
 class ProfileSerializer(serializers.ModelSerializer):
     # El campo user es de solo lectura para evitar que se pueda cambiar el propietario de un perfil desde la API

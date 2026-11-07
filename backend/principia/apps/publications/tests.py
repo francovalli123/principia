@@ -55,3 +55,20 @@ class PublicationAccessTests(APITestCase):
 		response = self.client.get(f"/api/publications/{self.publication.id}/")
 
 		self.assertEqual(response.status_code, 403)
+
+	def test_publication_response_includes_safe_owner_details(self):
+		self.client.force_authenticate(user=self.member)
+
+		response = self.client.get(f"/api/publications/{self.publication.id}/")
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(
+			response.data["data"]["owner"],
+			{
+				"id": self.owner.id,
+				"username": self.owner.username,
+				"first_name": self.owner.first_name,
+				"last_name": self.owner.last_name,
+			},
+		)
+		self.assertNotIn("email", response.data["data"]["owner"])

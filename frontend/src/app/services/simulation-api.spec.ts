@@ -32,6 +32,20 @@ describe('SimulationApiService', () => {
     expect(api.get).toHaveBeenCalledWith('simulations/?owner_id=8');
   });
 
+  it('unwraps the simulation associated with a publication', () => {
+    const simulation = {
+      id: 17,
+      phenomenon_type: 'Oblique Projectile Motion',
+    } as Simulation;
+    api.get.mockReturnValueOnce(of({ status: 'success', data: simulation }));
+
+    let actual: Simulation | undefined;
+    service.getByPublication(9).subscribe((result) => actual = result);
+
+    expect(api.get).toHaveBeenCalledWith('simulations/?publication_id=9');
+    expect(actual).toEqual(simulation);
+  });
+
   it('normalizes raw, wrapped, and paginated favourite lists', () => {
     const favourite = { id: 2, simulation: 17, marked_date: '2026-11-01T10:00:00Z' };
     const responses: SimulationFavouriteListResponse[] = [
