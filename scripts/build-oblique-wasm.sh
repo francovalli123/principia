@@ -28,6 +28,8 @@ EMCC_ARGS=( # Stores compiler inputs so every option can be documented independe
 
 emcc "${EMCC_ARGS[@]}" # Compiles and links the module using the declared options.
 
+python3 scripts/patch-oblique-wasm-keyboard.py frontend/src/wasm/obliqueProjectile/index.js # Leaves form-field keystrokes available to browser inputs.
+
 mkdir -p frontend/public/wasm/obliqueProjectile # Prepares the static asset directory served by Angular.
 cp frontend/src/wasm/obliqueProjectile/index.wasm frontend/public/wasm/obliqueProjectile/index.wasm # Keeps the fetched binary in sync with its generated JavaScript glue.
 

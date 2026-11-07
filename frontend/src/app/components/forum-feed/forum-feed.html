@@ -27,7 +27,9 @@
 				<app-post-card
 					[publication]="post.publication"
 					[comments]="post.comments"
+					[currentUserId]="currentUserId"
 					(commentAdded)="addComment(post, $event)"
+					(commentDeleted)="removeComment(post, $event)"
 				/>
 				@if (post.nextCommentPage !== null) {
 					<button

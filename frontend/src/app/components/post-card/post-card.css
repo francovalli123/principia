@@ -126,7 +126,9 @@
 }
 
 .comment {
+	position: relative;
 	padding: 12px 0;
+	padding-right: 32px;
 	border-bottom: 1px solid #edf1f6;
 }
 
@@ -138,6 +140,48 @@
 	color: #30425d;
 	font-size: 13px;
 	font-weight: 700;
+}
+
+.comment-delete {
+	position: absolute;
+	top: 7px;
+	right: 0;
+	display: grid;
+	width: 28px;
+	height: 28px;
+	place-items: center;
+	border: 0;
+	border-radius: 5px;
+	padding: 0;
+	color: #7b8794;
+	background: transparent;
+	cursor: pointer;
+	transition: color 140ms ease, background-color 140ms ease;
+}
+
+.comment-delete svg {
+	width: 16px;
+	height: 16px;
+	fill: none;
+	stroke: currentColor;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	stroke-width: 1.7;
+}
+
+.comment-delete:hover:not(:disabled) {
+	color: #b4232d;
+	background: #fff0f0;
+}
+
+.comment-delete:focus-visible {
+	outline: 2px solid #09629f;
+	outline-offset: 1px;
+}
+
+.comment-delete:disabled {
+	cursor: wait;
+	opacity: 0.55;
 }
 
 .comment p {

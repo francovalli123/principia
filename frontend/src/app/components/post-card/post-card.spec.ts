@@ -4,6 +4,7 @@ import { Comment } from '../../../models/comment';
 import { Publication } from '../../../models/publication';
 import { CommentApiService } from '../../services/comment-api';
 import { SimulationApiService } from '../../services/simulation-api';
+import { ToastService } from '../../services/toast';
 import { WasmSetupService } from '../../motor_interface/services/wasmSetUp';
 import { PostCard } from './post-card';
 
@@ -36,7 +37,9 @@ const commentApiStub = {
     content: 'A new comment',
     creation_date: '2026-10-21T12:00:00Z',
   })),
+  deleteComment: vi.fn(() => of(null)),
 };
+const toastStub = { success: vi.fn(), error: vi.fn() };
 
 describe('PostCard', () => {
   let component: PostCard;
@@ -50,6 +53,7 @@ describe('PostCard', () => {
         { provide: WasmSetupService, useValue: wasmSetupStub },
         { provide: SimulationApiService, useValue: simulationApiStub },
         { provide: CommentApiService, useValue: commentApiStub },
+        { provide: ToastService, useValue: toastStub },
       ],
     }).compileComponents();
 
@@ -135,6 +139,50 @@ describe('PostCard', () => {
     expect(fixture.nativeElement.textContent).toContain('Comentarios');
     expect(fixture.nativeElement.textContent).toContain('Useful comment');
     expect(fixture.nativeElement.textContent).toContain('commenter');
+  });
+
+  it('only shows a delete button for the current user’s comment', () => {
+    fixture.componentRef.setInput('currentUserId', 12);
+    fixture.componentRef.setInput('comments', [
+      {
+        id: 4,
+        owner: 12,
+        publication: component.publication.id,
+        content: 'My comment',
+        creation_date: '2026-10-21T11:00:00Z',
+      },
+      {
+        id: 5,
+        owner: 13,
+        publication: component.publication.id,
+        content: 'Someone else’s comment',
+        creation_date: '2026-10-21T11:01:00Z',
+      },
+    ]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('.comment-delete')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelector('.comment-delete').getAttribute('aria-label'))
+      .toBe('Eliminar comentario de Usuario');
+  });
+
+  it('deletes an owned comment and shows a success toast', () => {
+    const deleted = vi.fn();
+    component.commentDeleted.subscribe(deleted);
+    component.currentUserId = 12;
+    const comment: Comment = {
+      id: 4,
+      owner: 12,
+      publication: component.publication.id,
+      content: 'My comment',
+      creation_date: '2026-10-21T11:00:00Z',
+    };
+
+    component.deleteComment(comment);
+
+    expect(commentApiStub.deleteComment).toHaveBeenCalledWith(4);
+    expect(deleted).toHaveBeenCalledWith(4);
+    expect(toastStub.success).toHaveBeenCalledWith('Comentario eliminado.');
   });
 
   it('submits a comment and emits the created comment to the feed', () => {

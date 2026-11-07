@@ -7463,6 +7463,7 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         GLFW.refreshJoysticks();
       },
   onKeydown:(event) => {
+        if (event.target instanceof HTMLElement && (event.target.isContentEditable || event.target.matches('input, textarea, select'))) return;
         GLFW.onKeyChanged(event.keyCode, 1); // GLFW_PRESS or GLFW_REPEAT
 
         // This logic comes directly from the sdl implementation. We cannot

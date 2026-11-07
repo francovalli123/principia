@@ -42,7 +42,7 @@ export class CommentApiService {
         }).pipe(map((response) => response.data));
     }
 
-    deleteComment(id: number): Observable<any> {
-        return this.api.delete<any>(`comments/${id}/`);
+    deleteComment(id: number): Observable<unknown> {
+        return this.api.delete<unknown>(`comments/${id}/`);
     }
 }

@@ -7,6 +7,7 @@ import { AppHeader } from '../app-header/app-header';
 import { CommentApiService } from '../../services/comment-api';
 import { ForumApiService } from '../../services/forum-api';
 import { PublicationApiService } from '../../services/publication-api';
+import { UserApiService } from '../../services/user-api';
 import { PostCard } from '../../components/post-card/post-card';
 
 interface FeedPost {
@@ -32,6 +33,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
   readonly hasMore = signal(true);
   readonly error = signal(false);
   readonly forum = signal<Forum | null>(null);
+  currentUserId: number | null = null;
 
   private page = 1;
   private observer?: IntersectionObserver;
@@ -41,6 +43,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     private readonly forumApi: ForumApiService,
     private readonly publicationApi: PublicationApiService,
     private readonly commentApi: CommentApiService,
+    private readonly userApi: UserApiService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
   ) {}
@@ -54,6 +57,16 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.forumId = routeForumId;
+    this.userApi.getCurrentUser().subscribe({
+      next: (user) => {
+        if (Number.isSafeInteger(user.id) && user.id > 0) {
+          this.currentUserId = user.id;
+        } else {
+          console.error('Current user response did not contain a valid user ID');
+        }
+      },
+      error: (error: unknown) => console.error('Failed to load the current user for comment actions', error),
+    });
     this.forumApi.getForum(this.forumId).subscribe({
       next: (forum) => this.forum.set(forum),
       error: (error: unknown) => console.error(`Failed to load forum with ID: ${this.forumId}`, error),
@@ -112,6 +125,13 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     this.updatePost(post.publication.id, (current) => ({
       ...current,
       comments: [...current.comments, comment],
+    }));
+  }
+
+  removeComment(post: FeedPost, commentId: number): void {
+    this.updatePost(post.publication.id, (current) => ({
+      ...current,
+      comments: current.comments.filter((comment) => comment.id !== commentId),
     }));
   }
 

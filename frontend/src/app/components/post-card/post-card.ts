@@ -9,6 +9,7 @@ import { Publication } from '../../../models/publication';
 import { Simulation } from '../../../models/simulation';
 import { CommentApiService } from '../../services/comment-api';
 import { SimulationApiService } from '../../services/simulation-api';
+import { ToastService } from '../../services/toast';
 import { MotorControl } from '../../motor_interface/components/motor-control/motor-control';
 
 @Component({
@@ -21,16 +22,20 @@ import { MotorControl } from '../../motor_interface/components/motor-control/mot
 export class PostCard implements OnInit {
   @Input({ required: true }) publication!: Publication;
   @Input() comments: Comment[] = [];
+  @Input() currentUserId: number | null = null;
   @Output() commentAdded = new EventEmitter<Comment>();
+  @Output() commentDeleted = new EventEmitter<number>();
   simulation: Simulation | null = null;
   simulationError = '';
   commentDraft = '';
   commentError = '';
   submittingComment = false;
+  readonly deletingCommentIds = new Set<number>();
 
   constructor(
     private readonly simulationApi: SimulationApiService,
     private readonly commentApi: CommentApiService,
+    private readonly toast: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -54,6 +59,29 @@ export class PostCard implements OnInit {
 
   authorInitials(author: Author | number | null | undefined): string {
     return this.authorName(author).slice(0, 2).toUpperCase();
+  }
+
+  isOwnComment(comment: Comment): boolean {
+    const ownerId = typeof comment.owner === 'number' ? comment.owner : comment.owner?.id;
+    return this.currentUserId !== null && ownerId === this.currentUserId;
+  }
+
+  deleteComment(comment: Comment): void {
+    if (!this.isOwnComment(comment) || this.deletingCommentIds.has(comment.id)) return;
+
+    this.deletingCommentIds.add(comment.id);
+    this.commentApi.deleteComment(comment.id)
+      .pipe(finalize(() => this.deletingCommentIds.delete(comment.id)))
+      .subscribe({
+        next: () => {
+          this.commentDeleted.emit(comment.id);
+          this.toast.success('Comentario eliminado.');
+        },
+        error: (error: unknown) => {
+          console.error(`Failed to delete comment with ID: ${comment.id}`, error);
+          this.toast.error('No se pudo eliminar el comentario. Inténtalo de nuevo.');
+        },
+      });
   }
 
   submitComment(): void {

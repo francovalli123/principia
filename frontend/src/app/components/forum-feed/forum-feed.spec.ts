@@ -6,6 +6,7 @@ import { ForumFeed } from './forum-feed';
 import { ForumApiService } from '../../services/forum-api';
 import { PublicationApiService } from '../../services/publication-api';
 import { CommentApiService } from '../../services/comment-api';
+import { UserApiService } from '../../services/user-api';
 
 describe('ForumFeed', () => {
   let component: ForumFeed;
@@ -26,6 +27,7 @@ describe('ForumFeed', () => {
     })),
   };
   const commentApi = { getComments: () => of({ status: 'ok', data: { count: 0, next: null, previous: null, results: [] } }) };
+  const userApi = { getCurrentUser: vi.fn(() => of({ id: 12 })) };
   const router = { navigate: vi.fn() };
 
   beforeEach(async () => {
@@ -39,6 +41,7 @@ describe('ForumFeed', () => {
         { provide: ForumApiService, useValue: forumApi },
         { provide: PublicationApiService, useValue: publicationApi },
         { provide: CommentApiService, useValue: commentApi },
+        { provide: UserApiService, useValue: userApi },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '23' } } } },
         { provide: Router, useValue: router },
       ],
@@ -71,6 +74,11 @@ describe('ForumFeed', () => {
     const backButton = fixture.nativeElement.querySelector('.back-button') as HTMLButtonElement;
     backButton.click();
     expect(router.navigate).toHaveBeenCalledWith(['/inicio']);
+  });
+
+  it('loads the current user ID for own-comment actions', () => {
+    expect(userApi.getCurrentUser).toHaveBeenCalledOnce();
+    expect(component.currentUserId).toBe(12);
   });
 
   it('does not render a search field outside the home page', () => {
