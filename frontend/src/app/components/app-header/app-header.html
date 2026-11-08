@@ -23,7 +23,7 @@
 
   <a class="profile-link" routerLink="/perfil" aria-label="Ver mi perfil" title="Mi perfil">
     @if (profile()?.profile_picture; as profilePicture) {
-      <img class="profile-avatar" [src]="profilePicture" alt="" />
+      <img class="profile-avatar profile-photo" [src]="profilePicture" alt="" />
     } @else {
       <span class="profile-avatar profile-avatar-fallback" aria-hidden="true">P</span>
     }

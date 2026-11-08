@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { Simulation, SimulationVisibility } from '../../../models/simulation';
@@ -17,13 +17,16 @@ import { MotorControl } from '../../motor_interface/components/motor-control/mot
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
-export class ProfilePage implements OnInit {
+export class ProfilePage implements OnInit, OnDestroy {
   readonly profile = signal<Profile | null>(null);
   readonly user = signal<User | null>(null);
   readonly simulations = signal<Simulation[]>([]);
   readonly selectedSimulation = signal<Simulation | null>(null);
   readonly isLoading = signal(true);
   readonly loadError = signal(false);
+  readonly picturePreview = signal<string | null>(null);
+  readonly pictureUploadError = signal('');
+  readonly isUploadingPicture = signal(false);
   readonly visibilityGroups: { key: SimulationVisibility; title: string }[] = [
     { key: 'public', title: 'Públicas' },
     { key: 'hidden', title: 'Ocultas' },
@@ -52,6 +55,45 @@ export class ProfilePage implements OnInit {
         });
       },
       error: (error: unknown) => this.handleLoadError(error),
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.clearPicturePreview();
+  }
+
+  uploadProfilePicture(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.pictureUploadError.set('Seleccioná un archivo de imagen válido.');
+      input.value = '';
+      return;
+    }
+
+    this.clearPicturePreview();
+    this.picturePreview.set(URL.createObjectURL(file));
+    this.pictureUploadError.set('');
+    this.isUploadingPicture.set(true);
+
+    const formData = new FormData();
+    formData.append('profile_picture', file);
+    this.profileApi.updateProfile(formData).subscribe({
+      next: (profile) => {
+        this.profile.set(profile);
+        this.clearPicturePreview();
+        this.isUploadingPicture.set(false);
+        input.value = '';
+      },
+      error: (error: unknown) => {
+        console.error('Failed to update profile picture', error);
+        this.pictureUploadError.set('No se pudo actualizar la foto. Intentá nuevamente.');
+        this.clearPicturePreview();
+        this.isUploadingPicture.set(false);
+        input.value = '';
+      },
     });
   }
 
@@ -103,5 +145,11 @@ export class ProfilePage implements OnInit {
     console.error('Failed to load profile information', error);
     this.loadError.set(true);
     this.isLoading.set(false);
+  }
+
+  private clearPicturePreview(): void {
+    const preview = this.picturePreview();
+    if (preview) URL.revokeObjectURL(preview);
+    this.picturePreview.set(null);
   }
 }

@@ -2,11 +2,36 @@
 
 <main class="profile-page">
   <header class="profile-heading">
-    @if (profile()?.profile_picture; as profilePicture) {
-      <img class="profile-picture" [src]="profilePicture" alt="Foto de perfil" />
-    } @else {
-      <span class="profile-picture profile-picture-fallback" aria-hidden="true">P</span>
-    }
+    <div class="picture-actions">
+      <button
+        class="profile-picture-button"
+        type="button"
+        [disabled]="isUploadingPicture()"
+        [attr.aria-label]="isUploadingPicture() ? 'Subiendo foto de perfil' : 'Cambiar foto de perfil'"
+        (click)="pictureInput.click()"
+      >
+        @if (picturePreview() || profile()?.profile_picture; as profilePicture) {
+          <img class="profile-picture profile-photo" [src]="profilePicture" alt="" />
+        } @else {
+          <span class="profile-picture-fallback" aria-hidden="true">P</span>
+        }
+        <span class="picture-edit-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="m14 5 5 5M4 20l4.2-.8L20 7.4 16.6 4 4.8 15.8 4 20Z" /></svg>
+        </span>
+      </button>
+      <input
+        #pictureInput
+        class="picture-file-input"
+        type="file"
+        accept="image/*"
+        aria-label="Elegir foto de perfil"
+        [disabled]="isUploadingPicture()"
+        (change)="uploadProfilePicture($event)"
+      />
+      @if (pictureUploadError()) {
+        <p class="picture-upload-error" role="alert">{{ pictureUploadError() }}</p>
+      }
+    </div>
     <div class="profile-identity">
       <h1>{{ fullName }}</h1>
       @if (user()?.username; as username) {

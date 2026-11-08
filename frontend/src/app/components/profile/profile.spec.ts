@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from '../../services/auth';
 import { ProfileApiService } from '../../services/profile-api';
@@ -32,7 +32,12 @@ const simulations = [
 
 describe('ProfilePage', () => {
   let fixture: ComponentFixture<ProfilePage>;
-  const profileApi = { getProfile: vi.fn(() => of(profile)) };
+  const profileUpdated = new Subject<typeof profile>();
+  const profileApi = {
+    getProfile: vi.fn(() => of(profile)),
+    updateProfile: vi.fn((_data: FormData) => of(profile)),
+    profileUpdated$: profileUpdated.asObservable(),
+  };
   const userApi = { getCurrentUser: vi.fn(() => of(user)) };
   const simulationApi = { getByOwner: vi.fn(() => of(simulations)) };
   const auth = { clearTokens: vi.fn() };
@@ -87,6 +92,26 @@ describe('ProfilePage', () => {
 
     expect(auth.clearTokens).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('uploads a selected image as multipart profile data and updates the avatar', () => {
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:profile-preview');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const updatedProfile = { ...profile, profile_picture: '/media/new-avatar.png' };
+    profileApi.updateProfile.mockReturnValueOnce(of(updatedProfile));
+    const file = new File(['image'], 'avatar.png', { type: 'image/png' });
+    const input = document.createElement('input');
+    Object.defineProperty(input, 'files', { value: [file] });
+
+    fixture.componentInstance.uploadProfilePicture({ target: input } as unknown as Event);
+    fixture.detectChanges();
+
+    const requestBody = profileApi.updateProfile.mock.calls[0][0] as FormData;
+    expect(requestBody).toBeInstanceOf(FormData);
+    expect(requestBody.get('profile_picture')).toBe(file);
+    expect(fixture.componentInstance.profile()?.profile_picture).toBe('/media/new-avatar.png');
+    expect(fixture.nativeElement.querySelector('.profile-picture').getAttribute('src'))
+      .toBe('/media/new-avatar.png');
   });
 
   it('opens the chosen simulation in a modal and closes it from the close button', async () => {

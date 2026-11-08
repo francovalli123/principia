@@ -19,6 +19,89 @@ input {
   font: inherit;
 }
 
+app-profile-page .profile-picture-button {
+  position: relative;
+  display: block;
+  width: 88px;
+  height: 88px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: #e8f1f8;
+  cursor: pointer;
+}
+
+app-profile-page .profile-photo,
+.profile-link .profile-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 20%;
+}
+
+app-profile-page .profile-picture-fallback {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: #09629f;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+app-profile-page .picture-edit-icon {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  display: grid;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #09629f;
+  color: #fff;
+}
+
+app-profile-page .picture-edit-icon svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+app-profile-page .profile-picture-button:focus-visible {
+  outline: 3px solid rgb(9 98 159 / 36%);
+  outline-offset: 3px;
+}
+
+app-profile-page .profile-picture-button:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+
+app-profile-page .picture-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+}
+
+@media (max-width: 640px) {
+  app-profile-page .profile-picture-button {
+    width: 68px;
+    height: 68px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

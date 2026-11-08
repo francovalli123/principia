@@ -95,12 +95,6 @@
   outline-offset: 3px;
 }
 
-.profile-avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .profile-avatar-fallback {
   display: grid;
   place-items: center;
