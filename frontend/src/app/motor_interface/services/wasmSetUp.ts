@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core'; 
-import { Observable, throwError } from 'rxjs'; // Types the backend request as an observable
+import { Observable, tap, throwError } from 'rxjs'; // Types the backend request as an observable
 import { BaseApiService } from '../../services/base-api.service'; 
 import { WASM_REGISTRY } from '../wasmRegistry';
 import {
@@ -25,7 +25,13 @@ export class WasmSetupService {
         if (!Number.isSafeInteger(simulationId) || simulationId <= 0) {
             return throwError(() => new Error('A valid simulation ID is required to load its configuration'));
         }
-        return this.api.get<unknown>(`phenomenonConfig/${simulationId}/`); // Leaves phenomenon payload validation to its adapter
+        console.log(`Requesting configuration for simulation ID: ${simulationId}`);
+        return this.api.get<unknown>(`phenomenonConfig/${simulationId}/`).pipe(
+            tap({
+                next: () => console.log(`Received configuration for simulation ID: ${simulationId}`),
+                error: (error: unknown) => console.error(`Failed to load configuration for simulation ID: ${simulationId}`, error),
+            })
+        ); // Leaves phenomenon payload validation to its adapter
     }
 
     async loadEngine(
@@ -33,6 +39,7 @@ export class WasmSetupService {
         response: unknown,
         canvas: HTMLCanvasElement,
     ): Promise<SimulationEngine> {
+        //console.log(`Loading engine for simulation ID: ${simulation.id}`);
         const config = parseConfigResponse(response);
         const adapter = Object.prototype.hasOwnProperty.call(
             WASM_REGISTRY,
@@ -48,7 +55,7 @@ export class WasmSetupService {
                 `Unsupported phenomenon type: ${simulation.phenomenon_type}`
             );
         }
-
+       // console.log(`Loading engine for phenomenon type: ${simulation.phenomenon_type}`);
         return adapter.load(config.data, canvas); // Lets the selected adapter validate its parameters and bind its rendering surface
     }
 }

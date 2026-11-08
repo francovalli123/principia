@@ -16,10 +16,10 @@
 
 	<section class="simulation-section" aria-label="Simulación">
 		<div class="simulation-slot">
-			@if (simulation) {
-				<app-motor-control [simulation]="simulation" />
-			} @else if (simulationError) {
-				<p role="alert">{{ simulationError }}</p>
+			@if (simulation(); as loadedSimulation) {
+				<app-motor-control [simulation]="loadedSimulation" />
+			} @else if (simulationError()) {
+				<p role="alert">{{ simulationError() }}</p>
 			} @else {
 				<p role="status">Cargando configuración de la simulación…</p>
 			}

@@ -7432,6 +7432,7 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         return mod;
       },
   onKeyPress:(event) => {
+      if (window.__principiaFocusedSimulationCanvasId !== Browser.getCanvas().id) return;
         if (!GLFW.active || !GLFW.active.charFunc) return;
         if (event.ctrlKey || event.metaKey) return;
 
@@ -7463,6 +7464,7 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         GLFW.refreshJoysticks();
       },
   onKeydown:(event) => {
+      if (window.__principiaFocusedSimulationCanvasId !== Browser.getCanvas().id) return;
         if (event.target instanceof HTMLElement && (event.target.isContentEditable || event.target.matches('input, textarea, select'))) return;
         GLFW.onKeyChanged(event.keyCode, 1); // GLFW_PRESS or GLFW_REPEAT
 
@@ -7474,6 +7476,7 @@ var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
         }
       },
   onKeyup:(event) => {
+      if (window.__principiaFocusedSimulationCanvasId !== Browser.getCanvas().id) return;
         GLFW.onKeyChanged(event.keyCode, 0); // GLFW_RELEASE
       },
   onBlur:(event) => {

@@ -10,6 +10,8 @@
         width="960"
         height="540"
         tabindex="0"
+        (pointerdown)="focusCanvas()"
+        (focus)="activateSimulation()"
         (keydown)="preventSpaceScroll($event)"
         aria-label="Visualización de la simulación"
       ></canvas>

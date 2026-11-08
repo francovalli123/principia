@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { Author } from '../../../models/user';
@@ -25,8 +25,8 @@ export class PostCard implements OnInit {
   @Input() currentUserId: number | null = null;
   @Output() commentAdded = new EventEmitter<Comment>();
   @Output() commentDeleted = new EventEmitter<number>();
-  simulation: Simulation | null = null;
-  simulationError = '';
+  readonly simulation = signal<Simulation | null>(null);
+  readonly simulationError = signal('');
   commentDraft = '';
   commentError = '';
   submittingComment = false;
@@ -39,13 +39,15 @@ export class PostCard implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    console.info(`Mounted publication card ${this.publication.id}; requesting its simulation`);
     this.simulationApi.getByPublication(this.publication.id).subscribe({
       next: (simulation) => {
-        this.simulation = simulation;
+        console.info(`Loaded simulation ${simulation.id} for publication ${this.publication.id}`);
+        this.simulation.set(simulation);
       },
       error: (error: unknown) => {
         console.error(`Failed to load simulation for publication ${this.publication.id}`, error);
-        this.simulationError = 'No se pudo cargar la configuración de esta simulación.';
+        this.simulationError.set('No se pudo cargar la configuración de esta simulación.');
       },
     });
   }

@@ -104,6 +104,15 @@ describe('MotorControl', () => {
     expect(event.defaultPrevented).toBe(true);
   });
 
+  it('marks only this simulation as active for keyboard shortcuts', () => {
+    component.activateSimulation();
+
+    expect(
+      (window as Window & { __principiaFocusedSimulationCanvasId?: string })
+        .__principiaFocusedSimulationCanvasId,
+    ).toBe(component.canvasId);
+  });
+
   it('does not request configuration when the simulation ID is missing', () => {
     setup.getConfig.mockClear();
     const invalidFixture = TestBed.createComponent(MotorControl);

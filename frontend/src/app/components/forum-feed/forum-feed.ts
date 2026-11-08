@@ -156,6 +156,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     this.error.set(false);
 
     const requestedPage = this.page;
+    console.info(`Loading publications for forum ${this.forumId}, page ${requestedPage}`);
     this.publicationApi.getPaginatedByForum(requestedPage, this.forumId).subscribe({
       next: (response) => {
         const newPosts = response.data.results.map((publication) => ({
@@ -164,6 +165,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
           nextCommentPage: 1,
           loadingComments: true,
         }));
+        console.info(`Loaded ${newPosts.length} publications for forum ${this.forumId}, page ${requestedPage}`);
         this.posts.update((current) => [...current, ...newPosts]);
         this.page = requestedPage + 1;
         this.hasMore.set(response.data.next !== null);
@@ -171,7 +173,8 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
         this.loadingMore.set(false);
         newPosts.forEach((post) => this.loadInitialComments(post));
       },
-      error: () => {
+      error: (error: unknown) => {
+        console.error(`Failed to load publications for forum ${this.forumId}, page ${requestedPage}`, error);
         this.error.set(true);
         this.loading.set(false);
         this.loadingMore.set(false);
