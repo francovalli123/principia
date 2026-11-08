@@ -16,10 +16,10 @@
 .simulation-stage {
   position: relative;
   overflow: hidden;
-  display: flex;
-  justify-content: center;
+  display: block;
   width: 100%;
-  max-width: 960px;
+  max-width: 900px;
+  aspect-ratio: 900 / 490;
   margin-inline: auto;
   border-radius: 4px;
   background: #141414;
@@ -28,9 +28,7 @@
 .simulation-canvas {
   display: block;
   width: 100%;
-  max-width: 960px;
-  height: auto;
-  aspect-ratio: 16 / 9;
+  height: 100%;
   background: #0b1424;
   filter: invert(0.92);
   outline: none;

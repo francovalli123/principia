@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ForumApiService } from '../../services/forum-api';
 import { UserApiService } from '../../services/user-api';
@@ -11,7 +11,7 @@ import { AppHeader } from '../app-header/app-header';
   templateUrl: './principia-home.html',
   styleUrl: './principia-home.css',
 })
-export class PrincipiaHome {
+export class PrincipiaHome implements OnInit {
   searchTerm = '';
   firstName = '';
   //Signal is a reactive primitive in Angular
@@ -29,9 +29,7 @@ export class PrincipiaHome {
       next: (user) => {
         this.firstName = typeof user?.first_name === 'string' ? user.first_name.trim() : '';
       },
-      error: (error) => {
-        console.error('Error loading current user', error);
-      },
+      error: (error: unknown) => console.error('Error loading current user', error),
     });
 
     this.forumApi.getSuggestedForums().subscribe({

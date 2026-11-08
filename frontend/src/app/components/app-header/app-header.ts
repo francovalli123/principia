@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth';
+import { RouterLink } from '@angular/router';
+import { Profile } from '../../../models/user';
+import { ProfileApiService } from '../../services/profile-api';
 
 @Component({
   selector: 'app-header',
@@ -10,18 +11,20 @@ import { AuthService } from '../../services/auth';
   templateUrl: './app-header.html',
   styleUrl: './app-header.css',
 })
-export class AppHeader {
+export class AppHeader implements OnInit {
   @Input() searchTerm = '';
   @Input() showSearch = false;
   @Output() readonly searchTermChange = new EventEmitter<string>();
+  readonly profile = signal<Profile | null>(null);
 
   constructor(
-    private readonly auth: AuthService,
-    private readonly router: Router,
+    private readonly profileApi: ProfileApiService,
   ) {}
 
-  logout(): void {
-    this.auth.clearTokens();
-    void this.router.navigate(['/']);
+  ngOnInit(): void {
+    this.profileApi.getProfile().subscribe({
+      next: (profile) => this.profile.set(profile),
+      error: (error: unknown) => console.error('Failed to load profile picture for header', error),
+    });
   }
 }
