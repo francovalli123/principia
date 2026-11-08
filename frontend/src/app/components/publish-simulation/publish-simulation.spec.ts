@@ -53,6 +53,16 @@ describe('PublishSimulationPage', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/forums', 23]);
   });
 
+  it('publishes with an empty description', () => {
+    fixture.componentInstance.title = 'Tiro oblicuo';
+    fixture.componentInstance.description = '   ';
+
+    fixture.componentInstance.submit();
+
+    expect(publicationApi.createPublication).toHaveBeenCalledWith('Tiro oblicuo', '', 17, 23);
+    expect(router.navigate).toHaveBeenCalledWith(['/forums', 23]);
+  });
+
   it('displays the selected simulation title instead of its id', () => {
     expect(fixture.nativeElement.querySelector('.selected-simulation')?.textContent)
       .toContain('Tiro oblicuo');

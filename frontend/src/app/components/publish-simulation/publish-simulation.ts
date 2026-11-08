@@ -43,7 +43,7 @@ export class PublishSimulationPage implements OnInit {
   submit(): void {
     const title = this.title.trim();
     const description = this.description.trim();
-    if (!title || !description || this.routeError || this.isSubmitting) return;
+    if (!title || this.routeError || this.isSubmitting) return;
 
     this.isSubmitting = true;
     this.submitError = '';
