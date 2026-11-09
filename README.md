@@ -87,14 +87,16 @@ de entorno.
 ### Buenas prácticas de seguridad
 
 El backend aplica controles en distintas capas:
-1. Credenciales: usa los validadores y el hash de contraseñas de Django; no almacena contraseñas en texto claro. 
-2. Sesiones API: usa access tokens de corta duración y permite revocar refresh tokens. Los secretos se configuran fuera del código. 
-3. Datos personales: cifra ciertos campos con Fernet y usa HMAC para comparaciones que no requieren recuperar el dato original.
-4. Autorización: combina autenticación, permisos por objeto, propiedad del recurso, visibilidad de simulaciones y membresía de foro.
-5. Entradas y respuestas: valida solicitudes con serializadores y expone campos explícitos en datos de usuario y perfil.
-6. Configuración web: limita CORS a orígenes configurados y, fuera de `DEBUG`, activa HSTS y encabezados de seguridad; las cookies de sesión y CSRF se marcan como seguras.
-7. Consistencia: usa restricciones únicas en la base de datos y transacciones para operaciones relacionadas, como el registro de cuenta y perfil.
-8. Se utiliza Rate Limiting para evitar ataques de fuerza bruta. 
+
+| Área | Práctica implementada |
+| --- | --- |
+| Credenciales | Usa los validadores y el hash de contraseñas de Django; no almacena contraseñas en texto claro. |
+| Sesiones API | Usa access tokens de corta duración y permite revocar refresh tokens. Los secretos se configuran fuera del código. |
+| Datos personales | Cifra ciertos campos con Fernet y usa HMAC para comparaciones que no requieren recuperar el dato original. |
+| Autorización | Combina autenticación, permisos por objeto, propiedad del recurso, visibilidad de simulaciones y membresía de foro. |
+| Entradas y respuestas | Valida solicitudes con serializadores y expone campos explícitos en datos de usuario y perfil. |
+| Configuración web | Limita CORS a orígenes configurados y, fuera de `DEBUG`, activa HSTS y encabezados de seguridad; las cookies de sesión y CSRF se marcan como seguras. |
+| Consistencia | Usa restricciones únicas en la base de datos y transacciones para operaciones relacionadas, como el registro de cuenta y perfil. |
 
 Estos controles complementan la configuración del entorno: en producción se
 deben mantener `DEBUG` desactivado, usar claves secretas únicas y persistentes,
