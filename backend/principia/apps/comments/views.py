@@ -20,8 +20,8 @@ class CommentView(PaginatedAPIView):
         SimulationPermission,
     ]
 
-    # Valida que la publicacion tenga un foro y el solicitante sea miembro
-    # Ademas, valida que la simulacion asociada sea visible para el que quiere comentar
+    # Validates that the post has a forum and that the requester is a member
+    # Also, validates that the associated simulation is visible to the person who wants to comment
     def _check_publication_access(self, request, publication):
         if (
             publication.forum_id is None
@@ -39,17 +39,17 @@ class CommentView(PaginatedAPIView):
 
     def get(self, request, *args, **kwargs):
         comment_id = kwargs.get("id")
-        #Get specific comment
+        # Get specific comment
         if comment_id is not None:
             result = get_object_or_404(Comment, id=comment_id)
-           #Checks that the request.user belongs to the forum where the comment is. 
+           # Checks that the request.user belongs to the forum where the comment is. 
             if not self._check_publication_access(request, result.publication):
                 return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
             self.check_object_permissions(request, result)
             serializer = CommentSerializer(result)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
-        #Get comments from a publication
+        # Get comments from a publication
         publication_id = request.query_params.get("publication_id")
 
         if publication_id is None:
@@ -57,12 +57,12 @@ class CommentView(PaginatedAPIView):
 
         publication = get_object_or_404(Publication, id=publication_id)
 
-        #Checks that the request.user belongs to the forum where the comment is. 
+        # Checks that the request.user belongs to the forum where the comment is. 
         if not self._check_publication_access(request, publication):
             return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
         result = Comment.objects.filter(publication=publication).order_by("-creation_date")
-        # La serialización recibe solo la página solicitada, no todos los comentarios.
+        # Serialization receives only the requested page, not all the comments
         page = self.paginate_queryset(result, request)
         serializer = CommentSerializer(page if page is not None else result, many=True)
         if page is not None:
@@ -76,7 +76,7 @@ class CommentView(PaginatedAPIView):
 
         if serializer.is_valid():
             publication = serializer.validated_data["publication"]
-            #Must be a member of the forum to post a comment
+            # Must be a member of the forum to post a comment
             if not self._check_publication_access(request, publication):
                 return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 

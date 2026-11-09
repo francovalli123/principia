@@ -7,16 +7,16 @@ from .models import Profile
 # Signal will be executed when the user is eliminated and django removes its related profile
 @receiver(post_delete, sender=Profile)
 def delete_profile_picture(sender, instance, **kwargs):
-    #If there isnt profile picture, does nothing
+    # If there isnt profile picture, does nothing
     if not instance.profile_picture:
         return
 
     profile_picture = instance.profile_picture
-    #Guarantees that the file is removed only if the elimination from the bd is confirmed correctly
+    # Guarantees that the file is removed only if the elimination from the bd is confirmed correctly
     transaction.on_commit(
         lambda: profile_picture.delete(save=False)
     )
-#If user changes its picture through patch, the new image is stored and the old one erased
+# If user changes its picture through patch, the new image is stored and the old one erased
 @receiver(pre_save, sender=Profile)
 def delete_replaced_profile_picture(sender, instance, **kwargs):
     if not instance.pk:

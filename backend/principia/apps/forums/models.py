@@ -13,7 +13,7 @@ class Forum(models.Model):
         blank=True,
         )
 
-    # Miembros del foro. Usa un modelo intermedio
+    # Forum members. Uses an intermediate model
     members = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         through="ForumMembership",
@@ -23,7 +23,7 @@ class Forum(models.Model):
     def __str__(self):
         return self.name
 
-# Nota: Cuando se cree un foro, hay que agregar automáticamente al propietario como miembro
+# Note: when a forum is created, the owner must be automatically added as a member
 class ForumMembership(models.Model):
     forum = models.ForeignKey(Forum, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -31,7 +31,7 @@ class ForumMembership(models.Model):
 
     class Meta:
         constraints = [
-            # Evita que un usuario se una dos veces al mismo foro
+            # Prevents a user from joining the same forum twice
             models.UniqueConstraint(
                 fields = ["forum", "user"],
                 name="unique_forum_member",

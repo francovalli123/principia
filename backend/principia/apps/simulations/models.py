@@ -11,7 +11,7 @@ class Simulation(models.Model):
     phenomenon_type = models.CharField(max_length=255)
     title = models.CharField(max_length=255, default="")
     description = models.TextField(blank=True, default="")
-    #json_configuration = models.JSONField()
+    # json_configuration = models.JSONField()
     visibility = models.CharField(
         max_length=50,
         choices=[

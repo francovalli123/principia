@@ -15,13 +15,13 @@ class SimulationPermission(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         # Gets related simulation
-        simulation = getattr(obj, "simulation", obj)  # works for both Simulation and Publication
+        simulation = getattr(obj, "simulation", obj)  # Works for both Simulation and Publication
         if request.user == simulation.owner:
             return True
         visibility = simulation.visibility.lower()
         if visibility == "hidden":
             return False
         if visibility == "private":
-            return getattr(view, "access_context", None) == "forum" #Allowed from forum , but not from profile
+            return getattr(view, "access_context", None) == "forum" # Allowed from forum , but not from profile
         #Public
         return True

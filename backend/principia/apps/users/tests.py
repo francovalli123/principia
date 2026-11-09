@@ -55,7 +55,6 @@ class SensitiveDataSecurityTests(TestCase):
         self.assertEqual(self.user.email_lookup_hash, hash_lookup_value("new-alice@example.com"))
 
     def test_database_rejects_duplicate_email_lookup_hash(self):
-        # Verifica la restriccion de base de datos, no solo la validacion del serializer.
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
                 User.objects.create_user(

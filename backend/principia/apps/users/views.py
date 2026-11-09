@@ -31,8 +31,8 @@ def _normalize_username(username):
 
 # UserView 
 class UserView(PaginatedAPIView):
-    #The information is decoded on serialization, for which it should never be exposed 
-    #through an anonymous endpoint to users other than the owner
+    # The information is decoded on serialization, for which it should never be exposed 
+    # through an anonymous endpoint to users other than the owner
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -45,7 +45,7 @@ class UserView(PaginatedAPIView):
                 return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
             result = User.objects.all().order_by("id")
-            # Solo se serializan los usuarios de la página solicitada.
+            # Only the users of the requested page are serialized
             page = self.paginate_queryset(result, request)
             serializer = UserSerializer(page if page is not None else result, many=True)
             if page is not None:
@@ -97,7 +97,7 @@ class CurrentUserView(APIView):
 
 class RegisterView(CreateAPIView):
     permission_classes = [AllowAny]
-    #Indicates the serializer that validates and creates new accounts
+    # Indicates the serializer that validates and creates new accounts
     serializer_class = RegisterSerializer
     
 class LoginView(APIView):
@@ -107,16 +107,17 @@ class LoginView(APIView):
     def post(self, request):
         username = _normalize_username(request.data.get('username')) # Normalizes the username
         password = request.data.get('password')
-        #searchs or creates the attempts registry of the user login
-        login_attempt, _ = LoginAttempt.objects.get_or_create(username=hash_lookup_value(username))# User is normalized
-        #and transformed through HMAC_SHA256 before saving.
+        # Searchs or creates the attempts registry of the user login
+        login_attempt, _ = LoginAttempt.objects.get_or_create(username=hash_lookup_value(username)) # User is normalized
+        # and transformed through HMAC_SHA256 before saving
 
-        #If its blocked but the cool off is completed, user is unblocked
+        # If its blocked but the cool off is completed, user is unblocked
         if login_attempt.locked_until and login_attempt.locked_until <= timezone.now():
             login_attempt.failed_attempts = 0
             login_attempt.locked_until = None
             login_attempt.save(update_fields=['failed_attempts', 'locked_until', 'updated_at'])
-        #if max retry has been reached, user is blocked temporarily and request is denied with 403 forbidden
+        
+        # If max retry has been reached, user is blocked temporarily and request is denied with 403 forbidden
         if login_attempt.is_locked():
             remaining_minutes = max(1, int((login_attempt.locked_until - timezone.now()).total_seconds() // 60))
             return Response(
@@ -127,9 +128,9 @@ class LoginView(APIView):
         user = authenticate(username=request.data.get('username'), password=password)
 
         if user is None:
-            # if password is incorrect, failed try's counter increases
+            # If password is incorrect, failed try's counter increases
             login_attempt.failed_attempts += 1
-            #if falid try's counter reaches 5, account suffers cool-off
+            # If failed attempts' counter reaches 5, account suffers cool-off
             if login_attempt.failed_attempts >= MAX_LOGIN_ATTEMPTS:
                 login_attempt.locked_until = timezone.now() + timedelta(minutes=LOGIN_COOLDOWN_MINUTES)
                 login_attempt.save(update_fields=['failed_attempts', 'locked_until', 'updated_at'])
@@ -137,15 +138,15 @@ class LoginView(APIView):
                     {'status': 'error', 'message': f'Cuenta bloqueada por {LOGIN_COOLDOWN_MINUTES} minutos por demasiados intentos fallidos.'},
                     status=status.HTTP_403_FORBIDDEN,
                 )
-            # attempt is saved
+            # Attempt is saved
             login_attempt.save(update_fields=['failed_attempts', 'updated_at'])
             return Response(
                 {'status': 'error', 'message': 'Credenciales invalidas'},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
-        # if the attemt is succesful, the counter resets
+        # If the attemt is succesful, the counter resets
         login_attempt.reset()
-        #Generates a new refresh token for user
+        # Generates a new refresh token for user
         refresh = RefreshToken.for_user(user)
 
         return Response({
@@ -174,8 +175,9 @@ class LogoutView(APIView):
 
         try:
             token = RefreshToken(refresh_token)
-            token.blacklist()   #Marks token as denied,it remains in the bd until expiration.
-        # if token is invalid or revoked, returns error
+            token.blacklist()   # Marks token as denied,it remains in the bd until expiration.
+        
+        # If token is invalid or revoked, returns error
         except TokenError:
             return Response(
                 {"status": "error", "message": "El refresh token no es valido o ya fue revocado."},
@@ -183,14 +185,15 @@ class LogoutView(APIView):
             )
 
         return Response({"detail": "Sesión cerrada exitosamente"})
- #Blacklists all refresh tokens from user(all devices)
+
+# Blacklists all refresh tokens from user (all devices)
 class LogoutAllView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         # Note: Outstanding token is the table where SimpleJWT registers every active refresh token of all the users
         for token in OutstandingToken.objects.filter(user=request.user):   
-            BlacklistedToken.objects.get_or_create(token=token) # does nothing if its already blacklisted, else  blacklists
+            BlacklistedToken.objects.get_or_create(token=token)     # Does nothing if its already blacklisted, else  blacklists
         return Response({"detail": "Sesión cerrada en todos los dispositivos"})
 
 # Profile is automatically created in RegisterSerializer.create(). ProfileView allows to consult and modify profile post signuo

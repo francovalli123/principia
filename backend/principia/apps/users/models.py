@@ -38,21 +38,22 @@ class User(AbstractUser):
 class LoginAttempt(models.Model):
     username = models.CharField(max_length=64, unique=True) # The username saved a hexadecimal result of an HMAC-SHA256, which uses 64 char
     failed_attempts = models.PositiveIntegerField(default=0) # Attempt counter
-    locked_until = models.DateTimeField(blank=True, null=True)  # Fecha de expiración del cool off (si aplica)
+    locked_until = models.DateTimeField(blank=True, null=True)  # Cool-off expiration date (if any)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-updated_at']
 
-    # Devuelve true si hay una fecha de expiracion del cool off y si aun falta para que termine el mismo 
+    # Returns true if there's a cool-off expiration date and the cool-off period has not ended yet 
     def is_locked(self):
         return self.locked_until is not None and timezone.now() < self.locked_until
 
-    # Reinicia el contador de intentos
+    
+    # Resets the attempt counter
     def reset(self):
         self.failed_attempts = 0
-        self.locked_until = None    # Ahora no hay fecha de expiración del cool off
+        self.locked_until = None    # Now there is no cool-off expiration date
         self.save(update_fields=['failed_attempts', 'locked_until', 'updated_at'])
 
     def __str__(self):
@@ -61,8 +62,8 @@ class LoginAttempt(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,   # Si se elimina un usuario, se elimina su perfil
-        related_name = "profile",    # Acceder al perfil con user.profile
+        on_delete=models.CASCADE,   # If a user is deleted, their profile is deleted as well
+        related_name = "profile",    # Access profile with user.profile
     )
     bio = EncryptedTextField(blank=True, null=True)
     visible_name = EncryptedTextField(blank=True, null=True)

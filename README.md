@@ -21,9 +21,6 @@ pueden consultarse desde el perfil de su dueño.
 - [Autenticación y protección de datos](#autenticación-y-protección-de-datos)
 - [Buenas prácticas de seguridad](#buenas-prácticas-de-seguridad)
 - [Simulaciones y comunidad](#simulaciones-y-comunidad)
-- [API](#api)
-- [Dependencias](#dependencias-principales)
-- [Ejecución local](#ejecutar-localmente)
 
 ## Backend
 

@@ -4,16 +4,13 @@ from apps.users.models import User, Profile
 from .security import hash_lookup_value
 from django.db import transaction
 
-# Un serializer transforma instancias de un modelo en representaciones como json y viceversa
-
-# Serializador del usuario
+# User serializer
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
-
-        # Se define explicitamente los campos para evitar exponer campos internos accidentalmente
+        # Fields are explicitly defined to avoid accidentally exposing internal fields
         fields = (
             "id",
             "username",
@@ -25,8 +22,8 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
     def validate_email(self, value):
-        # La restriccion de base de datos evita carreras; esta validacion da
-        # un error legible a las solicitudes administrativas antes de guardar.
+        # The database constraint prevents race condition
+        # This validation provides a readable error for administrative requests before saving
         users_with_email = User.objects.filter(email_lookup_hash=hash_lookup_value(value))
         if self.instance:
             users_with_email = users_with_email.exclude(pk=self.instance.pk)
@@ -35,10 +32,10 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        password = validated_data.pop("password", None) # La contraseña se elimina de validated_data
+        password = validated_data.pop("password", None) # The password is removed from validated_data
         user = User(**validated_data)
         if password:
-            user.set_password(password) # Se procesa con set_password. Esto crea un hash seguro usando Django
+            user.set_password(password) # It is processed using set_password. This creates a secure hash using Django
         user.save()
         return user
 
@@ -48,7 +45,7 @@ class UserSerializer(serializers.ModelSerializer):
         for field, value in validated_data.items():
             setattr(instance, field, value)
         if password:
-            instance.set_password(password) # Si llega una nueva password, utiliza set_password para reemplazar el hash anterior
+            instance.set_password(password) # If a new password arrives, use set_password to replace the previous hash
         instance.save()
         return instance
 
@@ -59,13 +56,13 @@ class PublicUserSerializer(serializers.ModelSerializer):
         fields = ("id", "username", "first_name", "last_name")
         read_only_fields = fields
 
-# Serializador del perfil
+# Profile serializer
 class ProfileSerializer(serializers.ModelSerializer):
-    # El campo user es de solo lectura para evitar que se pueda cambiar el propietario de un perfil desde la API
-    user = serializers.PrimaryKeyRelatedField(read_only=True) # el user debe asignarse desde request.user
+    # The user field is read-only to prevent the profile owner from being changed via the API
+    user = serializers.PrimaryKeyRelatedField(read_only=True) # The user should be assigned from request.user
 
     creation_date = serializers.DateTimeField(read_only=True)
-    # No usamos fields = '__all__' porque expone campos internos y permite escribir user o creation_date
+    # We do not use fields='__all__' because it exposes internal fields and allows writing to 'user' or 'creation_date'
     class Meta:
         model = Profile
         fields = (
@@ -78,7 +75,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         )
 
 
-# Serializador del registro de usuarios
+# Register serializer
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, 
@@ -88,7 +85,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(max_length=150)
     last_name = serializers.CharField(max_length=150)
     email = serializers.EmailField(
-        # Mensajes de error
+        # Error messages
         error_messages = {
             "invalid": "Email invalido",
             "blank": "Email invalido",
@@ -97,20 +94,20 @@ class RegisterSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        # Indica que este serializer trabaja con el modelo User.
+        # Indicates that this serializer works with the User model
         model = User
-        # Expone únicamente los datos necesarios para registrar una cuenta.
+        # Provides only the necessary data to register an account
         fields = ("username", "first_name", "last_name", "email", "password")
 
     def validate_email(self, value):
-        # Como el email está cifrado, se calcula el mismo HMAC y se compara con email_lookup_hash
+        # Since the email is encrypted, the same HMAC is calculated and compared againts email_lookup_hash
         if User.objects.filter(email_lookup_hash=hash_lookup_value(value)).exists():
-            # Informa al cliente de que el correo ya está en uso.
+            # Inform the client that the email is already in use
             raise serializers.ValidationError("Este email ya está registrado.")
-        # Devuelve el correo validado al proceso de creación.
+        # Return the validated email to the creation process
         return value
 
-    @transaction.atomic # para garantizar que si no se crea el perfil, tampoco se guarde el usuario
+    @transaction.atomic # To ensure that if the profile is not created, the user is not saved either
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         Profile.objects.create(user=user)

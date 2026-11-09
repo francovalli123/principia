@@ -17,8 +17,7 @@ from apps.publications.serializers import PublicationSerializer
 from apps.simulations.phRegistry import PHENOMENON_SERIALIZERS
 from apps.users.serializers import UserSerializer
 
-
-#ForumView
+# ForumView
 class ForumView(PaginatedAPIView):
     permission_classes = [
         IsAuthenticatedOrReadOnly,
@@ -32,7 +31,7 @@ class ForumView(PaginatedAPIView):
         # Get all forums
         if forum_id is None:
             forums = Forum.objects.all().order_by("id")
-            # La página se calcula sobre el queryset completo para conservar el count.
+            # The page is calculated based on the entire queryset in order to preserve the count
             page = self.paginate_queryset(forums, request)
             serializer = ForumSerializer(
                 page if page is not None else forums,
@@ -86,9 +85,9 @@ class ForumView(PaginatedAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # owner obtained through token
+        # Owner obtained through token
         forum = serializer.save(owner=request.user)
-        #Creator of forum is automatically set as member
+        # Creator of forum is automatically set as member
         ForumMembership.objects.create(
             forum=forum,
             user=request.user,
@@ -105,7 +104,7 @@ class ForumView(PaginatedAPIView):
     def delete(self,request, id=None,*args,**kwargs):
         forum = get_object_or_404(Forum,id=id)
 
-        self.check_object_permissions(request,forum) #Checks if it has the necessary permissions. On fail returns Forbidden
+        self.check_object_permissions(request,forum) # Checks if it has the necessary permissions. Returns Forbidden if fails
         forum.delete()
 
         return Response(
@@ -154,7 +153,7 @@ class SuggestedForumsView(APIView):
         )
     
 class JoinForumView(APIView):
-    #Only authenticated users can join forums
+    # Only authenticated users can join forums
     permission_classes = [IsAuthenticated]
 
     # Join forum
@@ -184,7 +183,7 @@ class LeaveForumView(APIView):
     def delete(self, request, id):
         forum = get_object_or_404(Forum, id=id)
 
-        #Owner cant abandon its own forum. To avoid having a ownerless forum
+        # Owner cant abandon its own forum. To avoid having a ownerless forum
         if forum.owner_id == request.user.id:
             return Response(
                 {"status": "error", "message": "Owner cant abandon their forum"},
@@ -218,11 +217,11 @@ class ForumMembersView(PaginatedAPIView):
 
         # Order by username
         members = forum.members.all().order_by("username")
-        # Aplica la paginación al queryset members
+        # Applies pagination to the members queryset
         page = self.paginate_queryset(members, request)
-        # Serializa los datos
+        # Serializes data
         serializer = UserSerializer(page if page is not None else members, many=True)
-        # Si existe una página, genera la respuesta paginada
+        # If a page exists, generates the paginated response
         if page is not None:
             return self.get_paginated_response(serializer.data)
         return Response(
@@ -233,14 +232,14 @@ class ForumMembersView(PaginatedAPIView):
     # Kick member
     def delete(self, request, id, user_id):
         forum = get_object_or_404(Forum, id=id)
-        #Only owner can kick members 
+        # Only owner can kick members 
         if forum.owner_id != request.user.id:
             return Response(
                 {"status": "error", "message": "Only the forum owner can expel members."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        #Forum owner cant be kicked out, (to avoid ownerless forum)
+        # Forum owner cant be kicked out, (to avoid ownerless forum)
         if forum.owner_id == user_id:
             return Response(
                 {"status": "error", "message": "The forum owner cannot be expelled."},

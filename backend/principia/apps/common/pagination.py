@@ -4,21 +4,21 @@ from rest_framework.views import APIView
 
 
 class PaginatedAPIView(APIView):
-    # APIView no aplica DEFAULT_PAGINATION_CLASS automáticamente.
+    # APIView does not automatically apply DEFAULT_PAGINATION_CLASS
     pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
 
-    # Recibe el queryset completo y la peticion HTTP
+    # Receives the complete queryset and the HTTP request
     def paginate_queryset(self, queryset, request):
         if self.pagination_class is None:
-            return None # Devuelve None si la paginación está desactivada
+            return None # Returns None if pagination is disabled
 
-        # Se conserva el paginador para generar después los enlaces y metadatos.
+        # The paginator is retained so that links and metadata can be generated later
         self.paginator = self.pagination_class()
         return self.paginator.paginate_queryset(queryset, request, view=self)
 
-    # Recibe los datos serializados de la pagina actual
+    # Receives the serialized data from the current page
     def get_paginated_response(self, data):
-        # Mantiene el formato existente y añade la respuesta estándar de DRF en data.
+        # Mantains the existing format and adds the standard DRF response within data
         response = self.paginator.get_paginated_response(data)
         return Response(
             {"status": "success", "data": response.data},
