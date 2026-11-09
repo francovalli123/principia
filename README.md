@@ -15,9 +15,6 @@ Los usuarios pueden crear simulaciones, mostrarlas en su perfil, publicarlas en
 foros, comentarlas y guardarlas en favoritos. Las simulaciones públicas también
 pueden consultarse desde el perfil de su dueño.
 
-> Este README cubre el backend. La documentación del frontend se agregará más
-> adelante.
-
 ### Contenido
 
 - [Backend](#backend)
