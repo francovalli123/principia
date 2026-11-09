@@ -73,9 +73,11 @@ bloqueo temporal de 30 minutos.
 
 Son mecanismos diferentes y cumplen propósitos distintos:
 
-1. Hash de contraseña de Django: guarda contraseñas de forma no reversible. La aplicación nunca necesita recuperar la contraseña original.
-2. Fernet (`cryptography`): Cifra `email`, `first_name` y `last_name` para poder recuperarlos cuando la aplicación los necesita. Es cifrado simétrico autenticado.
-3. HMAC-SHA256 (biblioteca estándar de Python): genera índices no reversibles para buscar correos cifrados y contar intentos por nombre de usuario normalizado, sin guardar esos identificadores en texto claro en esos registros. 
+| Mecanismo | Uso en Principia |
+| --- | --- |
+| Hash de contraseña de Django | Guarda contraseñas de forma no reversible. La aplicación nunca necesita recuperar la contraseña original. |
+| Fernet (`cryptography`) | Cifra `email`, `first_name` y `last_name` para poder recuperarlos cuando la aplicación los necesita. Es cifrado simétrico autenticado. |
+| HMAC-SHA256 (biblioteca estándar de Python) | Genera índices no reversibles para buscar correos cifrados y contar intentos por nombre de usuario normalizado, sin guardar esos identificadores en texto claro en esos registros. |
 
 El correo se normaliza antes de calcular su HMAC, lo que permite comparar
 correos sin descifrar cada registro. `MultiFernet` permite leer datos cifrados
@@ -118,20 +120,3 @@ Los foros tienen un propietario y miembros. Las publicaciones vinculan una
 simulación con su autor y, opcionalmente, un foro. Los usuarios pueden comentar
 publicaciones y guardar simulaciones en favoritos. Los permisos restringen
 estas acciones según autenticación, membresía, visibilidad y propiedad.
-
-## API
-
-Las rutas principales están bajo `/api/`:
-
-| Recurso | Rutas |
-| --- | --- |
-| Registro e inicio de sesión | `POST /signup/`, `POST /login/`, `POST /token/refresh/` |
-| Usuarios y perfil | `/users/`, `/users/me/`, `/users/profile/` |
-| Fenómenos y simulaciones | `/phenomena/`, `/simulations/`, `/phenomenonConfig/<id>/` |
-| Favoritos | `/simulations/favourites/` |
-| Foros y miembros | `/forums/`, `/forums/mine/`, `/forums/<id>/join/`, `/forums/<id>/members/` |
-| Publicaciones y comentarios | `/publications/`, `/comments/` |
-
-Las rutas que modifican datos requieren autenticación, y cada recurso aplica
-permisos adicionales según la operación. Las colecciones se paginan con DRF;
-los errores se normalizan mediante un handler común.
