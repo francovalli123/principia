@@ -44,6 +44,7 @@
 					[currentUserId]="currentUserId"
 					(commentAdded)="addComment(post, $event)"
 					(commentDeleted)="removeComment(post, $event)"
+					(publicationDeleted)="removePublication($event)"
 				/>
 				@if (post.nextCommentPage !== null) {
 					<button

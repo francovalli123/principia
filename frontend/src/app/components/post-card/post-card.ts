@@ -11,6 +11,7 @@ import { CommentApiService } from '../../services/comment-api';
 import { SimulationApiService } from '../../services/simulation-api';
 import { ToastService } from '../../services/toast';
 import { MotorControl } from '../../motor_interface/components/motor-control/motor-control';
+import { PublicationApiService } from '../../services/publication-api';
 
 @Component({
   imports: [DatePipe, FormsModule, MotorControl],
@@ -25,17 +26,21 @@ export class PostCard implements OnInit {
   @Input() currentUserId: number | null = null;
   @Output() commentAdded = new EventEmitter<Comment>();
   @Output() commentDeleted = new EventEmitter<number>();
+  @Output() publicationDeleted = new EventEmitter<number>();  // Output marks a component's property as a custom event source
+
   readonly simulation = signal<Simulation | null>(null);
   readonly simulationError = signal('');
   commentDraft = '';
   commentError = '';
   submittingComment = false;
+  deletingPublication = false;  // Flag used to indicate whether the request is in process or not
   readonly deletingCommentIds = new Set<number>();
 
   constructor(
     private readonly simulationApi: SimulationApiService,
     private readonly commentApi: CommentApiService,
     private readonly toast: ToastService,
+    private readonly publicationApi: PublicationApiService,
   ) {}
 
   ngOnInit(): void {
@@ -104,6 +109,34 @@ export class PostCard implements OnInit {
             error instanceof HttpErrorResponse && typeof error.error?.message === 'string'
               ? error.error.message
               : 'No se pudo enviar el comentario. Inténtalo de nuevo.';
+        },
+      });
+  }
+
+  // Compares the owner's id with currentUserId. If there's no current user yet, it returns false
+  isOwnPublication(): boolean {
+    const ownerId = typeof this.publication.owner === 'number'
+      ? this.publication.owner
+      : this.publication.owner.id;
+      
+      return this.currentUserId !== null && ownerId === this.currentUserId;
+  }
+
+  // Delete an specific publication only if the currentUser is the owner of the post 
+  deletePublication(): void {
+    if (!this.isOwnPublication() || this.deletingPublication) return; 
+
+    this.deletingPublication = true;
+    this.publicationApi.deletePublication(this.publication.id)
+      .pipe(finalize(() => (this.deletingPublication = false)))
+      .subscribe({
+        next: () => {
+          this.publicationDeleted.emit(this.publication.id);  // Emits a new publicationDeleted event
+          this.toast.success('Publicación eliminada.');
+        },
+        error: (error: unknown) => {
+          console.error(`Failed to delete publication with ID: ${this.publication.id}`, error);
+          this.toast.error('No se pudo eliminar la publicación. Inténtalo de nuevo.');
         },
       });
   }

@@ -47,7 +47,7 @@ export class PublicationApiService {
         return this.api.post<Publication>('publications/', body);
     }
 
-    deletePublication(id: number): Observable<Publication> {
-        return this.api.delete<Publication>(`publications/${id}/`);
+    deletePublication(id: number): Observable<void> {
+        return this.api.delete<void>(`publications/${id}/`);
     }
 }

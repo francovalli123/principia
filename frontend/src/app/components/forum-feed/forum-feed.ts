@@ -143,6 +143,12 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     }));
   }
 
+  removePublication(publicationId: number): void {
+    this.posts.update((posts) => 
+      posts.filter((post) => post.publication.id !== publicationId)  
+    );
+  }
+
   private loadPublications(initial: boolean): void {
     if (initial) {
       this.loading.set(true);

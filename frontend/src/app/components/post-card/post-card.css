@@ -260,3 +260,42 @@
 		font-size: 16px;
 	}
 }
+
+.publication-delete {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 5px;
+  color: #7b8794;
+  background: transparent;
+  cursor: pointer;
+}
+
+.publication-delete svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.publication-delete:hover:not(:disabled) {
+  color: #b4232d;
+  background: #fff0f0;
+}
+
+.publication-delete:focus-visible {
+  outline: 2px solid #09629f;
+  outline-offset: 1px;
+}
+
+.publication-delete:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
