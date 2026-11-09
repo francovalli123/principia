@@ -41,6 +41,37 @@ class CommentAccessTests(APITestCase):
 		self.assertEqual(response.status_code, 403)
 		self.assertFalse(Comment.objects.exists())
 
+	def test_forum_member_can_comment_on_another_users_publication(self):
+		owner = User.objects.create_user(
+			username="publication-owner",
+			email="publication-owner@example.com",
+			******,
+		)
+		forum = Forum.objects.create(name="Physics", owner=owner)
+		ForumMembership.objects.create(forum=forum, user=self.user)
+		simulation = Simulation.objects.create(
+			owner=owner,
+			phenomenon_type="oblique_projectile_motion",
+			visibility="public",
+		)
+		publication = Publication.objects.create(
+			title="Another user's experiment",
+			description="A public experiment in the forum.",
+			simulation=simulation,
+			owner=owner,
+			forum=forum,
+		)
+		self.client.force_authenticate(user=self.user)
+
+		response = self.client.post(
+			"/api/comments/",
+			{"publication": publication.id, "content": "A comment"},
+			format="json",
+		)
+
+		self.assertEqual(response.status_code, 201)
+		self.assertTrue(Comment.objects.filter(publication=publication, owner=self.user).exists())
+
 	def test_comment_response_includes_safe_owner_details(self):
 		forum = Forum.objects.create(name="Physics", owner=self.user)
 		ForumMembership.objects.create(forum=forum, user=self.user)

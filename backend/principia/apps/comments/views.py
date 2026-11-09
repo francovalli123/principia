@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from apps.common.permissions import IsOwnerOrReadOnly, SimulationPermission
@@ -29,7 +30,11 @@ class CommentView(PaginatedAPIView):
             return False
 
         self.access_context = "forum"
-        self.check_object_permissions(request, publication.simulation)
+        simulation_permission = SimulationPermission()
+        if not simulation_permission.has_object_permission(
+            request, self, publication.simulation
+        ):
+            raise PermissionDenied(simulation_permission.message)
         return True
 
     def get(self, request, *args, **kwargs):
