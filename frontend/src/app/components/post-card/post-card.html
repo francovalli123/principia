@@ -1,8 +1,21 @@
 <article class="post-card">
 	<header class="post-header">
-		<div class="author-mark" aria-hidden="true">{{ authorInitials(publication.owner) }}</div>
+		<a
+		class="author-profile-link"
+		[routerLink]="profileLink(publication.owner)"
+		>
+		@if (authorProfilePicture(publication.owner); as profilePicture) {
+			<img class="author-mark author-photo" [src]="profilePicture" alt="" />
+		} @else {
+			<div class="author-mark" aria-hidden="true">
+				{{ authorInitials(publication.owner) }}
+			</div>
+		}
 		<div class="post-meta">
 			<p class="author-name">{{ authorName(publication.owner) }}</p>
+		</div>
+		</a>
+		<div class="post-meta">
 			<time [attr.datetime]="publication.creation_date">
 				{{ publication.creation_date | date: 'medium' }}
 			</time>
@@ -21,7 +34,7 @@
 		</button>
 		}
 	</header>
-
+		
 	<div class="post-content">
 		<h2>{{ publication.title }}</h2>
 		<p>{{ publication.description }}</p>
@@ -63,8 +76,12 @@
 								</svg>
 							</button>
 						}
-						<div class="comment-author">{{ authorName(comment.owner) }}</div>
-						<p>{{ comment.content }}</p>
+						<a
+						class="comment-author"
+							[routerLink]="profileLink(comment.owner)"
+						>
+							{{ authorName(comment.owner) }}
+						</a>						<p>{{ comment.content }}</p>
 						<time [attr.datetime]="comment.creation_date">
 							{{ comment.creation_date | date: 'medium' }}
 						</time>

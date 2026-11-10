@@ -15,7 +15,7 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, Bl
 from rest_framework.parsers import FormParser, MultiPartParser
 
 from .models import User, Profile, LoginAttempt
-from .serializers import RegisterSerializer, UserSerializer, ProfileSerializer
+from .serializers import RegisterSerializer, UserSerializer, ProfileSerializer, PublicProfileSerializer
 from apps.simulations.phRegistry import PHENOMENON_SERIALIZERS
 from .security import hash_lookup_value
 from apps.simulations.serializers import SimulationSerializer
@@ -195,6 +195,17 @@ class LogoutAllView(APIView):
         for token in OutstandingToken.objects.filter(user=request.user):   
             BlacklistedToken.objects.get_or_create(token=token)     # Does nothing if its already blacklisted, else  blacklists
         return Response({"detail": "Sesión cerrada en todos los dispositivos"})
+
+class PublicProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id):
+        profile = get_object_or_404(Profile, user_id=id)
+        serializer = PublicProfileSerializer(profile)
+        return Response(
+            {"status": "success", "data": serializer.data},
+            status=status.HTTP_200_OK,
+        )
 
 # Profile is automatically created in RegisterSerializer.create(). ProfileView allows to consult and modify profile post signuo
 class ProfileView(PaginatedAPIView):

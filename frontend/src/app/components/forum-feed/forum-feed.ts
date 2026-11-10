@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Comment } from '../../../models/comment';
 import { Forum } from '../../../models/forum';
 import { Publication } from '../../../models/publication';
@@ -20,7 +20,7 @@ interface FeedPost {
 }
 
 @Component({
-  imports: [AppHeader, PostCard],
+  imports: [AppHeader, PostCard, RouterLink],
   standalone: true,
   selector: 'app-forum-feed',
   styleUrl: './forum-feed.css',

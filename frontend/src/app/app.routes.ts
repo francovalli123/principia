@@ -11,12 +11,15 @@ import { CreatePublicationPage } from './components/create-publication/create-pu
 import { SelectSimulationPage } from './components/select-simulation/select-simulation';
 import { PublishSimulationPage } from './components/publish-simulation/publish-simulation';
 import { ProfilePage } from './components/profile/profile';
+import { PublicProfilePage } from './components/public-profile/public-profile';
+
 export const routes: Routes = [
   { path: '', component: LandingPage },
   { path: 'login', component: LoginPage },
   { path: 'registro', component: RegisterPage },
   { path: 'inicio', component: PrincipiaHome, canActivate: [authGuard] },
   { path: 'perfil', component: ProfilePage, canActivate: [authGuard] },
+  { path: 'perfil/:id', component: PublicProfilePage, canActivate: [authGuard]},
   { path: 'foros/crear', component: CreateForumPage, canActivate: [authGuard] },
   { path: 'simulaciones/crear', component: SimulationForm, canActivate: [authGuard] },
   { path: 'simulaciones/mis', component: SelectSimulationPage, canActivate: [authGuard] },

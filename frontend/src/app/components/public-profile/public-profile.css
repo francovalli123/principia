@@ -1,0 +1,221 @@
+:host {
+    display: block;
+    min-height: 100vh;
+    background: #f3f6fa;
+    color: #17233b;
+}
+
+.public-profile-page {
+    width: min(100% - 48px, 1040px);
+    margin: 36px auto 64px;
+}
+
+.public-profile-heading,
+.public-profile-details,
+.public-profile-simulations {
+    border: 1px solid #dce4ee;
+    padding: 24px;
+    background: #fff;
+}
+
+.public-profile-heading {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.public-profile-avatar {
+    display: grid;
+    width: 88px;
+    height: 88px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.public-profile-avatar-fallback {
+    background: #dcecf4;
+    color: #1d5e83;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.public-profile-identity h1,
+.public-profile-details h2,
+.section-heading h2 {
+    margin: 0;
+}
+
+.public-profile-username,
+.profile-status {
+    color: #61738e;
+}
+
+.public-profile-details,
+.public-profile-simulations {
+    margin-top: 20px;
+}
+
+.public-profile-details p {
+    margin-bottom: 0;
+    white-space: pre-wrap;
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.simulation-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+    gap: 16px;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.simulation-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    border: 1px solid #e1e7ee;
+    border-radius: 8px;
+    padding: 16px;
+    background: #fff;
+}
+
+.simulation-category {
+    margin: 0 0 7px;
+    color: #09629f;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.simulation-card h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.simulation-date {
+    display: block;
+    margin-top: 5px;
+    color: #61738e;
+    font-size: 11px;
+}
+
+.simulation-preview {
+    aspect-ratio: 16 / 9;
+    margin: 14px 0;
+    overflow: hidden;
+    border-radius: 6px;
+    background: #07101f;
+}
+
+.simulation-preview img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.view-simulation-button {
+    width: 100%;
+    min-height: 40px;
+    margin-top: auto;
+    border: 0;
+    border-radius: 5px;
+    padding: 8px 12px;
+    background: #09629f;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.view-simulation-button:focus-visible,
+.simulation-modal-close:focus-visible {
+    outline: 3px solid rgb(9 98 159 / 28%);
+    outline-offset: 3px;
+}
+
+.simulation-modal-backdrop {
+    position: fixed;
+    z-index: 20;
+    inset: 0;
+    display: grid;
+    overflow-y: auto;
+    padding: 24px;
+    place-items: center;
+    background: rgb(8 16 28 / 72%);
+}
+
+.simulation-modal {
+    width: min(100%, 980px);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    border: 1px solid #dce4ee;
+    border-radius: 8px;
+    padding: 18px;
+    background: #fff;
+}
+
+.simulation-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.simulation-modal-header h2 {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 18px;
+}
+
+.simulation-modal-close {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid #dce4ee;
+    border-radius: 50%;
+    background: #fff;
+    color: #52627a;
+    cursor: pointer;
+    font: inherit;
+    font-size: 25px;
+    line-height: 1;
+}
+
+@media (max-width: 640px) {
+    .public-profile-page {
+        width: min(100% - 28px, 560px);
+        margin-block: 20px 40px;
+    }
+
+    .public-profile-heading,
+    .public-profile-details,
+    .public-profile-simulations {
+        padding: 18px;
+    }
+
+    .public-profile-avatar {
+        width: 64px;
+        height: 64px;
+    }
+
+    .simulation-modal-backdrop {
+        padding: 12px;
+    }
+
+    .simulation-modal {
+        max-height: calc(100vh - 24px);
+        padding: 14px;
+    }
+}

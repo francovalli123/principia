@@ -12,9 +12,11 @@ import { SimulationApiService } from '../../services/simulation-api';
 import { ToastService } from '../../services/toast';
 import { MotorControl } from '../../motor_interface/components/motor-control/motor-control';
 import { PublicationApiService } from '../../services/publication-api';
+import { RouterLink } from '@angular/router';
+import { BaseApiService } from '../../services/base-api.service';
 
 @Component({
-  imports: [DatePipe, FormsModule, MotorControl],
+  imports: [DatePipe, FormsModule, MotorControl, RouterLink],
   selector: 'app-post-card',
   standalone: true,
   styleUrl: './post-card.css',
@@ -41,6 +43,7 @@ export class PostCard implements OnInit {
     private readonly commentApi: CommentApiService,
     private readonly toast: ToastService,
     private readonly publicationApi: PublicationApiService,
+    private readonly baseApi: BaseApiService,
   ) {}
 
   ngOnInit(): void {
@@ -66,6 +69,14 @@ export class PostCard implements OnInit {
 
   authorInitials(author: Author | number | null | undefined): string {
     return this.authorName(author).slice(0, 2).toUpperCase();
+  }
+
+  authorProfilePicture(author: Author | number | null | undefined): string | null {
+    if (typeof author !== 'object' || author === null || !author.profile_picture) {
+      return null;
+    }
+
+    return new URL(author.profile_picture, this.baseApi.getUrl('')).href;
   }
 
   isOwnComment(comment: Comment): boolean {
@@ -139,5 +150,23 @@ export class PostCard implements OnInit {
           this.toast.error('No se pudo eliminar la publicación. Inténtalo de nuevo.');
         },
       });
+  }
+
+
+  profileLink(author: Author | number | null | undefined): string[] | null {
+    const authorId = typeof author === 'number' ? author : author?.id;
+
+    if (
+      authorId === undefined ||
+      authorId === null ||
+      !Number.isSafeInteger(authorId) ||
+      authorId <= 0
+    ) {
+      return null;
+    }
+
+    return authorId === this.currentUserId
+      ? ['/perfil']
+      : ['/perfil', String(authorId)];
   }
 }

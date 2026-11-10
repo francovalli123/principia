@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { RouterLink } from '@angular/router';
+import { By } from '@angular/platform-browser';
+import { EMPTY, of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ForumFeed } from './forum-feed';
 import { ForumApiService } from '../../services/forum-api';
@@ -29,6 +31,7 @@ describe('ForumFeed', () => {
   };
   const commentApi = { getComments: () => of({ status: 'ok', data: { count: 0, next: null, previous: null, results: [] } }) };
   const profileApi = {
+    profileUpdated$: EMPTY,
     getProfile: vi.fn(() => of({
       id: 8,
       user: 12,
@@ -88,6 +91,8 @@ describe('ForumFeed', () => {
     const avatar = fixture.nativeElement.querySelector('.composer-avatar') as HTMLImageElement;
     expect(avatar.src).toBe('https://example.test/profile.jpg');
     expect(fixture.nativeElement.querySelector('.publication-composer .create-publication-button')).toBeTruthy();
+    expect(fixture.debugElement.query(By.directive(RouterLink))).toBeTruthy();
+    expect(avatar.closest('a')).toBeTruthy();
   });
 
   it('loads the current forum and provides a return action', () => {

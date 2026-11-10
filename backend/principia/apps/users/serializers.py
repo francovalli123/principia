@@ -51,10 +51,20 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class PublicUserSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ("id", "username", "first_name", "last_name")
+        fields = ("id", "username", "first_name", "last_name", "profile_picture")
         read_only_fields = fields
+
+    def get_profile_picture(self, obj):
+        try:
+            profile = obj.profile
+        except Profile.DoesNotExist:
+            return None
+
+        return profile.profile_picture.url if profile.profile_picture else None
 
 # Profile serializer
 class ProfileSerializer(serializers.ModelSerializer):
@@ -74,6 +84,22 @@ class ProfileSerializer(serializers.ModelSerializer):
             "creation_date",
         )
 
+# Public Profile Serializer
+class PublicProfileSerializer(serializers.ModelSerializer): 
+    username = serializers.CharField(source="user.username", read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = (
+            "id",
+            "user",
+            "username",
+            "visible_name",
+            "bio",
+            "profile_picture",
+            "creation_date",
+        )
+        read_only_fields = fields
 
 # Register serializer
 class RegisterSerializer(serializers.ModelSerializer):

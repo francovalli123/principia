@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 from apps.forums.models import Forum, ForumMembership
 from apps.publications.models import Publication
 from apps.simulations.models import Simulation
-from apps.users.models import User
+from apps.users.models import Profile, User
 
 # Create your tests here.
 
@@ -69,6 +69,22 @@ class PublicationAccessTests(APITestCase):
 				"username": self.owner.username,
 				"first_name": self.owner.first_name,
 				"last_name": self.owner.last_name,
+				"profile_picture": None,
 			},
 		)
 		self.assertNotIn("email", response.data["data"]["owner"])
+
+	def test_publication_response_includes_owner_profile_picture_url(self):
+		Profile.objects.create(
+			user=self.owner,
+			profile_picture="profile_pictures/avatar.png",
+		)
+		self.client.force_authenticate(user=self.member)
+
+		response = self.client.get(f"/api/publications/{self.publication.id}/")
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(
+			response.data["data"]["owner"]["profile_picture"],
+			"/media/profile_pictures/avatar.png",
+		)

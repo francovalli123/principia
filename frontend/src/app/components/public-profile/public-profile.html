@@ -1,0 +1,94 @@
+<app-header />
+
+<main class="public-profile-page">
+    @if (loading()) {
+        <p class="profile-status" role="status">Cargando perfil...</p>
+    } @else if (error()) {
+        <p class="profile-status" role="alert">
+            No se pudo cargar este perfil.
+        </p>
+    } @else if (profile(); as publicProfile) {
+        <header class="public-profile-heading">
+            @if (publicProfile.profile_picture; as profilePicture) {
+                <img
+                    class="public-profile-avatar"
+                    [src]="profilePicture"
+                    alt=""
+                />
+            } @else {
+                <span class="public-profile-avatar public-profile-avatar-fallback" aria-hidden="true">
+                    {{ initials }}
+                </span>
+            }
+
+            <div class="public-profile-identity">
+                <h1>{{ displayName }}</h1>
+                <p class="public-profile-username">@{{ publicProfile.username }}</p>
+            </div>
+        </header>
+
+        <section class="public-profile-details">
+            <h2>Sobre mí</h2>
+            <p>{{ publicProfile.bio || 'Este usuario todavía no agregó una biografía.' }}</p>
+        </section>
+
+        <section class="public-profile-simulations">
+            <header class="section-heading">
+                <h2>Simulaciones públicas</h2>
+                <span>{{ simulations().length }}</span>
+            </header>
+
+            @if (simulations().length > 0) {
+                <ul class="simulation-list">
+                    @for (simulation of simulations(); track simulation.id) {
+                        <li class="simulation-item">
+                            <article class="simulation-card">
+                                <p class="simulation-category">{{ phenomenonLabel(simulation.phenomenon_type) }}</p>
+                                <h3>{{ simulationTitle(simulation) }}</h3>
+                                <time class="simulation-date" [attr.datetime]="simulation.creation_date">
+                                    {{ simulation.creation_date?.slice(0, 10) || 'Fecha no disponible' }}
+                                </time>
+                                <div class="simulation-preview">
+                                    <img src="assets/sim.png" alt="Vista previa de la simulación" />
+                                </div>
+                                <button
+                                    class="view-simulation-button"
+                                    type="button"
+                                    (click)="openSimulation(simulation)"
+                                >Ver simulación</button>
+                            </article>
+                        </li>
+                    }
+                </ul>
+            } @else {
+                <p class="profile-status">No hay simulaciones públicas para mostrar.</p>
+            }
+        </section>
+    }
+</main>
+
+@if (selectedSimulation(); as activeSimulation) {
+<div class="simulation-modal-backdrop" (click)="closeSimulation()">
+    <section
+        class="simulation-modal"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-label]="simulationTitle(activeSimulation)"
+        (click)="$event.stopPropagation()"
+    >
+        <header class="simulation-modal-header">
+            <h2>{{ simulationTitle(activeSimulation) }}</h2>
+            <button
+                class="simulation-modal-close"
+                type="button"
+                aria-label="Cerrar simulación"
+                title="Cerrar"
+                (click)="closeSimulation()"
+            >
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </header>
+        <app-motor-control [simulation]="activeSimulation" />
+    </section>
+</div>
+}

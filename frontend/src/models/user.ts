@@ -6,7 +6,9 @@ export interface User {
     last_name: string;
 }
 
-export type Author = Pick<User, 'id' | 'username' | 'first_name' | 'last_name'>;
+export type Author = Pick<User, 'id' | 'username' | 'first_name' | 'last_name'> & {
+    profile_picture?: string | null;
+};
 
 export interface UpdateUser {
     username?: string;
@@ -23,4 +25,8 @@ export interface Profile {
     visible_name: string | null;
     profile_picture: string | null;
     creation_date: string;
+}
+
+export interface PublicProfile extends Profile {
+    username: string;
 }

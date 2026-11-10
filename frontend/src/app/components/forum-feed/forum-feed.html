@@ -8,16 +8,18 @@
 		<button type="button" class="back-button" (click)="goBack()">‹ <span>Volver al inicio</span></button>
 	</header>
 	<div class="publication-composer">
-		@if (profile()?.profile_picture; as profilePicture) {
-			<img class="composer-avatar" [src]="profilePicture" alt="" />
-		} @else {
-			<span class="composer-avatar composer-avatar-fallback" aria-hidden="true">
-				<svg viewBox="0 0 24 24" focusable="false">
-					<circle cx="12" cy="8" r="3.5" />
-					<path d="M5 21c.4-4.1 2.8-6.2 7-6.2s6.6 2.1 7 6.2" />
-				</svg>
-			</span>
-		}
+		<a class="composer-profile-link" routerLink="/perfil" aria-label="Ver mi perfil" title="Mi perfil">
+			@if (profile()?.profile_picture; as profilePicture) {
+				<img class="composer-avatar" [src]="profilePicture" alt="" />
+			} @else {
+				<span class="composer-avatar composer-avatar-fallback" aria-hidden="true">
+					<svg viewBox="0 0 24 24" focusable="false">
+						<circle cx="12" cy="8" r="3.5" />
+						<path d="M5 21c.4-4.1 2.8-6.2 7-6.2s6.6 2.1 7 6.2" />
+					</svg>
+				</span>
+			}
+		</a>
 		<button type="button" class="create-publication-button" (click)="createPublication()">
 			<svg viewBox="0 0 24 24" aria-hidden="true">
 				<path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" />

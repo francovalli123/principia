@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject, map, switchMap, tap } from 'rxjs';
 import { BaseApiService } from './base-api.service';
-import { Profile } from '../../models/user';
+import { Profile, PublicProfile } from '../../models/user';
 
 interface ProfileResponse {
     status: string;
@@ -44,19 +44,20 @@ export class ProfileApiService {
             `users/profile/?phenomenon_type=${encodeURIComponent(phenomenonType)}`
         );
     }
+
+    getPublicProfile(userId: number): Observable<PublicProfile> {
+        return this.api
+            .get<{ status: string; data: PublicProfile}>(`users/public-profiles/${userId}/`)
+            .pipe(
+                map((response) => 
+                    resolveProfilePicture(response.data, this.api.getUrl('')),
+                ),
+            );
+    }
 }
 
 function unwrapProfile(response: Profile | ProfileResponse): Profile {
     return 'data' in response ? response.data : response;
-}
-
-function resolveProfilePicture(profile: Profile, apiUrl: string): Profile {
-    if (!profile.profile_picture) return profile;
-
-    return {
-        ...profile,
-        profile_picture: new URL(profile.profile_picture, apiUrl).href,
-    };
 }
 
 function addCacheBuster(imageUrl: string): string {
@@ -64,4 +65,16 @@ function addCacheBuster(imageUrl: string): string {
     const separator = urlWithoutFragment.includes('?') ? '&' : '?';
     const cacheKey = `profile_updated=${Date.now()}`;
     return `${urlWithoutFragment}${separator}${cacheKey}${fragment ? `#${fragment}` : ''}`;
+}
+
+function resolveProfilePicture<T extends {profile_picture: string | null}>(
+    profile: T,
+    apiUrl: string,
+): T {
+    if (!profile.profile_picture) return profile;
+
+    return {
+        ...profile,
+        profile_picture: new URL(profile.profile_picture, apiUrl).href,
+    };
 }

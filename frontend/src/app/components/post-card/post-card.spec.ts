@@ -5,6 +5,9 @@ import { Publication } from '../../../models/publication';
 import { CommentApiService } from '../../services/comment-api';
 import { SimulationApiService } from '../../services/simulation-api';
 import { ToastService } from '../../services/toast';
+import { PublicationApiService } from '../../services/publication-api';
+import { BaseApiService } from '../../services/base-api.service';
+import { provideRouter } from '@angular/router';
 import { WasmSetupService } from '../../motor_interface/services/wasmSetUp';
 import { PostCard } from './post-card';
 
@@ -39,6 +42,8 @@ const commentApiStub = {
   })),
   deleteComment: vi.fn(() => of(null)),
 };
+const publicationApiStub = { deletePublication: vi.fn(() => of(null)) };
+const baseApiStub = { getUrl: vi.fn(() => 'http://127.0.0.1:8000/api') };
 const toastStub = { success: vi.fn(), error: vi.fn() };
 
 describe('PostCard', () => {
@@ -53,7 +58,10 @@ describe('PostCard', () => {
         { provide: WasmSetupService, useValue: wasmSetupStub },
         { provide: SimulationApiService, useValue: simulationApiStub },
         { provide: CommentApiService, useValue: commentApiStub },
+        { provide: PublicationApiService, useValue: publicationApiStub },
+        { provide: BaseApiService, useValue: baseApiStub },
         { provide: ToastService, useValue: toastStub },
+        provideRouter([]),
       ],
     }).compileComponents();
 
@@ -118,6 +126,26 @@ describe('PostCard', () => {
     expect(fixture.nativeElement.textContent).toContain('Publication details');
     expect(fixture.nativeElement.textContent).toContain('test-user');
     expect(fixture.nativeElement.textContent).toContain('Todavía no hay comentarios.');
+  });
+
+  it('renders the owner profile photo when the API includes its URL', () => {
+    fixture.componentRef.setInput('publication', {
+      ...component.publication,
+      owner: {
+        id: 12,
+        username: 'test-user',
+        first_name: 'Test',
+        last_name: 'User',
+        profile_picture: '/media/profile_pictures/avatar.png',
+      },
+    });
+    expect(component.authorProfilePicture(component.publication.owner))
+      .toBe('http://127.0.0.1:8000/media/profile_pictures/avatar.png');
+    fixture.detectChanges();
+
+    const photo = fixture.nativeElement.querySelector('.author-photo') as HTMLImageElement;
+    expect(photo).toBeTruthy();
+    expect(photo.src).toBe('http://127.0.0.1:8000/media/profile_pictures/avatar.png');
   });
 
   it('renders comments linked to the publication', () => {

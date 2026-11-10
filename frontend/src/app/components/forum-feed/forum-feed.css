@@ -121,6 +121,17 @@
 	object-fit: cover;
 }
 
+.composer-profile-link {
+	display: grid;
+	flex: 0 0 36px;
+	border-radius: 50%;
+}
+
+.composer-profile-link:focus-visible {
+	outline: 3px solid #09629f;
+	outline-offset: 3px;
+}
+
 .composer-avatar-fallback {
 	display: grid;
 	place-items: center;
