@@ -15,7 +15,7 @@ from apps.forums.models import Forum, ForumMembership
 from apps.forums.serializers import ForumSerializer
 from apps.publications.serializers import PublicationSerializer
 from apps.simulations.phRegistry import PHENOMENON_SERIALIZERS
-from apps.users.serializers import UserSerializer
+from apps.users.serializers import PublicUserSerializer
 
 # ForumView
 class ForumView(PaginatedAPIView):
@@ -220,7 +220,11 @@ class ForumMembersView(PaginatedAPIView):
         # Applies pagination to the members queryset
         page = self.paginate_queryset(members, request)
         # Serializes data
-        serializer = UserSerializer(page if page is not None else members, many=True)
+        serializer = PublicUserSerializer(
+            page if page is not None else members,
+            many=True,
+            context={"request": request},
+        )
         # If a page exists, generates the paginated response
         if page is not None:
             return self.get_paginated_response(serializer.data)

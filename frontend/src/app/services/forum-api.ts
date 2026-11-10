@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { Author } from '../../models/user';
 import { Forum } from '../../models/forum';
 import { BaseApiService } from './base-api.service';
 
@@ -68,8 +69,10 @@ export class ForumApiService {
         return this.api.delete<any>(`forums/${id}/leave/`);
     }
 
-    getMembers(id: number): Observable<any> {
-        return this.api.get<any>(`forums/${id}/members/`);
+    getMembers(id: number): Observable<Author[]> {
+        return this.api.get<PaginatedResponse<Author>>(`forums/${id}/members/`).pipe(
+            map((response) => response.data.results)
+        );
     }
 
     kickMember(id: number, userId: number): Observable<any> {

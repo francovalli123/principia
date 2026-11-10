@@ -23,11 +23,15 @@ describe('ForumFeed', () => {
       name: 'Physics',
       description: '',
       creation_date: '',
-      owner: { id: 1, username: 'owner', email: '', first_name: '', last_name: '' },
+      owner: 1,
       member_count: 1,
       is_member: true,
       is_owner: false,
     })),
+    getMembers: vi.fn(() => of([
+      { id: 1, username: 'owner', profile_picture: 'https://example.test/owner.jpg' },
+      { id: 45, username: 'member-one', profile_picture: 'https://example.test/member.jpg' },
+    ])),
   };
   const commentApi = { getComments: () => of({ status: 'ok', data: { count: 0, next: null, previous: null, results: [] } }) };
   const profileApi = {
@@ -101,6 +105,25 @@ describe('ForumFeed', () => {
     const backButton = fixture.nativeElement.querySelector('.back-button') as HTMLButtonElement;
     backButton.click();
     expect(router.navigate).toHaveBeenCalledWith(['/inicio']);
+  });
+
+  it('shows forum members with profile links when the members button is clicked', () => {
+    const membersButton = fixture.nativeElement.querySelector('.members-toggle') as HTMLButtonElement;
+    membersButton.click();
+    fixture.detectChanges();
+
+    expect(forumApi.getMembers).toHaveBeenCalledWith(23);
+    const memberAvatar = fixture.nativeElement.querySelector(
+      '.member-link img[src="https://example.test/member.jpg"]',
+    ) as HTMLImageElement;
+    const memberLink = memberAvatar.closest('.member-link') as HTMLAnchorElement;
+    expect(fixture.debugElement.query(By.css('.member-link')).injector.get(RouterLink)).toBeTruthy();
+    expect(memberLink.textContent).toContain('member-one');
+    expect(memberAvatar.src).toBe('https://example.test/member.jpg');
+    const ownerBadge = fixture.nativeElement.querySelector('.member-owner-badge') as HTMLElement;
+    const ownerLink = ownerBadge.closest('.member-link') as HTMLAnchorElement;
+    expect((ownerLink.querySelector('img') as HTMLImageElement).src).toBe('https://example.test/owner.jpg');
+    expect(ownerLink.querySelector('.member-owner-badge')?.textContent).toContain('Propietario');
   });
 
   it('loads the current user ID for own-comment actions', () => {

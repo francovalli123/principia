@@ -4,7 +4,7 @@ export interface Forum {
 	name: string;
 	description: string;
 	creation_date: string;
-	owner: User;
+	owner: User | number;
 	member_count: number;
 	is_member: boolean;
 	is_owner: boolean;

@@ -3,7 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Comment } from '../../../models/comment';
 import { Forum } from '../../../models/forum';
 import { Publication } from '../../../models/publication';
-import { Profile } from '../../../models/user';
+import { Author, Profile } from '../../../models/user';
 import { AppHeader } from '../app-header/app-header';
 import { CommentApiService } from '../../services/comment-api';
 import { ForumApiService } from '../../services/forum-api';
@@ -36,6 +36,11 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
   readonly error = signal(false);
   readonly forum = signal<Forum | null>(null);
   readonly profile = signal<Profile | null>(null);
+  readonly members = signal<Author[]>([]);
+  readonly membersOpen = signal(false);
+  readonly membersLoading = signal(false);
+  readonly membersLoaded = signal(false);
+  readonly membersError = signal(false);
   currentUserId: number | null = null;
 
   private page = 1;
@@ -111,6 +116,34 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
 
   createPublication(): void {
     void this.router.navigate(['/forums', this.forumId, 'publications', 'crear']);
+  }
+
+  toggleMembers(): void {
+    this.membersOpen.update((isOpen) => !isOpen);
+    if (this.membersOpen() && !this.membersLoaded() && !this.membersLoading()) {
+      this.loadMembers();
+    }
+  }
+
+  loadMembers(): void {
+    this.membersLoading.set(true);
+    this.membersError.set(false);
+    this.forumApi.getMembers(this.forumId).subscribe({
+      next: (members) => {
+        this.members.set(members);
+        this.membersLoaded.set(true);
+        this.membersLoading.set(false);
+      },
+      error: (error: unknown) => {
+        console.error(`Failed to load members for forum ${this.forumId}`, error);
+        this.membersError.set(true);
+        this.membersLoading.set(false);
+      },
+    });
+  }
+
+  memberInitials(member: Author): string {
+    return member.username.slice(0, 2).toUpperCase();
   }
 
   loadMoreComments(post: FeedPost): void {

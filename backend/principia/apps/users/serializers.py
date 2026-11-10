@@ -64,7 +64,12 @@ class PublicUserSerializer(serializers.ModelSerializer):
         except Profile.DoesNotExist:
             return None
 
-        return profile.profile_picture.url if profile.profile_picture else None
+        if not profile.profile_picture:
+            return None
+
+        picture_url = profile.profile_picture.url
+        request = self.context.get("request")
+        return request.build_absolute_uri(picture_url) if request else picture_url
 
 # Profile serializer
 class ProfileSerializer(serializers.ModelSerializer):

@@ -28,6 +28,14 @@ class ForumMembersTests(APITestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(len(response.data["data"]), 2)
 
+	def test_member_list_includes_profile_picture_field(self):
+		self.client.force_authenticate(user=self.member)
+
+		response = self.client.get(f"/api/forums/{self.forum.id}/members/")
+
+		self.assertEqual(response.status_code, 200)
+		self.assertIn("profile_picture", response.data["data"]["results"][0])
+
 	def test_owner_can_list_forums_without_membership_row(self):
 		legacy_forum = Forum.objects.create(name="Legacy forum", owner=self.owner)
 		self.client.force_authenticate(user=self.owner)

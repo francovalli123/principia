@@ -26,7 +26,49 @@
 			</svg>
 			<span>Publicar simulación</span>
 		</button>
+		<button
+			type="button"
+			class="members-toggle"
+			[attr.aria-expanded]="membersOpen()"
+			(click)="toggleMembers()"
+		>
+			<svg viewBox="0 0 24 24" aria-hidden="true">
+				<circle cx="9" cy="8" r="3" />
+				<path d="M3.5 19c.3-3.1 2.1-4.8 5.5-4.8s5.2 1.7 5.5 4.8M16 5.5a3 3 0 0 1 0 5.8M17 14.5c2.2.5 3.4 2 3.6 4.5" />
+			</svg>
+			<span>{{ membersOpen() ? 'Ocultar miembros' : 'Miembros' }}</span>
+		</button>
 	</div>
+	@if (membersOpen()) {
+		<section class="members-panel" aria-label="Miembros del foro">
+			@if (membersLoading()) {
+				<p class="members-status" role="status">Cargando miembros...</p>
+			} @else if (membersError()) {
+				<p class="members-status" role="alert">No se pudieron cargar los miembros.</p>
+				<button class="members-retry" type="button" (click)="loadMembers()">Reintentar</button>
+			} @else if (members().length === 0) {
+				<p class="members-status">Este foro todavía no tiene miembros.</p>
+			} @else {
+				<ul class="members-list">
+					@for (member of members(); track member.id) {
+						<li>
+							<a class="member-link" [routerLink]="['/perfil', member.id]">
+								@if (member.profile_picture) {
+									<img class="member-avatar" [src]="member.profile_picture" alt="" />
+								} @else {
+									<span class="member-avatar member-avatar-fallback" aria-hidden="true">{{ memberInitials(member) }}</span>
+								}
+								<span class="member-name">{{ member.username }}</span>
+								@if (member.id === forum()?.owner) {
+									<span class="member-owner-badge">Propietario</span>
+								}
+							</a>
+						</li>
+					}
+				</ul>
+			}
+		</section>
+	}
 	@if (loading()) {
 		<p class="feed-status" role="status">Cargando publicaciones...</p>
 	} @else if (error() && posts().length === 0) {
