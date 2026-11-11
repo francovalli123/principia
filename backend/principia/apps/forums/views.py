@@ -101,6 +101,34 @@ class ForumView(PaginatedAPIView):
             status=status.HTTP_201_CREATED,
         )
 
+    def patch(self, request, id=None, *args, **kwargs):
+        forum = get_object_or_404(Forum, id=id)
+
+        self.check_object_permissions(request, forum)
+
+        serializer = ForumSerializer(
+            forum,
+            data=request.data,
+            partial=True,
+            context={"request": request},
+        )
+
+        if not serializer.is_valid():
+            return Response(
+                {"status": "error", "message": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        forum = serializer.save()
+
+        return Response(
+            {
+                "status": "success",
+                "data": ForumSerializer(forum, context={"request": request}).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+    
     def delete(self,request, id=None,*args,**kwargs):
         forum = get_object_or_404(Forum,id=id)
 

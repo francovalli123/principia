@@ -5,7 +5,26 @@
 			<h1>{{ forum()?.name || 'Foro' }} - Simulaciones</h1>
 			<p>{{ forum()?.description || 'Sube y comparte simulaciones para repasar conceptos y ejercicios.' }}</p>
 		</div>
-		<button type="button" class="back-button" (click)="goBack()">‹ <span>Volver al inicio</span></button>
+		<div class="forum-header-actions">
+		@if (forum()?.is_owner) {
+			<button
+			type="button"
+			class="settings-button"
+			aria-label="Configuración del foro"
+			title="Configuración del foro"
+			(click)="openSettings()"
+			>
+			<svg viewBox="0 0 24 24" aria-hidden="true">
+				<path d="M10.8 2h2.4l.5 2.4c.7.2 1.3.4 1.9.8l2.2-1.1 1.7 1.7-1.1 2.2c.4.6.6 1.2.8 1.9l2.4.5v2.4l-2.4.5c-.2.7-.4 1.3-.8 1.9l1.1 2.2-1.7 1.7-2.2-1.1c-.6.4-1.2.6-1.9.8l-.5 2.4h-2.4l-.5-2.4c-.7-.2-1.3-.4-1.9-.8l-2.2 1.1-1.7-1.7 1.1-2.2c-.4-.6-.6-1.2-.8-1.9l-2.4-.5V9.6l2.4-.5c.2-.7.4-1.3.8-1.9L4.5 5l1.7-1.7 2.2 1.1c.6-.4 1.2-.6 1.9-.8L10.8 2Z" />
+				<circle cx="12" cy="12" r="3.2" />
+			</svg>
+			</button>
+		}
+
+		<button type="button" class="back-button" (click)="goBack()">
+			‹ <span>Volver al inicio</span>
+		</button>
+		</div>	
 	</header>
 	<div class="publication-composer">
 		<a class="composer-profile-link" routerLink="/perfil" aria-label="Ver mi perfil" title="Mi perfil">
@@ -115,3 +134,113 @@
 	}
 	<div #feedEnd class="feed-end-marker" aria-hidden="true"></div>
 </section>
+
+@if (settingsOpen()) {
+  <div class="forum-settings-backdrop" (click)="closeSettings()">
+    <section
+      class="forum-settings-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="forum-settings-title"
+      tabindex="-1"
+      (click)="$event.stopPropagation()"
+      (keydown.escape)="closeSettings()"
+    >
+      <header class="forum-settings-header">
+        <h2 id="forum-settings-title">Configuración del foro</h2>
+        <button
+          type="button"
+          class="settings-close"
+          aria-label="Cerrar configuración"
+          [disabled]="savingSettings() || deletingForum()"
+          (click)="closeSettings()"
+        >
+          &times;
+        </button>
+      </header>
+
+      <form class="forum-settings-form" (ngSubmit)="saveForumSettings()">
+        <label for="forum-name">Nombre</label>
+        <input
+          id="forum-name"
+          name="forumName"
+          type="text"
+          required
+          maxlength="255"
+          autofocus
+          [(ngModel)]="forumName"
+          [disabled]="savingSettings() || deletingForum()"
+        />
+
+        <label for="forum-description">Descripción</label>
+        <textarea
+          id="forum-description"
+          name="forumDescription"
+          rows="4"
+          [(ngModel)]="forumDescription"
+          [disabled]="savingSettings() || deletingForum()"
+        ></textarea>
+
+        @if (settingsError()) {
+          <p class="settings-error" role="alert">{{ settingsError() }}</p>
+        }
+
+        <div class="settings-actions">
+          <button
+            type="button"
+            class="settings-cancel"
+            [disabled]="savingSettings() || deletingForum()"
+            (click)="closeSettings()"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="settings-save"
+            [disabled]="savingSettings() || deletingForum()"
+          >
+            {{ savingSettings() ? 'Guardando…' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </form>
+
+      <div class="settings-delete-section">
+        <h3>Borrar foro</h3>
+
+        @if (!deleteConfirmation()) {
+          <p>Se borrarán las publicaciones y comentarios del foro. Las simulaciones se conservarán.</p>
+          <button
+            type="button"
+            class="settings-delete"
+            [disabled]="savingSettings() || deletingForum()"
+            (click)="requestForumDeletion()"
+          >
+            Borrar foro
+          </button>
+        } @else {
+          <p class="delete-warning" role="alert">
+            Esta acción no se puede deshacer. ¿Seguro que querés borrar este foro?
+          </p>
+          <div class="settings-actions">
+            <button
+              type="button"
+              class="settings-cancel"
+              [disabled]="deletingForum()"
+              (click)="deleteConfirmation.set(false)"
+            >
+              No, volver
+            </button>
+            <button
+              type="button"
+              class="settings-delete"
+              [disabled]="deletingForum()"
+              (click)="deleteForum()"
+            >
+              {{ deletingForum() ? 'Borrando…' : 'Sí, borrar foro' }}
+            </button>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+}

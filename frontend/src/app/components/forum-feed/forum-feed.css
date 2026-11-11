@@ -45,20 +45,28 @@
 	line-height: 1.5;
 }
 
+.forum-header-actions {
+  position: absolute;
+  top: 50%;
+  right: max(24px, calc((100vw - 1260px) / 2));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateY(-50%);
+}
+
 .back-button {
-	position: absolute;
-	top: 50%;
-	right: max(24px, calc((100vw - 1260px) / 2));
-	transform: translateY(-50%);
-	border: 0;
-	padding: 8px 0 8px 8px;
-	color: #62758d;
-	background: transparent;
-	cursor: pointer;
-	font: inherit;
-	font-size: 13px;
-	font-weight: 650;
-	white-space: nowrap;
+  position: static;
+  transform: none;
+  border: 0;
+  padding: 8px;
+  color: #62758d;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
 .back-button:hover {
@@ -334,6 +342,19 @@
 		margin-top: -16px;
 		padding: 10px;
 	}
+	
+	.forum-header-actions {
+		right: 16px;
+		gap: 6px;
+	}
+
+	.forum-heading {
+		padding-right: 150px;
+	}
+
+	.forum-settings-dialog {
+		padding: 20px;
+	}
 }
 
 .post-list {
@@ -398,4 +419,180 @@
 
 .feed-end-marker {
 	height: 1px;
+}
+
+.settings-button {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border: 1px solid #c9d6e2;
+  border-radius: 50%;
+  color: #29445c;
+  background: #fff;
+  cursor: pointer;
+}
+
+.settings-button:hover {
+  background: #f0f5f8;
+}
+
+.settings-button svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.settings-button:focus-visible,
+.settings-close:focus-visible,
+.settings-actions button:focus-visible,
+.settings-delete:focus-visible {
+  outline: 3px solid #8fc5e8;
+  outline-offset: 3px;
+}
+
+.forum-settings-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(17 31 48 / 42%);
+  backdrop-filter: blur(5px);
+}
+
+.forum-settings-dialog {
+  width: min(100%, 520px);
+  max-height: min(90vh, 760px);
+  overflow-y: auto;
+  border: 1px solid #e0e7f0;
+  border-radius: 14px;
+  padding: 24px;
+  color: #17233b;
+  background: #fff;
+  box-shadow: 0 20px 60px rgb(16 35 56 / 24%);
+}
+
+.forum-settings-header,
+.settings-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.forum-settings-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.settings-close {
+  border: 0;
+  padding: 4px 8px;
+  color: #61728a;
+  background: transparent;
+  cursor: pointer;
+  font-size: 26px;
+}
+
+.forum-settings-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.forum-settings-form label {
+  color: #29445c;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.forum-settings-form input,
+.forum-settings-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #c9d6e2;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #17233b;
+  background: #fff;
+  font: inherit;
+}
+
+.forum-settings-form textarea {
+  resize: vertical;
+}
+
+.forum-settings-form input:focus,
+.forum-settings-form textarea:focus {
+  border-color: #09629f;
+  outline: 2px solid rgb(9 98 159 / 18%);
+}
+
+.settings-actions button,
+.settings-delete {
+  min-height: 38px;
+  border-radius: 8px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settings-cancel {
+  border: 1px solid #c9d6e2;
+  color: #29445c;
+  background: #fff;
+}
+
+.settings-save {
+  border: 1px solid #09629f;
+  color: #fff;
+  background: #09629f;
+}
+
+.settings-delete-section {
+  margin-top: 24px;
+  border-top: 1px solid #e0e7f0;
+  padding-top: 18px;
+}
+
+.settings-delete-section h3 {
+  margin: 0 0 6px;
+  color: #a52f35;
+  font-size: 15px;
+}
+
+.settings-delete-section p {
+  color: #61728a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.settings-delete {
+  border: 1px solid #b64242;
+  color: #a52f35;
+  background: #fff;
+}
+
+.settings-delete:hover {
+  background: #fff4f4;
+}
+
+.settings-error,
+.delete-warning {
+  color: #a52f35 !important;
+}
+
+.settings-actions button:disabled,
+.settings-delete:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }

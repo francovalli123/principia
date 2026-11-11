@@ -57,8 +57,15 @@ export class ForumApiService {
         return this.api.post<ForumResponse>('forums/', data);
     }
 
-    deleteForum(id: number): Observable<Forum> {
-        return this.api.delete<Forum>(`forums/${id}/`);
+    updateForum(
+        id: number,
+        data: Pick<Forum, 'name' | 'description'>
+    ): Observable<ForumResponse> {
+        return this.api.patch<ForumResponse>(`forums/${id}/`, data);
+    }
+
+    deleteForum(id: number): Observable<void> {
+        return this.api.delete<void>(`forums/${id}/`);
     }
 
     joinForum(id: number): Observable<any> {

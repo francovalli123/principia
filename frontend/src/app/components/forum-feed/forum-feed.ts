@@ -11,6 +11,7 @@ import { PublicationApiService } from '../../services/publication-api';
 import { ProfileApiService } from '../../services/profile-api';
 import { UserApiService } from '../../services/user-api';
 import { PostCard } from '../../components/post-card/post-card';
+import { FormsModule } from '@angular/forms';
 
 interface FeedPost {
   publication: Publication;
@@ -20,7 +21,7 @@ interface FeedPost {
 }
 
 @Component({
-  imports: [AppHeader, PostCard, RouterLink],
+  imports: [AppHeader, PostCard, RouterLink, FormsModule],
   standalone: true,
   selector: 'app-forum-feed',
   styleUrl: './forum-feed.css',
@@ -41,6 +42,14 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
   readonly membersLoading = signal(false);
   readonly membersLoaded = signal(false);
   readonly membersError = signal(false);
+  readonly settingsOpen = signal(false);
+  readonly savingSettings = signal(false);
+  readonly deletingForum = signal(false);
+  readonly deleteConfirmation = signal(false);
+  readonly settingsError = signal('');
+
+  forumName = '';
+  forumDescription = '';
   currentUserId: number | null = null;
 
   private page = 1;
@@ -180,6 +189,85 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     this.posts.update((posts) => 
       posts.filter((post) => post.publication.id !== publicationId)  
     );
+  }
+
+  openSettings(): void {
+    const forum = this.forum();
+    if (!forum?.is_owner) return;
+
+    this.forumName = forum.name;
+    this.forumDescription = forum.description;
+    this.settingsError.set('');
+    this.deleteConfirmation.set(false);
+    this.settingsOpen.set(true);
+  }
+
+  closeSettings(): void {
+    if (this.savingSettings() || this.deletingForum()) return;
+    this.settingsOpen.set(false);
+  }
+
+  saveForumSettings(): void {
+    const forum = this.forum();
+    const name = this.forumName.trim();
+
+    if (!forum?.is_owner || this.savingSettings() || this.deletingForum()) return;
+
+    if (!name) {
+      this.settingsError.set('El nombre del foro no puede estar vacío.');
+      return;
+    }
+
+    this.settingsError.set('');
+    this.savingSettings.set(true);
+
+    this.forumApi.updateForum(this.forumId, {
+      name,
+      description: this.forumDescription.trim(),
+    }).subscribe({
+      next: (response) => {
+        this.forum.set(response.data);
+        this.savingSettings.set(false);
+        this.settingsOpen.set(false);
+      },
+      error: (error: unknown) => {
+        console.error(`Failed to update forum ${this.forumId}`, error);
+        this.settingsError.set('No se pudieron ganar los cambios. Intenta nuevamente.');
+        this.savingSettings.set(false);
+      },
+    });
+  }
+
+  requestForumDeletion(): void {
+    if (!this.forum()?.is_owner || this.deletingForum()) return;
+
+    this.settingsError.set('');
+    this.deleteConfirmation.set(true);
+  }
+
+  deleteForum(): void {
+    if (
+      !this.forum()?.is_owner || 
+      !this.deleteConfirmation() ||
+      this.savingSettings() ||
+      this.deletingForum()
+    ) {
+      return;
+    }
+
+    this.settingsError.set('');
+    this.deletingForum.set(true);
+
+    this.forumApi.deleteForum(this.forumId).subscribe({
+      next: () => {
+        void this.router.navigate(['/inicio']);
+      },
+      error: (error: unknown) => {
+        console.error(`Failed to delete forum ${this.forumId}`, error);
+        this.settingsError.set('No se pudo borrar el foro. Intenta nuevamente.');
+        this.deletingForum.set(false);
+      },
+    });
   }
 
   private loadPublications(initial: boolean): void {
