@@ -1,6 +1,7 @@
 import { Component, HostListener, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Subscription, forkJoin } from 'rxjs';
 import { Simulation, SimulationVisibility } from '../../../models/simulation';
 import { Profile, User } from '../../../models/user';
 import { AppHeader } from '../app-header/app-header';
@@ -8,16 +9,23 @@ import { ProfileApiService } from '../../services/profile-api';
 import { SimulationApiService } from '../../services/simulation-api';
 import { UserApiService } from '../../services/user-api';
 import { AuthService } from '../../services/auth';
+import { ToastService } from '../../services/toast';
 import { MotorControl } from '../../motor_interface/components/motor-control/motor-control';
+import { WasmSetupService } from '../../motor_interface/services/wasmSetUp';
+import {
+  getSimulationFormAdapter,
+  SimulationFormAdapter,
+} from '../simulation-form/simulation-form.adapter';
 
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [AppHeader, MotorControl],
+  imports: [AppHeader, MotorControl, ReactiveFormsModule],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
 export class ProfilePage implements OnInit, OnDestroy {
+  private parameterConfigSubscription?: Subscription;
   readonly profile = signal<Profile | null>(null);
   readonly user = signal<User | null>(null);
   readonly simulations = signal<Simulation[]>([]);
@@ -27,6 +35,42 @@ export class ProfilePage implements OnInit, OnDestroy {
   readonly picturePreview = signal<string | null>(null);
   readonly pictureUploadError = signal('');
   readonly isUploadingPicture = signal(false);
+  readonly isEditProfileOpen = signal(false);
+  readonly isSavingProfile = signal(false);
+  readonly profileFormError = signal('');
+  readonly editingSimulation = signal<Simulation | null>(null);
+  readonly editingSimulationAdapter = signal<SimulationFormAdapter | null>(null);
+  readonly isLoadingParameters = signal(false);
+  readonly simulationParametersLoaded = signal(false);
+  readonly isSavingSimulation = signal(false);
+  readonly isDeletingSimulation = signal(false);
+  readonly isDeleteConfirmationOpen = signal(false);
+  readonly simulationEditorError = signal('');
+  readonly profileForm = new FormGroup({
+    firstName: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(150)],
+    }),
+    lastName: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(150)],
+    }),
+    bio: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(500)],
+    }),
+  });
+  readonly simulationForm = new FormGroup({
+    title: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern(/\S/), Validators.maxLength(255)],
+    }),
+    visibility: new FormControl<SimulationVisibility>('public', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+  });
+  simulationParametersForm = new FormGroup<Record<string, FormControl<number>>>({});
   readonly visibilityGroups: { key: SimulationVisibility; title: string }[] = [
     { key: 'public', title: 'Públicas' },
     { key: 'hidden', title: 'Ocultas' },
@@ -39,6 +83,8 @@ export class ProfilePage implements OnInit, OnDestroy {
     private readonly userApi: UserApiService,
     private readonly auth: AuthService,
     private readonly router: Router,
+    private readonly toast: ToastService,
+    private readonly wasmSetup: WasmSetupService,
   ) {}
 
   ngOnInit(): void {
@@ -59,6 +105,7 @@ export class ProfilePage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.parameterConfigSubscription?.unsubscribe();
     this.clearPicturePreview();
   }
 
@@ -105,13 +152,197 @@ export class ProfilePage implements OnInit, OnDestroy {
     this.selectedSimulation.set(simulation);
   }
 
+  openEditProfile(): void {
+    const user = this.user();
+    const profile = this.profile();
+    this.profileForm.reset({
+      firstName: user?.first_name ?? profile?.first_name ?? '',
+      lastName: user?.last_name ?? profile?.last_name ?? '',
+      bio: profile?.bio ?? '',
+    });
+    this.profileFormError.set('');
+    this.isEditProfileOpen.set(true);
+  }
+
+  closeEditProfile(): void {
+    this.isEditProfileOpen.set(false);
+  }
+
+  saveProfile(): void {
+    if (this.profileForm.invalid || this.isSavingProfile()) {
+      this.profileForm.markAllAsTouched();
+      return;
+    }
+
+    const values = this.profileForm.getRawValue();
+    this.isSavingProfile.set(true);
+    this.profileFormError.set('');
+    this.profileApi.updateProfile({
+      first_name: values.firstName.trim(),
+      last_name: values.lastName.trim(),
+      bio: values.bio.trim(),
+    }).subscribe({
+      next: (profile) => {
+        this.profile.set(profile);
+        this.user.update((user) => user
+          ? { ...user, first_name: profile.first_name, last_name: profile.last_name }
+          : user);
+        this.isSavingProfile.set(false);
+        this.closeEditProfile();
+        this.toast.success('Tu perfil se actualizó correctamente.');
+      },
+      error: (error: unknown) => {
+        console.error('Failed to update profile details', error);
+        this.isSavingProfile.set(false);
+        this.profileFormError.set('No se pudieron guardar los cambios. Intentá nuevamente.');
+        this.toast.error('No se pudo actualizar tu perfil.');
+      },
+    });
+  }
+
+  openSimulationManager(simulation: Simulation): void {
+    this.parameterConfigSubscription?.unsubscribe();
+    const adapter = getSimulationFormAdapter(simulation.phenomenon_type);
+    this.editingSimulation.set(simulation);
+    this.editingSimulationAdapter.set(adapter ?? null);
+    this.simulationForm.reset({
+      title: simulation.title || this.phenomenonLabel(simulation.phenomenon_type),
+      visibility: simulation.visibility,
+    });
+    this.simulationEditorError.set('');
+    this.simulationParametersLoaded.set(adapter === undefined);
+    this.isLoadingParameters.set(adapter !== undefined);
+    this.simulationParametersForm = new FormGroup<Record<string, FormControl<number>>>({});
+
+    if (!adapter) return;
+
+    for (const field of adapter.fields) {
+      const validators = [Validators.required, Validators.min(field.min)];
+      if (field.max !== undefined) validators.push(Validators.max(field.max));
+      this.simulationParametersForm.addControl(
+        field.name,
+        new FormControl(field.defaultValue, { nonNullable: true, validators }),
+      );
+    }
+
+    this.parameterConfigSubscription = this.wasmSetup.getConfig(simulation.id).subscribe({
+      next: (response) => {
+        try {
+          const parameters = readSimulationParameters(response);
+          for (const field of adapter.fields) {
+            const value = parameters[field.name];
+            if (typeof value !== 'number' || !Number.isFinite(value)) {
+              throw new Error(`Missing or invalid simulation parameter: ${field.name}`);
+            }
+            this.simulationParametersForm.controls[field.name].setValue(value);
+          }
+          this.simulationParametersLoaded.set(true);
+        } catch (error) {
+          console.error(`Failed to parse parameters for simulation ${simulation.id}`, error);
+          this.simulationEditorError.set('No se pudieron cargar los parámetros de esta simulación.');
+        }
+        this.isLoadingParameters.set(false);
+      },
+      error: (error: unknown) => {
+        console.error(`Failed to load parameters for simulation ${simulation.id}`, error);
+        this.simulationEditorError.set('No se pudieron cargar los parámetros de esta simulación.');
+        this.isLoadingParameters.set(false);
+      },
+    });
+  }
+
+  closeSimulationManager(): void {
+    this.parameterConfigSubscription?.unsubscribe();
+    this.parameterConfigSubscription = undefined;
+    this.isDeleteConfirmationOpen.set(false);
+    this.editingSimulation.set(null);
+    this.editingSimulationAdapter.set(null);
+    this.simulationParametersLoaded.set(false);
+    this.simulationEditorError.set('');
+  }
+
+  saveSimulation(): void {
+    const simulation = this.editingSimulation();
+    const adapter = this.editingSimulationAdapter();
+    if (!simulation || this.simulationForm.invalid || this.isSavingSimulation()) {
+      this.simulationForm.markAllAsTouched();
+      this.simulationParametersForm.markAllAsTouched();
+      return;
+    }
+    if (
+      this.isLoadingParameters() ||
+      (adapter && (!this.simulationParametersLoaded() || this.simulationParametersForm.invalid))
+    ) {
+      this.simulationParametersForm.markAllAsTouched();
+      return;
+    }
+
+    const payload = {
+      title: this.simulationForm.controls.title.value.trim(),
+      visibility: this.simulationForm.controls.visibility.value,
+      ...(adapter ? { parameters: adapter.toParameters(this.simulationParametersForm.getRawValue()) } : {}),
+    };
+    this.isSavingSimulation.set(true);
+    this.simulationEditorError.set('');
+    this.simulationApi.updateSimulation(simulation.id, payload).subscribe({
+      next: (updatedSimulation) => {
+        this.simulations.update((simulations) => simulations.map((item) =>
+          item.id === updatedSimulation.id ? { ...item, ...updatedSimulation } : item));
+        this.isSavingSimulation.set(false);
+        this.closeSimulationManager();
+        this.toast.success('La simulación se actualizó correctamente.');
+      },
+      error: (error: unknown) => {
+        console.error(`Failed to update simulation ${simulation.id}`, error);
+        this.isSavingSimulation.set(false);
+        this.simulationEditorError.set('No se pudo guardar la simulación. Revisá los datos e intentá nuevamente.');
+        this.toast.error('No se pudo actualizar la simulación.');
+      },
+    });
+  }
+
+  confirmSimulationDeletion(): void {
+    this.isDeleteConfirmationOpen.set(true);
+  }
+
+  deleteSimulation(): void {
+    const simulation = this.editingSimulation();
+    if (!simulation || this.isDeletingSimulation()) return;
+
+    this.isDeletingSimulation.set(true);
+    this.simulationApi.deleteSimulation(simulation.id).subscribe({
+      next: () => {
+        this.simulations.update((simulations) => simulations.filter((item) => item.id !== simulation.id));
+        this.isDeletingSimulation.set(false);
+        this.closeSimulationManager();
+        if (this.selectedSimulation()?.id === simulation.id) this.closeSimulation();
+        this.toast.success('La simulación se eliminó correctamente.');
+      },
+      error: (error: unknown) => {
+        console.error(`Failed to delete simulation ${simulation.id}`, error);
+        this.isDeletingSimulation.set(false);
+        this.isDeleteConfirmationOpen.set(false);
+        this.simulationEditorError.set('No se pudo eliminar la simulación. Intentá nuevamente.');
+        this.toast.error('No se pudo eliminar la simulación.');
+      },
+    });
+  }
+
   closeSimulation(): void {
     this.selectedSimulation.set(null);
   }
 
   @HostListener('document:keydown.escape')
   closeSimulationOnEscape(): void {
-    if (this.selectedSimulation()) this.closeSimulation();
+    if (this.isDeleteConfirmationOpen()) {
+      this.isDeleteConfirmationOpen.set(false);
+    } else if (this.editingSimulation()) {
+      this.closeSimulationManager();
+    } else if (this.isEditProfileOpen()) {
+      this.closeEditProfile();
+    } else if (this.selectedSimulation()) {
+      this.closeSimulation();
+    }
   }
 
   simulationTitle(simulation: Simulation): string {
@@ -152,4 +383,17 @@ export class ProfilePage implements OnInit, OnDestroy {
     if (preview) URL.revokeObjectURL(preview);
     this.picturePreview.set(null);
   }
+}
+
+function readSimulationParameters(response: unknown): Record<string, unknown> {
+  if (typeof response !== 'object' || response === null || !('data' in response)) {
+    throw new Error('The simulation configuration response is invalid');
+  }
+  const parameters = response.data;
+  if (typeof parameters !== 'object' || parameters === null || Array.isArray(parameters)) {
+    throw new Error('The simulation configuration is invalid');
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(parameters)) result[key] = value;
+  return result;
 }

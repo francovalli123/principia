@@ -12,6 +12,12 @@ export type SimulationResponse = ApiResponse<Simulation> | Simulation;
 
 export type SimulationCreationResponse = ApiResponse<Simulation> | Simulation;
 
+export interface UpdateSimulation {
+    title?: string;
+    visibility?: Simulation['visibility'];
+    parameters?: Record<string, number>;
+}
+
 export type SimulationListResponse = Simulation[] | {
     data?: Simulation[] | { results?: Simulation[] } | null;
     results?: Simulation[];
@@ -67,6 +73,25 @@ export class SimulationApiService {
                 return Array.isArray(payload) ? payload : payload.results ?? [];
             }),
         );
+    }
+
+    updateSimulation(simulationId: number, data: UpdateSimulation): Observable<Simulation> {
+        return this.api.patch<SimulationResponse>(`simulations/${simulationId}/`, data).pipe(
+            map((response) => {
+                if (
+                    typeof response === 'object' &&
+                    response !== null &&
+                    'data' in response
+                ) {
+                    return response.data;
+                }
+                return response;
+            }),
+        );
+    }
+
+    deleteSimulation(simulationId: number): Observable<void> {
+        return this.api.delete<void>(`simulations/${simulationId}/`);
     }
 
     createSimulation(

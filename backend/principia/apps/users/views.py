@@ -12,7 +12,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
-from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 
 from .models import User, Profile, LoginAttempt
 from .serializers import RegisterSerializer, UserSerializer, ProfileSerializer, PublicProfileSerializer
@@ -210,7 +210,7 @@ class PublicProfileView(APIView):
 # Profile is automatically created in RegisterSerializer.create(). ProfileView allows to consult and modify profile post signuo
 class ProfileView(PaginatedAPIView):
     permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get_profile(self, user):
         profile, _ = Profile.objects.get_or_create(user=user)

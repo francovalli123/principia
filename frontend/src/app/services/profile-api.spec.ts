@@ -8,6 +8,8 @@ describe('ProfileApiService', () => {
   const profile = {
     id: 2,
     user: 7,
+    first_name: 'Ada',
+    last_name: 'Lovelace',
     bio: null,
     visible_name: null,
     profile_picture: '/media/avatar.png',

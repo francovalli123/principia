@@ -21,6 +21,8 @@ export interface UpdateUser {
 export interface Profile {
     id: number;
     user: number;
+    first_name: string;
+    last_name: string;
     bio: string | null;
     visible_name: string | null;
     profile_picture: string | null;

@@ -76,6 +76,24 @@ class ProfileSerializer(serializers.ModelSerializer):
     # The user field is read-only to prevent the profile owner from being changed via the API
     user = serializers.PrimaryKeyRelatedField(read_only=True) # The user should be assigned from request.user
 
+    first_name = serializers.CharField(
+        source="user.first_name",
+        max_length=150,
+        required=False,
+        allow_blank=True,
+    )
+    last_name = serializers.CharField(
+        source="user.last_name",
+        max_length=150,
+        required=False,
+        allow_blank=True,
+    )
+    bio = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        max_length=500,
+    )
     creation_date = serializers.DateTimeField(read_only=True)
     # We do not use fields='__all__' because it exposes internal fields and allows writing to 'user' or 'creation_date'
     class Meta:
@@ -83,15 +101,28 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "user",
+            "first_name",
+            "last_name",
             "bio",
             "visible_name",
             "profile_picture",
             "creation_date",
         )
 
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop("user", {})
+        if user_data:
+            for field, value in user_data.items():
+                setattr(instance.user, field, value)
+            instance.user.save(update_fields=list(user_data))
+        return super().update(instance, validated_data)
+
 # Public Profile Serializer
 class PublicProfileSerializer(serializers.ModelSerializer): 
     username = serializers.CharField(source="user.username", read_only=True)
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
 
     class Meta:
         model = Profile
@@ -99,6 +130,8 @@ class PublicProfileSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "username",
+            "first_name",
+            "last_name",
             "visible_name",
             "bio",
             "profile_picture",

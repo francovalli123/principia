@@ -38,6 +38,7 @@
         <p class="username">@{{ username }}</p>
       }
     </div>
+    <button class="edit-profile-button" type="button" (click)="openEditProfile()">Editar perfil</button>
     <button class="logout-button" type="button" (click)="logout()">Cerrar sesión</button>
   </header>
 
@@ -82,6 +83,12 @@
                       <img src="assets/sim.png" alt="Preview de la simulación" />
                     </div>
                     <button
+                      class="manage-simulation-button"
+                      type="button"
+                      [attr.aria-label]="'Gestionar ' + simulationTitle(simulation)"
+                      (click)="openSimulationManager(simulation)"
+                    >Gestionar</button>
+                    <button
                       class="view-simulation-button"
                       type="button"
                       (click)="openSimulation(simulation)"
@@ -98,6 +105,171 @@
     </section>
   }
 </main>
+
+@if (isEditProfileOpen()) {
+  <div class="simulation-modal-backdrop" (click)="closeEditProfile()">
+    <section
+      class="profile-editor-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="profile-editor-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="editor-modal-header">
+        <div>
+          <h2 id="profile-editor-title">Editar perfil</h2>
+          <p>Actualizá tu nombre, apellido y biografía.</p>
+        </div>
+        <button
+          class="simulation-modal-close"
+          type="button"
+          aria-label="Cerrar edición de perfil"
+          (click)="closeEditProfile()"
+        ><span aria-hidden="true">&times;</span></button>
+      </header>
+      <form class="editor-form" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+        <label class="editor-field">
+          <span>Nombre</span>
+          <input type="text" formControlName="firstName" maxlength="150" autocomplete="given-name" />
+        </label>
+        <label class="editor-field">
+          <span>Apellido</span>
+          <input type="text" formControlName="lastName" maxlength="150" autocomplete="family-name" />
+        </label>
+        <label class="editor-field">
+          <span>Biografía</span>
+          <textarea formControlName="bio" maxlength="500" rows="5"
+            placeholder="Contales a los demás un poco sobre vos."></textarea>
+          <small>{{ profileForm.controls.bio.value.length }}/500</small>
+        </label>
+        @if (profileFormError()) {
+          <p class="editor-error" role="alert">{{ profileFormError() }}</p>
+        }
+        <footer class="editor-actions">
+          <button class="editor-secondary-button" type="button" (click)="closeEditProfile()">Cancelar</button>
+          <button class="editor-primary-button" type="submit" [disabled]="isSavingProfile()">
+            {{ isSavingProfile() ? 'Guardando…' : 'Guardar cambios' }}
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}
+
+@if (editingSimulation(); as simulationToEdit) {
+  <div class="simulation-modal-backdrop" (click)="closeSimulationManager()">
+    <section
+      class="profile-editor-modal simulation-editor-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="simulation-editor-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="editor-modal-header">
+        <div>
+          <h2 id="simulation-editor-title">Gestionar simulación</h2>
+          <p>{{ phenomenonLabel(simulationToEdit.phenomenon_type) }}</p>
+        </div>
+        <button
+          class="simulation-modal-close"
+          type="button"
+          aria-label="Cerrar gestión de simulación"
+          (click)="closeSimulationManager()"
+        ><span aria-hidden="true">&times;</span></button>
+      </header>
+      <form class="editor-form" [formGroup]="simulationForm" (ngSubmit)="saveSimulation()">
+        <label class="editor-field">
+          <span>Nombre de la simulación</span>
+          <input type="text" formControlName="title" maxlength="255" required />
+        </label>
+        @if (simulationForm.controls.title.invalid && simulationForm.controls.title.touched) {
+          <p class="editor-error" role="alert">Ingresá un nombre válido para la simulación.</p>
+        }
+
+        @if (editingSimulationAdapter(); as adapter) {
+          <section class="editor-parameters" aria-labelledby="simulation-parameters-title">
+            <h3 id="simulation-parameters-title">Parámetros</h3>
+            @if (isLoadingParameters()) {
+              <p class="editor-help" role="status">Cargando parámetros…</p>
+            } @else {
+              <div class="editor-parameter-grid" [formGroup]="simulationParametersForm">
+                @for (field of adapter.fields; track field.name) {
+                  <label class="editor-field">
+                    <span>{{ field.label }} <small>({{ field.unit }})</small></span>
+                    <input
+                      type="number"
+                      [formControlName]="field.name"
+                      [min]="field.min"
+                      [max]="field.max ?? null"
+                      [step]="field.step"
+                    />
+                  </label>
+                }
+              </div>
+            }
+          </section>
+        } @else {
+          <p class="editor-help">La edición de parámetros todavía no está disponible para este fenómeno.</p>
+        }
+
+        <fieldset class="editor-visibility">
+          <legend>Visibilidad</legend>
+          <label><input type="radio" formControlName="visibility" value="public" /> Pública</label>
+          <label><input type="radio" formControlName="visibility" value="hidden" /> Oculta</label>
+          <label><input type="radio" formControlName="visibility" value="private" /> Privada</label>
+        </fieldset>
+        @if (simulationEditorError()) {
+          <p class="editor-error" role="alert">{{ simulationEditorError() }}</p>
+        }
+        <footer class="editor-actions editor-actions-spread">
+          <button
+            class="editor-delete-button"
+            type="button"
+            [disabled]="isDeletingSimulation()"
+            (click)="confirmSimulationDeletion()"
+          >Eliminar simulación</button>
+          <div>
+            <button class="editor-secondary-button" type="button" (click)="closeSimulationManager()">Cancelar</button>
+            <button
+              class="editor-primary-button"
+              type="submit"
+              [disabled]="isSavingSimulation() || isLoadingParameters() || (editingSimulationAdapter() !== null && !simulationParametersLoaded())"
+            >{{ isSavingSimulation() ? 'Guardando…' : 'Guardar cambios' }}</button>
+          </div>
+        </footer>
+      </form>
+    </section>
+  </div>
+}
+
+@if (isDeleteConfirmationOpen() && editingSimulation(); as simulationToDelete) {
+  <div class="simulation-modal-backdrop confirmation-backdrop" (click)="isDeleteConfirmationOpen.set(false)">
+    <section
+      class="delete-confirmation-modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="delete-simulation-title"
+      (click)="$event.stopPropagation()"
+    >
+      <h2 id="delete-simulation-title">¿Eliminar esta simulación?</h2>
+      <p>Se eliminará “{{ simulationTitle(simulationToDelete) }}”. Esta acción no se puede deshacer.</p>
+      <footer class="editor-actions">
+        <button
+          class="editor-secondary-button"
+          type="button"
+          [disabled]="isDeletingSimulation()"
+          (click)="isDeleteConfirmationOpen.set(false)"
+        >Conservar</button>
+        <button
+          class="editor-delete-button"
+          type="button"
+          [disabled]="isDeletingSimulation()"
+          (click)="deleteSimulation()"
+        >{{ isDeletingSimulation() ? 'Eliminando…' : 'Sí, eliminar' }}</button>
+      </footer>
+    </section>
+  </div>
+}
 
 @if (selectedSimulation(); as activeSimulation) {
   <div class="simulation-modal-backdrop" (click)="closeSimulation()">

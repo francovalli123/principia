@@ -5,13 +5,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from '../../services/auth';
 import { ProfileApiService } from '../../services/profile-api';
 import { SimulationApiService } from '../../services/simulation-api';
+import { ToastService } from '../../services/toast';
 import { UserApiService } from '../../services/user-api';
 import { WasmSetupService } from '../../motor_interface/services/wasmSetUp';
+import { Simulation } from '../../../models/simulation';
 import { ProfilePage } from './profile';
 
 const profile = {
   id: 2,
   user: 7,
+  first_name: 'Ada',
+  last_name: 'Lovelace',
   bio: 'Physics educator',
   visible_name: 'Ada',
   profile_picture: '/media/ada.png',
@@ -24,26 +28,37 @@ const user = {
   first_name: 'Ada',
   last_name: 'Lovelace',
 };
-const simulations = [
-  { id: 1, title: 'Public', phenomenon_type: 'Dynamics', visibility: 'public' },
-  { id: 2, title: 'Hidden', phenomenon_type: 'Dynamics', visibility: 'hidden' },
-  { id: 3, title: 'Private', phenomenon_type: 'Dynamics', visibility: 'private' },
-] as never[];
+const simulations: Simulation[] = [
+  { id: 1, owner: user, title: 'Public', description: '', phenomenon_type: 'Oblique Projectile Motion', visibility: 'public', allow_cloning: true, creation_date: '' },
+  { id: 2, owner: user, title: 'Hidden', description: '', phenomenon_type: 'Dynamics', visibility: 'hidden', allow_cloning: true, creation_date: '' },
+  { id: 3, owner: user, title: 'Private', description: '', phenomenon_type: 'Dynamics', visibility: 'private', allow_cloning: true, creation_date: '' },
+];
 
 describe('ProfilePage', () => {
   let fixture: ComponentFixture<ProfilePage>;
   const profileUpdated = new Subject<typeof profile>();
   const profileApi = {
     getProfile: vi.fn(() => of(profile)),
-    updateProfile: vi.fn((_data: FormData) => of(profile)),
+    updateProfile: vi.fn((data: FormData | Partial<typeof profile>) =>
+      of(data instanceof FormData ? profile : { ...profile, ...data })),
     profileUpdated$: profileUpdated.asObservable(),
   };
   const userApi = { getCurrentUser: vi.fn(() => of(user)) };
-  const simulationApi = { getByOwner: vi.fn(() => of(simulations)) };
+  const simulationApi = {
+    getByOwner: vi.fn(() => of(simulations)),
+    updateSimulation: vi.fn((id: number, data: { title?: string; visibility?: Simulation['visibility'] }) =>
+      of({ ...simulations.find((simulation) => simulation.id === id)!, ...data }),
+    ),
+    deleteSimulation: vi.fn(() => of(undefined)),
+  };
   const auth = { clearTokens: vi.fn() };
   const router = { navigate: vi.fn() };
+  const toast = { success: vi.fn(), error: vi.fn() };
   const wasmSetup = {
-    getConfig: vi.fn(() => of({ status: 'success', data: {} })),
+    getConfig: vi.fn(() => of({
+      status: 'success',
+      data: { initial_velocity: 18, angle: 37, initial_height: 2 },
+    })),
     loadEngine: vi.fn(async () => ({
       controls: [],
       readSnapshot: () => ({ status: 'paused' as const, metrics: [] }),
@@ -61,6 +76,7 @@ describe('ProfilePage', () => {
         { provide: UserApiService, useValue: userApi },
         { provide: SimulationApiService, useValue: simulationApi },
         { provide: AuthService, useValue: auth },
+        { provide: ToastService, useValue: toast },
         { provide: WasmSetupService, useValue: wasmSetup },
         { provide: ActivatedRoute, useValue: { snapshot: {} } },
         { provide: Router, useValue: router },
@@ -129,5 +145,65 @@ describe('ProfilePage', () => {
 
     expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
     expect(fixture.nativeElement.querySelector('app-motor-control')).toBeNull();
+  });
+
+  it('updates first and last name and biography through the profile editor', () => {
+    fixture.componentInstance.openEditProfile();
+    fixture.componentInstance.profileForm.setValue({
+      firstName: 'Augusta',
+      lastName: 'King',
+      bio: 'Mathematician',
+    });
+
+    fixture.componentInstance.saveProfile();
+    fixture.detectChanges();
+
+    expect(profileApi.updateProfile).toHaveBeenCalledWith({
+      first_name: 'Augusta',
+      last_name: 'King',
+      bio: 'Mathematician',
+    });
+    expect(fixture.componentInstance.fullName).toBe('Augusta King');
+    expect(toast.success).toHaveBeenCalledWith('Tu perfil se actualizó correctamente.');
+    expect(fixture.nativeElement.querySelector('[aria-labelledby="profile-editor-title"]')).toBeNull();
+  });
+
+  it('updates simulation title, parameters, and visibility in the manager', () => {
+    fixture.componentInstance.openSimulationManager(simulations[0]);
+    fixture.componentInstance.simulationForm.setValue({ title: 'Nuevo nombre', visibility: 'private' });
+    fixture.componentInstance.simulationParametersForm.setValue({
+      initial_velocity: 22,
+      angle: 42,
+      initial_height: 4,
+    });
+
+    fixture.componentInstance.saveSimulation();
+    fixture.detectChanges();
+
+    expect(simulationApi.updateSimulation).toHaveBeenCalledWith(1, {
+      title: 'Nuevo nombre',
+      visibility: 'private',
+      parameters: { initial_velocity: 22, angle: 42, initial_height: 4 },
+    });
+    expect(fixture.componentInstance.simulations()[0]).toMatchObject({
+      title: 'Nuevo nombre',
+      visibility: 'private',
+    });
+    expect(toast.success).toHaveBeenCalledWith('La simulación se actualizó correctamente.');
+  });
+
+  it('requires confirmation before deleting a simulation and removes it after success', () => {
+    fixture.componentInstance.openSimulationManager(simulations[0]);
+    fixture.componentInstance.confirmSimulationDeletion();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[role="alertdialog"]')).toBeTruthy();
+
+    fixture.componentInstance.deleteSimulation();
+    fixture.detectChanges();
+
+    expect(simulationApi.deleteSimulation).toHaveBeenCalledWith(1);
+    expect(fixture.componentInstance.simulations()).toHaveLength(2);
+    expect(toast.success).toHaveBeenCalledWith('La simulación se eliminó correctamente.');
   });
 });

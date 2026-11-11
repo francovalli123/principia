@@ -85,3 +85,96 @@ class SimulationCreationTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data["message"], "title must be a string")
+
+    def test_owner_can_update_simulation_metadata_and_parameters(self):
+        simulation = Simulation.objects.create(
+            owner=self.user,
+            phenomenon_type="Oblique Projectile Motion",
+            title="Tiro inicial",
+            visibility="public",
+        )
+        ObliqueProjectileMotion.objects.create(
+            simulation=simulation,
+            initial_velocity=18,
+            angle=37,
+            initial_height=2,
+        )
+
+        response = self.client.patch(
+            f"/api/simulations/{simulation.id}/",
+            {
+                "title": "Tiro actualizado",
+                "visibility": "hidden",
+                "parameters": {
+                    "initial_velocity": 24,
+                    "angle": 45,
+                    "initial_height": 3,
+                },
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        simulation.refresh_from_db()
+        configuration = simulation.obliqueprojectilemotion
+        self.assertEqual(simulation.title, "Tiro actualizado")
+        self.assertEqual(simulation.visibility, "hidden")
+        self.assertEqual(configuration.initial_velocity, 24)
+        self.assertEqual(configuration.angle, 45)
+        self.assertEqual(configuration.initial_height, 3)
+
+    def test_rejects_invalid_parameters_without_updating_metadata(self):
+        simulation = Simulation.objects.create(
+            owner=self.user,
+            phenomenon_type="Oblique Projectile Motion",
+            title="Tiro inicial",
+            visibility="public",
+        )
+        ObliqueProjectileMotion.objects.create(
+            simulation=simulation,
+            initial_velocity=18,
+            angle=37,
+            initial_height=2,
+        )
+
+        response = self.client.patch(
+            f"/api/simulations/{simulation.id}/",
+            {
+                "title": "No guardar",
+                "parameters": {
+                    "initial_velocity": 24,
+                    "angle": 120,
+                    "initial_height": 3,
+                },
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        simulation.refresh_from_db()
+        self.assertEqual(simulation.title, "Tiro inicial")
+        self.assertEqual(simulation.obliqueprojectilemotion.angle, 37)
+
+    def test_another_user_cannot_update_simulation(self):
+        simulation = Simulation.objects.create(
+            owner=self.user,
+            phenomenon_type="Oblique Projectile Motion",
+            title="Tiro inicial",
+            visibility="public",
+        )
+        other_user = get_user_model().objects.create_user(
+            username="simulation-other",
+            email="simulation-other@example.com",
+            password="test-password",
+        )
+        self.client.force_authenticate(user=other_user)
+
+        response = self.client.patch(
+            f"/api/simulations/{simulation.id}/",
+            {"title": "No autorizado"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        simulation.refresh_from_db()
+        self.assertEqual(simulation.title, "Tiro inicial")

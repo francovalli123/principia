@@ -55,7 +55,12 @@ export class PublicProfilePage implements OnInit {
     }
 
     get displayName(): string {
-        return this.profile()?.visible_name?.trim() || this.profile()?.username || 'Usuario';
+        const profile = this.profile();
+        const fullName = [profile?.first_name, profile?.last_name]
+            .filter((name): name is string => typeof name === 'string' && name.trim().length > 0)
+            .map((name) => name.trim())
+            .join(' ');
+        return fullName || profile?.visible_name?.trim() || profile?.username || 'Usuario';
     }
 
     get initials(): string {

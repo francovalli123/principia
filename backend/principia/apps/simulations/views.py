@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -123,6 +125,104 @@ class SimulationView(PaginatedAPIView):
         return Response(
             {"status": "success", "data": "Record Deleted"},
             status=status.HTTP_204_NO_CONTENT,
+        )
+
+    def patch(self, request, id=None, *args, **kwargs):
+        if id is None:
+            return Response(
+                {"status": "error", "message": "A simulation id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not isinstance(request.data, Mapping):
+            return Response(
+                {"status": "error", "message": "The request body must be an object"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        simulation = get_object_or_404(Simulation, id=id)
+        self.check_object_permissions(request, simulation)
+
+        allowed_fields = {"title", "visibility", "parameters"}
+        unsupported_fields = set(request.data) - allowed_fields
+        if unsupported_fields:
+            return Response(
+                {
+                    "status": "error",
+                    "message": {
+                        "unsupported_fields": sorted(unsupported_fields),
+                    },
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not request.data:
+            return Response(
+                {"status": "error", "message": "At least one field is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        simulation_data = {
+            field: request.data[field]
+            for field in ("title", "visibility")
+            if field in request.data
+        }
+        if "title" in simulation_data:
+            title = simulation_data["title"]
+            if not isinstance(title, str) or not title.strip():
+                return Response(
+                    {"status": "error", "message": {"title": "A title is required"}},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            simulation_data["title"] = title.strip()
+
+        simulation_serializer = SimulationSerializer(
+            simulation,
+            data=simulation_data,
+            partial=True,
+        )
+        if not simulation_serializer.is_valid():
+            return Response(
+                {"status": "error", "message": simulation_serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        parameter_serializer = None
+        if "parameters" in request.data:
+            config = PHENOMENON_SERIALIZERS.get(simulation.phenomenon_type)
+            if config is None:
+                return Response(
+                    {"status": "error", "message": "Invalid phenomenon_type"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            try:
+                configuration = getattr(simulation, config["related_name"])
+            except ObjectDoesNotExist:
+                return Response(
+                    {"status": "error", "message": "Simulation configuration not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            parameter_serializer = config["serializer"](
+                configuration,
+                data=request.data["parameters"],
+            )
+            if not parameter_serializer.is_valid():
+                return Response(
+                    {"status": "error", "message": parameter_serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        with transaction.atomic():
+            updated_simulation = simulation_serializer.save()
+            if parameter_serializer is not None:
+                parameter_serializer.save()
+
+        return Response(
+            {
+                "status": "success",
+                "data": SimulationSerializer(updated_simulation).data,
+            },
+            status=status.HTTP_200_OK,
         )
 
 class FavouriteView(PaginatedAPIView):

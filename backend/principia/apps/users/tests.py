@@ -3,7 +3,7 @@ from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from apps.users.models import User
+from apps.users.models import Profile, User
 from apps.users.security import hash_lookup_value
 
 
@@ -112,3 +112,36 @@ class SensitiveDataSecurityTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+
+
+class ProfileUpdateTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="profile-owner",
+            email="profile-owner@example.com",
+            password="test-password",
+            first_name="Initial",
+            last_name="Name",
+        )
+        self.profile = Profile.objects.create(user=self.user, bio="Original bio")
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_owner_can_update_name_and_bio_together(self):
+        response = self.client.patch(
+            "/api/users/profile/",
+            {
+                "first_name": "New first name",
+                "last_name": "New surname",
+                "bio": "A new biography",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.profile.refresh_from_db()
+        self.assertEqual(self.user.first_name, "New first name")
+        self.assertEqual(self.user.last_name, "New surname")
+        self.assertEqual(self.profile.bio, "A new biography")
+        self.assertEqual(response.data["data"]["first_name"], "New first name")
