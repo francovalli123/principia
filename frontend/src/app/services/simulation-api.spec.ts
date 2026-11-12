@@ -71,7 +71,17 @@ describe('SimulationApiService', () => {
   });
 
   it('normalizes raw, wrapped, and paginated favourite lists', () => {
-    const favourite = { id: 2, simulation: 17, marked_date: '2026-11-01T10:00:00Z' };
+    const favourite: SimulationFavourite = {
+      id: 2,
+      simulation: 17,
+      simulation_details: {
+        id: 17,
+        title: 'Tiro',
+        phenomenon_type: 'Oblique Projectile Motion',
+      } as Simulation,
+      publication: { id: 9, forum: 3 },
+      marked_date: '2026-11-01T10:00:00Z',
+    };
     const responses: SimulationFavouriteListResponse[] = [
       [favourite],
       { data: [favourite] },
@@ -87,5 +97,21 @@ describe('SimulationApiService', () => {
     }
 
     expect(api.get).toHaveBeenCalledWith('simulations/favourites/');
+  });
+
+  it('returns one favourite per simulation even if the API repeats a row', () => {
+    const favourite: SimulationFavourite = {
+      id: 2,
+      simulation: 17,
+      simulation_details: { id: 17 } as Simulation,
+      publication: { id: 9, forum: 3 },
+      marked_date: '2026-11-01T10:00:00Z',
+    };
+    api.get.mockReturnValueOnce(of({ status: 'success', data: [favourite, { ...favourite, id: 3 }] }));
+
+    let actual: SimulationFavourite[] = [];
+    service.getFavourites().subscribe((favourites) => actual = favourites);
+
+    expect(actual).toEqual([favourite]);
   });
 });

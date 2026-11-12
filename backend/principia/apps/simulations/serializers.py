@@ -8,10 +8,23 @@ class SimulationSerializer(serializers.ModelSerializer):
         read_only_fields = ['owner']
 
 class FavouriteSerializer(serializers.ModelSerializer):
+    simulation_details = SimulationSerializer(source="simulation", read_only=True)
+
     class Meta:
         model = Favourite
-        fields = '__all__'
+        fields = ["id", "simulation", "simulation_details", "publication", "marked_date"]
         read_only_fields = ['owner', 'marked_date']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.publication_id is None:
+            data["publication"] = None
+        else:
+            data["publication"] = {
+                "id": instance.publication_id,
+                "forum": instance.publication.forum_id,
+            }
+        return data
 
 class ObliqueProjectileMotionSerializer(serializers.ModelSerializer):
     class Meta:

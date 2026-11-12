@@ -103,6 +103,54 @@
         </section>
       }
     </section>
+
+    <section class="favourites-section" aria-labelledby="favourites-title">
+      <header class="section-heading">
+        <h2 id="favourites-title">Simulaciones favoritas</h2>
+        <span>{{ favouriteSimulations().length }}</span>
+      </header>
+
+      @if (loadingFavourites()) {
+        <p class="profile-status" role="status">Cargando simulaciones favoritas…</p>
+      } @else if (favouritesError()) {
+        <p class="profile-status" role="alert">No se pudieron cargar tus simulaciones favoritas.</p>
+      } @else if (favouriteSimulations().length === 0) {
+        <p class="empty-group">Todavía no marcaste simulaciones como favoritas.</p>
+      } @else {
+        <ul class="simulation-list favourite-list">
+          @for (favourite of favouriteSimulations(); track favourite.id) {
+            <li class="favourite-item">
+              <article class="simulation-card favourite-card">
+                <p class="simulation-category">
+                  {{ phenomenonLabel(favourite.simulation_details.phenomenon_type) }}
+                </p>
+                <h4>{{ simulationTitle(favourite.simulation_details) }}</h4>
+                <time class="simulation-date" [attr.datetime]="favourite.marked_date">
+                  Favorita desde {{ favourite.marked_date.slice(0, 10) }}
+                </time>
+                <div class="favourite-actions">
+                  @if (favourite.publication?.forum !== null && favourite.publication) {
+                    <button
+                      class="view-simulation-button"
+                      type="button"
+                      (click)="openFavouritePublication(favourite)"
+                    >Ir a la publicación</button>
+                  } @else {
+                    <p class="favourite-source-unavailable">La publicación original ya no está disponible.</p>
+                  }
+                  <button
+                    class="manage-simulation-button"
+                    type="button"
+                    [disabled]="removingFavouriteIds().has(favourite.simulation)"
+                    (click)="removeFavourite(favourite)"
+                  >{{ removingFavouriteIds().has(favourite.simulation) ? 'Quitando…' : 'Quitar de favoritos' }}</button>
+                </div>
+              </article>
+            </li>
+          }
+        </ul>
+      }
+    </section>
   }
 </main>
 

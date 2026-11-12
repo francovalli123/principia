@@ -1,18 +1,18 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, EventEmitter, Input, OnInit, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { Author } from '../../../models/user';
 import { Comment } from '../../../models/comment';
 import { Publication } from '../../../models/publication';
 import { Simulation } from '../../../models/simulation';
+import { Router, RouterLink } from '@angular/router';
 import { CommentApiService } from '../../services/comment-api';
 import { SimulationApiService } from '../../services/simulation-api';
 import { ToastService } from '../../services/toast';
 import { MotorControl } from '../../motor_interface/components/motor-control/motor-control';
 import { PublicationApiService } from '../../services/publication-api';
-import { RouterLink } from '@angular/router';
 import { BaseApiService } from '../../services/base-api.service';
 
 @Component({
@@ -22,16 +22,23 @@ import { BaseApiService } from '../../services/base-api.service';
   styleUrl: './post-card.css',
   templateUrl: './post-card.html',
 })
-export class PostCard implements OnInit {
+export class PostCard implements OnInit, OnChanges {
   @Input({ required: true }) publication!: Publication;
   @Input() comments: Comment[] = [];
   @Input() currentUserId: number | null = null;
+  @Input() favoriteIds: ReadonlySet<number> = new Set<number>();
   @Output() commentAdded = new EventEmitter<Comment>();
   @Output() commentDeleted = new EventEmitter<number>();
   @Output() publicationDeleted = new EventEmitter<number>();  // Output marks a component's property as a custom event source
+  @Output() favoriteChanged = new EventEmitter<{ simulationId: number; isFavourite: boolean }>();
 
   readonly simulation = signal<Simulation | null>(null);
   readonly simulationError = signal('');
+  readonly isFavourite = signal(false);
+  readonly actionsOpen = signal(false);
+  readonly cloningSimulation = signal(false);
+  readonly cloneSuccessOpen = signal(false);
+  readonly savingFavourite = signal(false);
   commentDraft = '';
   commentError = '';
   submittingComment = false;
@@ -44,6 +51,7 @@ export class PostCard implements OnInit {
     private readonly toast: ToastService,
     private readonly publicationApi: PublicationApiService,
     private readonly baseApi: BaseApiService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -52,10 +60,71 @@ export class PostCard implements OnInit {
       next: (simulation) => {
         console.info(`Loaded simulation ${simulation.id} for publication ${this.publication.id}`);
         this.simulation.set(simulation);
+        this.isFavourite.set(this.favoriteIds.has(simulation.id));
       },
       error: (error: unknown) => {
         console.error(`Failed to load simulation for publication ${this.publication.id}`, error);
         this.simulationError.set('No se pudo cargar la configuración de esta simulación.');
+      },
+    });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['favoriteIds']) {
+      const simulation = this.simulation();
+      if (simulation) this.isFavourite.set(this.favoriteIds.has(simulation.id));
+    }
+  }
+
+  toggleActions(): void {
+    this.actionsOpen.update((open) => !open);
+  }
+
+  cloneSimulation(): void {
+    const simulation = this.simulation();
+    if (!simulation?.allow_cloning || this.cloningSimulation()) return;
+
+    this.actionsOpen.set(false);
+    this.cloningSimulation.set(true);
+    this.simulationApi.cloneSimulation(simulation.id, this.publication.id)
+      .pipe(finalize(() => this.cloningSimulation.set(false)))
+      .subscribe({
+        next: () => this.cloneSuccessOpen.set(true),
+        error: (error: unknown) => {
+          console.error(`Failed to clone simulation ${simulation.id}`, error);
+          this.toast.error('No se pudo clonar la simulación. Inténtalo de nuevo.');
+        },
+      });
+  }
+
+  closeCloneSuccess(): void {
+    this.cloneSuccessOpen.set(false);
+  }
+
+  goToMySimulations(): void {
+    this.cloneSuccessOpen.set(false);
+    void this.router.navigate(['/perfil']);
+  }
+
+  toggleFavourite(): void {
+    const simulation = this.simulation();
+    if (!simulation || this.currentUserId === null || this.savingFavourite()) return;
+
+    const nextState = !this.isFavourite();
+    this.savingFavourite.set(true);
+    const request = nextState
+      ? this.simulationApi.addFavourite(simulation.id, this.publication.id).pipe(map((): void => undefined))
+      : this.simulationApi.removeFavourite(simulation.id);
+
+    request.pipe(finalize(() => this.savingFavourite.set(false))).subscribe({
+      next: () => {
+        this.isFavourite.set(nextState);
+        this.favoriteChanged.emit({ simulationId: simulation.id, isFavourite: nextState });
+        this.toast.success(nextState ? 'Simulación agregada a favoritos.' : 'Simulación quitada de favoritos.');
+      },
+      error: (error: unknown) => {
+        console.error(`Failed to update favourite state for simulation ${simulation.id}`, error);
+        this.toast.error('No se pudo actualizar la simulación favorita. Inténtalo de nuevo.');
       },
     });
   }

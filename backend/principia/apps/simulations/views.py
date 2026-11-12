@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
 
 from django.db import transaction
+from django.db.models import Q
 
 from apps.common.permissions import IsOwnerOrReadOnly, SimulationPermission
 from apps.common.pagination import PaginatedAPIView
@@ -15,6 +16,7 @@ from .models import Favourite, Simulation
 from .serializers import SimulationSerializer, FavouriteSerializer
 from .phRegistry import PHENOMENON_SERIALIZERS
 from apps.publications.models import Publication
+from apps.forums.models import ForumMembership
 
 class PhenomenonCatalogView(APIView):
     permission_classes = [AllowAny] # Public catalogue
@@ -225,19 +227,116 @@ class SimulationView(PaginatedAPIView):
             status=status.HTTP_200_OK,
         )
 
+class SimulationCloneView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, simulation_id, *args, **kwargs):
+        publication_id = request.data.get("publication_id")
+        if publication_id is None:
+            return Response(
+                {"status": "error", "message": "publication_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        publication = get_object_or_404(
+            Publication.objects.select_related("simulation", "forum"),
+            id=publication_id,
+            simulation_id=simulation_id,
+        )
+        if publication.forum_id is None or not ForumMembership.objects.filter(
+            forum_id=publication.forum_id,
+            user=request.user,
+        ).exists():
+            return Response(
+                {"status": "error", "message": "You are not a member of this forum."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        source = publication.simulation
+        self.access_context = "forum"
+        if not SimulationPermission().has_object_permission(request, self, source):
+            return Response(
+                {"status": "error", "message": "You do not have permission to access this simulation."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if not source.allow_cloning:
+            return Response(
+                {"status": "error", "message": "Cloning is not allowed for this simulation."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        config = PHENOMENON_SERIALIZERS.get(source.phenomenon_type)
+        if config is None:
+            return Response(
+                {"status": "error", "message": "Invalid phenomenon_type"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            source_configuration = getattr(source, config["related_name"])
+        except ObjectDoesNotExist:
+            return Response(
+                {"status": "error", "message": "Simulation configuration not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        configuration_serializer = config["serializer"](data=config["serializer"](source_configuration).data)
+        if not configuration_serializer.is_valid():
+            return Response(
+                {"status": "error", "message": configuration_serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            clone = Simulation.objects.create(
+                owner=request.user,
+                phenomenon_type=source.phenomenon_type,
+                title=f"{source.title or source.phenomenon_type} - Copia",
+                description=source.description,
+                visibility="private",
+                allow_cloning=source.allow_cloning,
+            )
+            configuration_serializer.save(simulation=clone)
+
+        return Response(
+            {"status": "success", "data": SimulationSerializer(clone).data},
+            status=status.HTTP_201_CREATED,
+        )
+
 class FavouriteView(PaginatedAPIView):
     permission_classes = [IsAuthenticated, SimulationPermission]
+
+    def set_access_context(self, request, favourite):
+        publication = favourite.publication
+        self.access_context = (
+            "forum"
+            if publication is not None
+            and publication.forum_id is not None
+            and publication.forum.members.filter(id=request.user.id).exists()
+            else None
+        )
 
     def get(self, request, *args, **kwargs):
         simulation_id = kwargs.get("simulation_id")
         # Get a particular simulation
         if simulation_id is not None:
-            favorite = get_object_or_404(Favourite,owner=request.user,simulation_id=simulation_id)
+            favorite = get_object_or_404(
+                Favourite.objects.select_related("simulation", "publication", "publication__forum"),
+                owner=request.user,
+                simulation_id=simulation_id,
+            )
+            self.set_access_context(request, favorite)
             self.check_object_permissions(request, favorite.simulation)
             serializer = FavouriteSerializer(favorite)
             return Response({"status": "success","data": serializer.data},status=status.HTTP_200_OK)
         # Get all favourites of user
-        favorites = Favourite.objects.filter(owner=request.user).order_by("-marked_date")
+        favorites = Favourite.objects.filter(owner=request.user).filter(
+            Q(simulation__owner=request.user)
+            | Q(simulation__visibility="public")
+            | Q(
+                simulation__visibility="private",
+                publication__forum__members=request.user,
+            )
+        ).select_related("simulation", "publication", "publication__forum").order_by("-marked_date").distinct()
         page = self.paginate_queryset(favorites, request)
         serializer = FavouriteSerializer(page if page is not None else favorites, many=True)
         if page is not None:
@@ -250,22 +349,47 @@ class FavouriteView(PaginatedAPIView):
             return Response({"status": "error","message": "simulation_id is required"},status=status.HTTP_400_BAD_REQUEST)
 
         simulation = get_object_or_404(Simulation,id=simulation_id)
+        publication = None
+        publication_id = request.data.get("publication_id")
+        if publication_id is not None:
+            publication = get_object_or_404(
+                Publication.objects.select_related("forum"),
+                id=publication_id,
+                simulation=simulation,
+            )
+            if publication.forum_id is None or not publication.forum.members.filter(id=request.user.id).exists():
+                return Response(
+                    {"status": "error", "message": "You are not a member of this forum."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            self.access_context = "forum"
         self.check_object_permissions(request, simulation)
-        favorite, created = Favourite.objects.get_or_create(owner=request.user,simulation=simulation)
+        favorite, created = Favourite.objects.get_or_create(
+            owner=request.user,
+            simulation=simulation,
+            defaults={"publication": publication},
+        )
+        if not created and publication is not None and favorite.publication_id != publication.id:
+            favorite.publication = publication
+            favorite.save(update_fields=["publication"])
 
-        if not created:
-            return Response({"status": "error","message": "Simulation already favorited"},status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({"status": "success","data": FavouriteSerializer(favorite).data},status=status.HTTP_201_CREATED)
+        return Response(
+            {"status": "success","data": FavouriteSerializer(favorite).data},
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
 
     def delete(self, request, *args, **kwargs):
         simulation_id = kwargs.get("simulation_id")
         if simulation_id is None:
             return Response({"status": "error","message": "simulation_id is required"},status=status.HTTP_400_BAD_REQUEST)
 
-        favorite = get_object_or_404(Favourite,owner=request.user,simulation_id=simulation_id)
-        self.check_object_permissions(request, favorite.simulation)
-        favorite.delete()
+        favorites = Favourite.objects.filter(owner=request.user, simulation_id=simulation_id)
+        if not favorites.exists():
+            return Response(
+                {"status": "error", "message": "Favourite not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        favorites.delete()
 
         return Response({"status": "success","data": "Favourite removed"},status=status.HTTP_204_NO_CONTENT)
 

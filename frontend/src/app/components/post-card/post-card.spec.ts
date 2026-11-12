@@ -25,7 +25,15 @@ const simulationApiStub = {
     id: 3,
     title: 'Tiro oblicuo',
     phenomenon_type: 'Oblique Projectile Motion',
+    allow_cloning: true,
   })),
+  cloneSimulation: vi.fn(() => of({
+    id: 4,
+    title: 'Tiro oblicuo',
+    phenomenon_type: 'Oblique Projectile Motion',
+  })),
+  addFavourite: vi.fn(() => of({})),
+  removeFavourite: vi.fn(() => of(undefined)),
 };
 const commentApiStub = {
   createComment: vi.fn(() => of({
@@ -234,6 +242,38 @@ describe('PostCard', () => {
     expect(simulation.textContent).toContain('Estado de la simulación');
     expect(simulationApiStub.getByPublication).toHaveBeenCalledWith(7);
     expect(wasmSetupStub.getConfig).toHaveBeenCalledWith(3);
+  });
+
+  it('clones an allowed simulation and shows the success actions', () => {
+    component.currentUserId = 12;
+
+    component.cloneSimulation();
+    fixture.detectChanges();
+
+    expect(simulationApiStub.cloneSimulation).toHaveBeenCalledWith(3, 7);
+    expect(fixture.nativeElement.textContent).toContain('¡Simulación clonada con éxito!');
+    expect(fixture.nativeElement.textContent).toContain('Ir a mis simulaciones');
+    expect(fixture.nativeElement.textContent).toContain('Aceptar');
+
+    fixture.nativeElement.querySelector('.clone-accept-button').click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.clone-success-dialog')).toBeNull();
+  });
+
+  it('adds and removes a simulation from favourites', () => {
+    const changed = vi.fn();
+    component.favoriteChanged.subscribe(changed);
+    component.currentUserId = 12;
+
+    component.toggleFavourite();
+    expect(simulationApiStub.addFavourite).toHaveBeenCalledWith(3, 7);
+    expect(component.isFavourite()).toBe(true);
+    expect(changed).toHaveBeenLastCalledWith({ simulationId: 3, isFavourite: true });
+
+    component.toggleFavourite();
+    expect(simulationApiStub.removeFavourite).toHaveBeenCalledWith(3);
+    expect(component.isFavourite()).toBe(false);
+    expect(changed).toHaveBeenLastCalledWith({ simulationId: 3, isFavourite: false });
   });
 
   it('shows a loading state while the associated simulation is fetched', () => {

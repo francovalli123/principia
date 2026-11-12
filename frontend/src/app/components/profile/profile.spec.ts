@@ -46,6 +46,8 @@ describe('ProfilePage', () => {
   const userApi = { getCurrentUser: vi.fn(() => of(user)) };
   const simulationApi = {
     getByOwner: vi.fn(() => of(simulations)),
+    getFavourites: vi.fn(() => of([])),
+    removeFavourite: vi.fn(() => of(undefined)),
     updateSimulation: vi.fn((id: number, data: { title?: string; visibility?: Simulation['visibility'] }) =>
       of({ ...simulations.find((simulation) => simulation.id === id)!, ...data }),
     ),
@@ -101,6 +103,13 @@ describe('ProfilePage', () => {
       .toBeTruthy();
     expect(fixture.nativeElement.querySelector('[aria-labelledby="visibility-private"] .simulation-item'))
       .toBeTruthy();
+  });
+
+  it('shows the empty state when the user has no favourite simulations', () => {
+    expect(fixture.nativeElement.textContent).toContain('Simulaciones favoritas');
+    expect(fixture.nativeElement.textContent).toContain(
+      'Todavía no marcaste simulaciones como favoritas.',
+    );
   });
 
   it('clears the session and navigates to the landing page on logout', () => {

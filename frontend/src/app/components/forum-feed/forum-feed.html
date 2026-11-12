@@ -102,12 +102,15 @@
 		<div class="post-list">
 			@for (post of posts(); track post.publication.id) {
 				<app-post-card
+					[id]="'publication-' + post.publication.id"
 					[publication]="post.publication"
 					[comments]="post.comments"
 					[currentUserId]="currentUserId"
+					[favoriteIds]="favoriteIds()"
 					(commentAdded)="addComment(post, $event)"
 					(commentDeleted)="removeComment(post, $event)"
 					(publicationDeleted)="removePublication($event)"
+					(favoriteChanged)="updateFavourite($event)"
 				/>
 				@if (post.nextCommentPage !== null) {
 					<button

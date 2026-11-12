@@ -20,18 +20,63 @@
 				{{ publication.creation_date | date: 'medium' }}
 			</time>
 		</div>
-		@if (isOwnPublication()) {
-			<button
-				class="publication-delete"
-				type="button"
-				[disabled]="deletingPublication"
-				aria-label="Eliminar publicación"
-				(click)="deletePublication()"
-			>
-			<svg aria-hidden="true" viewBox="0 0 24 24">
-				<path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3" />
-			</svg>
-		</button>
+		@if (currentUserId !== null) {
+			<div class="post-actions">
+				@if (simulation()) {
+					<button
+						class="favourite-button"
+						type="button"
+						[disabled]="savingFavourite()"
+						[attr.aria-pressed]="isFavourite()"
+						[attr.aria-label]="isFavourite() ? 'Quitar de favoritos' : 'Agregar a favoritos'"
+						[attr.title]="isFavourite() ? 'Quitar de favoritos' : 'Agregar a favoritos'"
+						(click)="toggleFavourite()"
+					>
+						<svg aria-hidden="true" viewBox="0 0 24 24">
+							<path d="M20.8 8.8c0 5.2-8.8 11-8.8 11s-8.8-5.8-8.8-11A4.8 4.8 0 0 1 12 6.1a4.8 4.8 0 0 1 8.8 2.7Z" />
+						</svg>
+					</button>
+				}
+				@if (isOwnPublication() || simulation()?.allow_cloning) {
+					<div class="post-action-menu">
+						<button
+							class="post-menu-trigger"
+							type="button"
+							[attr.aria-expanded]="actionsOpen()"
+							aria-haspopup="menu"
+							aria-label="Más opciones de la publicación"
+							title="Más opciones"
+							(click)="toggleActions()"
+						>
+							<svg aria-hidden="true" viewBox="0 0 24 24">
+								<circle cx="5" cy="12" r="1.5" />
+								<circle cx="12" cy="12" r="1.5" />
+								<circle cx="19" cy="12" r="1.5" />
+							</svg>
+						</button>
+						@if (actionsOpen()) {
+							<div class="post-action-menu-items" role="menu">
+								@if (simulation()?.allow_cloning) {
+									<button
+										type="button"
+										role="menuitem"
+										[disabled]="cloningSimulation()"
+										(click)="cloneSimulation()"
+									>{{ cloningSimulation() ? 'Clonando…' : 'Clonar simulación' }}</button>
+								}
+								@if (isOwnPublication()) {
+									<button
+										type="button"
+										role="menuitem"
+										[disabled]="deletingPublication"
+										(click)="deletePublication()"
+									>Eliminar publicación</button>
+								}
+							</div>
+						}
+					</div>
+				}
+			</div>
 		}
 	</header>
 		
@@ -110,3 +155,29 @@
 		}
 	</section>
 </article>
+
+@if (cloneSuccessOpen()) {
+	<div class="clone-success-backdrop" (click)="closeCloneSuccess()">
+		<section
+			class="clone-success-dialog"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="clone-success-title"
+			(click)="$event.stopPropagation()"
+		>
+			<div class="clone-success-icon" aria-hidden="true">
+				<svg viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7" /></svg>
+			</div>
+			<h2 id="clone-success-title">¡Simulación clonada con éxito!</h2>
+			<p>La simulación se ha guardado en tus simulaciones.<br />¿Qué deseas hacer ahora?</p>
+			<footer class="clone-success-actions">
+				<button type="button" class="clone-profile-button" (click)="goToMySimulations()">
+					Ir a mis simulaciones
+				</button>
+				<button type="button" class="clone-accept-button" (click)="closeCloneSuccess()">
+					Aceptar
+				</button>
+			</footer>
+		</section>
+	</div>
+}

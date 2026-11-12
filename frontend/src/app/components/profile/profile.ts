@@ -4,6 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Subscription, forkJoin } from 'rxjs';
 import { Simulation, SimulationVisibility } from '../../../models/simulation';
 import { Profile, User } from '../../../models/user';
+import { SimulationFavourite } from '../../services/simulation-api';
 import { AppHeader } from '../app-header/app-header';
 import { ProfileApiService } from '../../services/profile-api';
 import { SimulationApiService } from '../../services/simulation-api';
@@ -29,6 +30,10 @@ export class ProfilePage implements OnInit, OnDestroy {
   readonly profile = signal<Profile | null>(null);
   readonly user = signal<User | null>(null);
   readonly simulations = signal<Simulation[]>([]);
+  readonly favouriteSimulations = signal<SimulationFavourite[]>([]);
+  readonly loadingFavourites = signal(true);
+  readonly favouritesError = signal(false);
+  readonly removingFavouriteIds = signal<Set<number>>(new Set());
   readonly selectedSimulation = signal<Simulation | null>(null);
   readonly isLoading = signal(true);
   readonly loadError = signal(false);
@@ -99,6 +104,17 @@ export class ProfilePage implements OnInit, OnDestroy {
           },
           error: (error: unknown) => this.handleLoadError(error),
         });
+        this.simulationApi.getFavourites().subscribe({
+          next: (favourites) => {
+            this.favouriteSimulations.set(favourites);
+            this.loadingFavourites.set(false);
+          },
+          error: (error: unknown) => {
+            console.error('Failed to load favourite simulations', error);
+            this.favouritesError.set(true);
+            this.loadingFavourites.set(false);
+          },
+        });
       },
       error: (error: unknown) => this.handleLoadError(error),
     });
@@ -150,6 +166,43 @@ export class ProfilePage implements OnInit, OnDestroy {
 
   openSimulation(simulation: Simulation): void {
     this.selectedSimulation.set(simulation);
+  }
+
+  openFavouritePublication(favourite: SimulationFavourite): void {
+    const publication = favourite.publication;
+    if (!publication || publication.forum === null) return;
+
+    void this.router.navigate(['/forums', publication.forum], {
+      queryParams: { publicationId: publication.id },
+    });
+  }
+
+  removeFavourite(favourite: SimulationFavourite): void {
+    const simulationId = favourite.simulation;
+    if (this.removingFavouriteIds().has(simulationId)) return;
+
+    this.removingFavouriteIds.update((ids) => new Set(ids).add(simulationId));
+    this.simulationApi.removeFavourite(simulationId).subscribe({
+      next: () => {
+        this.favouriteSimulations.update((favourites) =>
+          favourites.filter((item) => item.simulation !== simulationId));
+        this.removingFavouriteIds.update((ids) => {
+          const next = new Set(ids);
+          next.delete(simulationId);
+          return next;
+        });
+        this.toast.success('Simulación quitada de favoritos.');
+      },
+      error: (error: unknown) => {
+        console.error(`Failed to remove simulation ${simulationId} from favourites`, error);
+        this.removingFavouriteIds.update((ids) => {
+          const next = new Set(ids);
+          next.delete(simulationId);
+          return next;
+        });
+        this.toast.error('No se pudo quitar la simulación de favoritos.');
+      },
+    });
   }
 
   openEditProfile(): void {

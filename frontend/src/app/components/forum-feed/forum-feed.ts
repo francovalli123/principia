@@ -10,6 +10,7 @@ import { ForumApiService } from '../../services/forum-api';
 import { PublicationApiService } from '../../services/publication-api';
 import { ProfileApiService } from '../../services/profile-api';
 import { UserApiService } from '../../services/user-api';
+import { SimulationApiService } from '../../services/simulation-api';
 import { PostCard } from '../../components/post-card/post-card';
 import { FormsModule } from '@angular/forms';
 
@@ -37,6 +38,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
   readonly error = signal(false);
   readonly forum = signal<Forum | null>(null);
   readonly profile = signal<Profile | null>(null);
+  readonly favoriteIds = signal<Set<number>>(new Set());
   readonly members = signal<Author[]>([]);
   readonly membersOpen = signal(false);
   readonly membersLoading = signal(false);
@@ -54,6 +56,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
 
   private page = 1;
   private observer?: IntersectionObserver;
+  private targetPublicationId: number | null = null;
   forumId!: number;
 
   constructor(
@@ -62,6 +65,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     private readonly commentApi: CommentApiService,
     private readonly profileApi: ProfileApiService,
     private readonly userApi: UserApiService,
+    private readonly simulationApi: SimulationApiService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
   ) {}
@@ -75,10 +79,20 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.forumId = routeForumId;
+    const targetPublicationId = Number(this.route.snapshot.queryParamMap.get('publicationId'));
+    if (Number.isSafeInteger(targetPublicationId) && targetPublicationId > 0) {
+      this.targetPublicationId = targetPublicationId;
+    }
     this.userApi.getCurrentUser().subscribe({
       next: (user) => {
         if (Number.isSafeInteger(user.id) && user.id > 0) {
           this.currentUserId = user.id;
+          this.simulationApi.getFavourites().subscribe({
+            next: (favourites) => this.favoriteIds.set(
+              new Set(favourites.map((favourite) => favourite.simulation)),
+            ),
+            error: (error: unknown) => console.error('Failed to load favourite simulations for the forum feed', error),
+          });
         } else {
           console.error('Current user response did not contain a valid user ID');
         }
@@ -191,6 +205,15 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
+  updateFavourite(event: { simulationId: number; isFavourite: boolean }): void {
+    this.favoriteIds.update((current) => {
+      const next = new Set(current);
+      if (event.isFavourite) next.add(event.simulationId);
+      else next.delete(event.simulationId);
+      return next;
+    });
+  }
+
   openSettings(): void {
     const forum = this.forum();
     if (!forum?.is_owner) return;
@@ -299,6 +322,15 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
         this.loading.set(false);
         this.loadingMore.set(false);
         newPosts.forEach((post) => this.loadInitialComments(post));
+        this.scrollToTargetPublication();
+        if (this.targetPublicationId !== null) {
+          if (response.data.next !== null) {
+            this.loadPublications(false);
+          } else {
+            console.warn(`Publication ${this.targetPublicationId} was not found in forum ${this.forumId}`);
+            this.targetPublicationId = null;
+          }
+        }
       },
       error: (error: unknown) => {
         console.error(`Failed to load publications for forum ${this.forumId}, page ${requestedPage}`, error);
@@ -325,5 +357,18 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     this.posts.update((posts) => posts.map((post) =>
       post.publication.id === publicationId ? update(post) : post
     ));
+  }
+
+  private scrollToTargetPublication(): void {
+    if (this.targetPublicationId === null) return;
+    const target = this.posts().find((post) => post.publication.id === this.targetPublicationId);
+    if (!target) return;
+
+    const publicationId = this.targetPublicationId;
+    this.targetPublicationId = null;
+    setTimeout(() => {
+      document.getElementById(`publication-${publicationId}`)
+        ?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    });
   }
 }

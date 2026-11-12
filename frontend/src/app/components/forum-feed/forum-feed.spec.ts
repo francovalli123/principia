@@ -10,6 +10,7 @@ import { PublicationApiService } from '../../services/publication-api';
 import { CommentApiService } from '../../services/comment-api';
 import { UserApiService } from '../../services/user-api';
 import { ProfileApiService } from '../../services/profile-api';
+import { SimulationApiService } from '../../services/simulation-api';
 
 describe('ForumFeed', () => {
   let component: ForumFeed;
@@ -46,6 +47,7 @@ describe('ForumFeed', () => {
     })),
   };
   const userApi = { getCurrentUser: vi.fn(() => of({ id: 12 })) };
+  const simulationApi = { getFavourites: vi.fn(() => of([])) };
   const router = { navigate: vi.fn() };
 
   beforeEach(async () => {
@@ -61,7 +63,8 @@ describe('ForumFeed', () => {
         { provide: CommentApiService, useValue: commentApi },
         { provide: ProfileApiService, useValue: profileApi },
         { provide: UserApiService, useValue: userApi },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '23' } } } },
+        { provide: SimulationApiService, useValue: simulationApi },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '23' }, queryParamMap: { get: () => null } } } },
         { provide: Router, useValue: router },
       ],
     }).compileComponents();

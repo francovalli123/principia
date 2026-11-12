@@ -26,6 +26,11 @@ export type SimulationListResponse = Simulation[] | {
 export interface SimulationFavourite {
     id: number;
     simulation: number;
+    simulation_details: Simulation;
+    publication: {
+        id: number;
+        forum: number | null;
+    } | null;
     marked_date: string;
 }
 
@@ -115,25 +120,44 @@ export class SimulationApiService {
     getFavourites(): Observable<SimulationFavourite[]> {
         return this.api.get<SimulationFavouriteListResponse>('simulations/favourites/').pipe(
             map((response) => {
-                if (Array.isArray(response)) return response;
-                const payload = response.data ?? response;
-                return Array.isArray(payload) ? payload : payload.results ?? [];
+                let favourites: SimulationFavourite[];
+                if (Array.isArray(response)) {
+                    favourites = response;
+                } else {
+                    const payload = response.data ?? response;
+                    favourites = Array.isArray(payload) ? payload : payload.results ?? [];
+                }
+                const seenSimulationIds = new Set<number>();
+                return favourites.filter((favourite) => {
+                    if (seenSimulationIds.has(favourite.simulation)) return false;
+                    seenSimulationIds.add(favourite.simulation);
+                    return true;
+                });
             }),
         );
     }
 
-    getFavourite(simulationId: number): Observable<Simulation> {
-        return this.api.get<Simulation>(`simulations/favourites/${simulationId}/`);
-    }
-
-    addFavourite(simulationId: number): Observable<any> {
-        return this.api.post<any>(
+    getFavourite(simulationId: number): Observable<SimulationFavourite> {
+        return this.api.get<ApiResponse<SimulationFavourite>>(
             `simulations/favourites/${simulationId}/`,
-            {}
-        );
+        ).pipe(map((response) => response.data));
     }
 
-    removeFavourite(simulationId: number): Observable<any> {
-        return this.api.delete<any>(`simulations/favourites/${simulationId}/`);
+    addFavourite(simulationId: number, publicationId: number): Observable<SimulationFavourite> {
+        return this.api.post<ApiResponse<SimulationFavourite>>(
+            `simulations/favourites/${simulationId}/`,
+            { publication_id: publicationId },
+        ).pipe(map((response) => response.data));
+    }
+
+    removeFavourite(simulationId: number): Observable<void> {
+        return this.api.delete<void>(`simulations/favourites/${simulationId}/`);
+    }
+
+    cloneSimulation(simulationId: number, publicationId: number): Observable<Simulation> {
+        return this.api.post<ApiResponse<Simulation>>(
+            `simulations/${simulationId}/clone/`,
+            { publication_id: publicationId },
+        ).pipe(map((response) => response.data));
     }
 }

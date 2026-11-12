@@ -38,6 +38,11 @@ class Favourite(models.Model):
         on_delete=models.CASCADE,
         related_name="favourites",
     )
+    publication = models.ForeignKey(
+        "publications.Publication",
+        on_delete=models.CASCADE,
+        related_name="favourites",
+    )
     marked_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
