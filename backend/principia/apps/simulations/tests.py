@@ -226,6 +226,27 @@ class SimulationCloneAndFavouriteTests(TestCase):
         )
         self.client = APIClient()
 
+    def test_forum_member_can_load_private_simulation_configuration(self):
+        self.client.force_authenticate(user=self.member)
+
+        response = self.client.get(
+            f"/api/phenomenonConfig/{self.simulation.id}/"
+            f"?publication_id={self.publication.id}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["data"]["angle"], 37.0)
+
+    def test_non_member_cannot_load_private_forum_simulation_configuration(self):
+        self.client.force_authenticate(user=self.outsider)
+
+        response = self.client.get(
+            f"/api/phenomenonConfig/{self.simulation.id}/"
+            f"?publication_id={self.publication.id}"
+        )
+
+        self.assertEqual(response.status_code, 403)
+
     def test_forum_member_can_clone_a_permitted_simulation(self):
         self.client.force_authenticate(user=self.member)
 

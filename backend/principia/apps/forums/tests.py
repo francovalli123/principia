@@ -73,6 +73,20 @@ class ForumMembersTests(APITestCase):
 		self.assertFalse(serialized_forum["is_member"])
 		self.assertFalse(serialized_forum["is_owner"])
 
+	def test_forum_search_includes_matches_beyond_the_first_page(self):
+		for index in range(12):
+			Forum.objects.create(name=f"Unrelated forum {index}", owner=self.owner)
+		target_forum = Forum.objects.create(name="Unique target forum", owner=self.owner)
+		self.client.force_authenticate(user=self.member)
+
+		response = self.client.get("/api/forums/?search=target")
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(
+			[forum["id"] for forum in response.data["data"]],
+			[target_forum.id],
+		)
+
 	def test_only_owner_can_expel_member(self):
 		self.client.force_authenticate(user=self.member)
 

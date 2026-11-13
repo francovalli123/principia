@@ -400,6 +400,19 @@ class PhenomenonTypeView(APIView):
     def get(self, request,*args, **kwargs):
         simulation_id = kwargs.get("simulation_id")
         simulation = get_object_or_404(Simulation, id=simulation_id)
+        publication_id = request.query_params.get("publication_id")
+        self.access_context = None
+        if publication_id is not None:
+            publication = get_object_or_404(
+                Publication,
+                id=publication_id,
+                simulation_id=simulation.id,
+            )
+            if (
+                publication.forum_id is not None
+                and publication.forum.members.filter(id=request.user.id).exists()
+            ):
+                self.access_context = "forum"
         self.check_object_permissions(request, simulation)
         phenomenon_type = simulation.phenomenon_type
         # Get from the registry the matching dictionary to the phenomenon_tyoe  

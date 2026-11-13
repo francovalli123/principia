@@ -31,6 +31,19 @@ class ForumView(PaginatedAPIView):
         # Get all forums
         if forum_id is None:
             forums = Forum.objects.all().order_by("id")
+            search_term = request.query_params.get("search", "").strip()
+            if search_term:
+                forums = forums.filter(name__icontains=search_term)
+                serializer = ForumSerializer(
+                    forums,
+                    many=True,
+                    context={"request": request},
+                )
+                return Response(
+                    {"status": "success", "data": serializer.data},
+                    status=status.HTTP_200_OK,
+                )
+
             # The page is calculated based on the entire queryset in order to preserve the count
             page = self.paginate_queryset(forums, request)
             serializer = ForumSerializer(

@@ -21,12 +21,18 @@ interface ConfigResponse {
 export class WasmSetupService { 
     constructor(private readonly api: BaseApiService) {} // Injects the shared HTTP service
 
-    getConfig(simulationId: number): Observable<unknown> { // Requests one simulation's saved parameters
+    getConfig(simulationId: number, publicationId?: number): Observable<unknown> { // Requests one simulation's saved parameters
         if (!Number.isSafeInteger(simulationId) || simulationId <= 0) {
             return throwError(() => new Error('A valid simulation ID is required to load its configuration'));
         }
+        if (publicationId !== undefined && (!Number.isSafeInteger(publicationId) || publicationId <= 0)) {
+            return throwError(() => new Error('A valid publication ID is required to load its simulation configuration'));
+        }
         console.log(`Requesting configuration for simulation ID: ${simulationId}`);
-        return this.api.get<unknown>(`phenomenonConfig/${simulationId}/`).pipe(
+        const publicationQuery = publicationId === undefined
+            ? ''
+            : `?publication_id=${publicationId}`;
+        return this.api.get<unknown>(`phenomenonConfig/${simulationId}/${publicationQuery}`).pipe(
             tap({
                 next: () => console.log(`Received configuration for simulation ID: ${simulationId}`),
                 error: (error: unknown) => console.error(`Failed to load configuration for simulation ID: ${simulationId}`, error),

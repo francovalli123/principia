@@ -27,4 +27,15 @@ describe('ForumApiService', () => {
     expect(api.get).toHaveBeenCalledWith('forums/23/members/');
     expect(result).toEqual(members);
   });
+
+  it('searches all forums using the encoded query', () => {
+    const forums = [{ id: 17, name: 'Física cuántica' }];
+    api.get.mockReturnValueOnce(of({ status: 'success', data: forums }));
+
+    let result: unknown;
+    service.searchForums('Física cuántica').subscribe((response) => result = response);
+
+    expect(api.get).toHaveBeenCalledWith('forums/?search=F%C3%ADsica%20cu%C3%A1ntica');
+    expect(result).toEqual(forums);
+  });
 });

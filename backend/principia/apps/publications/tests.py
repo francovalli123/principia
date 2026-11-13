@@ -56,6 +56,29 @@ class PublicationAccessTests(APITestCase):
 
 		self.assertEqual(response.status_code, 403)
 
+	def test_forum_owner_sees_hidden_publication_in_forum_listing(self):
+		self.publication.simulation.visibility = "hidden"
+		self.publication.simulation.save(update_fields=["visibility"])
+		self.client.force_authenticate(user=self.owner)
+
+		response = self.client.get(f"/api/publications/?forum_id={self.forum.id}")
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(
+			[item["id"] for item in response.data["data"]["results"]],
+			[self.publication.id],
+		)
+
+	def test_forum_members_do_not_see_another_users_hidden_publication(self):
+		self.publication.simulation.visibility = "hidden"
+		self.publication.simulation.save(update_fields=["visibility"])
+		self.client.force_authenticate(user=self.member)
+
+		response = self.client.get(f"/api/publications/?forum_id={self.forum.id}")
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.data["data"]["results"], [])
+
 	def test_publication_response_includes_safe_owner_details(self):
 		self.client.force_authenticate(user=self.member)
 

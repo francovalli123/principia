@@ -83,12 +83,17 @@
 	<div class="post-content">
 		<h2>{{ publication.title }}</h2>
 		<p>{{ publication.description }}</p>
+		@if (isOwnPublication() && simulation()?.visibility === 'hidden') {
+			<p class="hidden-simulation-indicator" role="status">
+				Simulación oculta: solo vos podés ver esta publicación en el foro.
+			</p>
+		}
 	</div>
 
 	<section class="simulation-section" aria-label="Simulación">
 		<div class="simulation-slot">
 			@if (simulation(); as loadedSimulation) {
-				<app-motor-control [simulation]="loadedSimulation" />
+				<app-motor-control [simulation]="loadedSimulation" [publicationId]="publication.id" />
 			} @else if (simulationError()) {
 				<p role="alert">{{ simulationError() }}</p>
 			} @else {

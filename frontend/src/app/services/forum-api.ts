@@ -20,6 +20,11 @@ export interface ForumResponse {
     data: Forum;
 }
 
+interface ForumSearchResponse {
+    status: string;
+    data: Forum[];
+}
+
 export interface SuggestedForumsResponse {
     status: string;
     data: {
@@ -39,6 +44,13 @@ export class ForumApiService {
             map((response) => response.data.results)
         );
     }
+
+    searchForums(query: string): Observable<Forum[]> {
+        return this.api.get<ForumSearchResponse>(`forums/?search=${encodeURIComponent(query)}`).pipe(
+            map((response) => response.data)
+        );
+    }
+
     getMyForums(): Observable<Forum[]> {
         return this.api.get<PaginatedResponse<Forum>>('forums/mine/').pipe(
             map((response) => response.data.results)

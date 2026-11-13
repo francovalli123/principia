@@ -96,6 +96,21 @@ describe('MotorControl', () => {
     expect(fixture.nativeElement.querySelector('canvas').id).toMatch(/^simulation-canvas-/);
   });
 
+  it('passes the forum publication when loading simulation configuration', async () => {
+    setup.getConfig.mockClear();
+    const forumFixture = TestBed.createComponent(MotorControl);
+    forumFixture.componentRef.setInput('simulation', {
+      id: 8,
+      phenomenon_type: 'Oblique Projectile Motion',
+    });
+    forumFixture.componentRef.setInput('publicationId', 19);
+    forumFixture.detectChanges();
+    await forumFixture.whenStable();
+
+    expect(setup.getConfig).toHaveBeenCalledWith(8, 19);
+    forumFixture.destroy();
+  });
+
   it('prevents the space key from scrolling the forum while the simulation canvas is focused', () => {
     const event = new KeyboardEvent('keydown', { code: 'Space', cancelable: true });
 

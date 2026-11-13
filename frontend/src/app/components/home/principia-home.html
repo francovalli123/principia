@@ -1,4 +1,15 @@
-<app-header [showSearch]="true" [(searchTerm)]="searchTerm" />
+<app-header
+  [showSearch]="true"
+  [searchTerm]="searchTerm"
+  (searchTermChange)="searchForums($event)"
+/>
+
+@if (searchTerm.trim() && searchingForums()) {
+  <p class="empty-state" role="status">Buscando entre todos los foros…</p>
+}
+@if (searchTerm.trim() && searchError()) {
+  <p class="empty-state" role="alert">No pudimos buscar los foros. Intentá nuevamente.</p>
+}
 
 <main class="home">
   <section class="welcome" aria-labelledby="welcome-title">
@@ -37,7 +48,11 @@
         <app-forum-card [forum]="forum" (membershipChanged)="updateMembership($event)" />
       } @empty {
       <!-- Empty State for My Forums -->
-        @if (myForums().length === 0 && !searchTerm.trim()) {
+        @if (searchTerm.trim()) {
+          @if (!searchingForums() && !searchError()) {
+            <p class="empty-state">No encontramos foros tuyos con esa búsqueda.</p>
+          }
+        } @else if (myForums().length === 0) {
           <div class="empty-state" role="status">
             <h3>Todavía no tenés foros</h3>
             <p>Cuando crees o te unas a un foro, lo vas a encontrar acá.</p>
@@ -58,12 +73,14 @@
       @for (forum of visibleSuggestedForums; track forum.id) {
         <app-forum-card [forum]="forum" variant="suggested" (membershipChanged)="updateMembership($event)" />
       } @empty {
-        @if (suggestedForumsLoading()) {
+        @if (searchTerm.trim()) {
+          @if (!searchingForums() && !searchError()) {
+            <p class="empty-state">No encontramos foros disponibles con esa búsqueda.</p>
+          }
+        } @else if (suggestedForumsLoading()) {
           <p class="empty-state" role="status">Buscando foros disponibles…</p>
         } @else if (suggestedForumsError()) {
           <p class="empty-state" role="alert">No pudimos cargar los foros sugeridos. Intentá nuevamente más tarde.</p>
-        } @else if (searchTerm.trim()) {
-          <p class="empty-state">No encontramos foros sugeridos con esa búsqueda.</p>
         } @else if (totalOtherForums() === 0) {
           <div class="empty-state" role="status">
             <h3>Todavía no hay foros para descubrir</h3>

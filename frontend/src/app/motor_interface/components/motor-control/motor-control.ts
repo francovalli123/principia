@@ -22,6 +22,7 @@ export class MotorControl implements OnInit, AfterViewInit, OnDestroy {
   private static nextCanvasId = 0;
 
   @Input({ required: true }) simulation!: SimulationDescriptor; 
+  @Input() publicationId?: number;
   @ViewChild('simulationCanvas')
   private readonly simulationCanvas!: ElementRef<HTMLCanvasElement>;
   readonly canvasId = `simulation-canvas-${MotorControl.nextCanvasId++}`;
@@ -68,8 +69,10 @@ export class MotorControl implements OnInit, AfterViewInit, OnDestroy {
     }
 
     console.info(`MotorControl requesting configuration for simulation ID: ${this.simulation.id}`);
-    this.configSubscription = this.wasmSetup
-      .getConfig(this.simulation.id) // Fetches configuration using the simulation identifier.
+    const configRequest = this.publicationId === undefined
+      ? this.wasmSetup.getConfig(this.simulation.id)
+      : this.wasmSetup.getConfig(this.simulation.id, this.publicationId);
+    this.configSubscription = configRequest // Fetches configuration using its simulation and optional forum publication identifiers.
       .subscribe({
       next: (response) => { // Passes the backend payload to the selected adapter
         void this.wasmSetup

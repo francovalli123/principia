@@ -74,6 +74,16 @@
 	white-space: pre-wrap;
 }
 
+.post-content > .hidden-simulation-indicator {
+	display: inline-block;
+	border-radius: 4px;
+	padding: 5px 8px;
+	color: #75510a;
+	background: #fff4d6;
+	font-size: 12px;
+	font-weight: 650;
+}
+
 .simulation-section {
 	padding: 0 23px 12px;
 }

@@ -136,6 +136,24 @@ describe('PostCard', () => {
     expect(fixture.nativeElement.textContent).toContain('Todavía no hay comentarios.');
   });
 
+  it('shows hidden visibility only to the publication owner', async () => {
+    component.simulation.update((simulation) =>
+      simulation ? { ...simulation, visibility: 'hidden' } : simulation,
+    );
+    fixture.componentRef.setInput('currentUserId', 12);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      'Simulación oculta: solo vos podés ver esta publicación en el foro.',
+    );
+
+    fixture.componentRef.setInput('currentUserId', 13);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('Simulación oculta');
+  });
+
   it('renders the owner profile photo when the API includes its URL', () => {
     fixture.componentRef.setInput('publication', {
       ...component.publication,
@@ -241,7 +259,7 @@ describe('PostCard', () => {
     expect(simulation).toBeTruthy();
     expect(simulation.textContent).toContain('Estado de la simulación');
     expect(simulationApiStub.getByPublication).toHaveBeenCalledWith(7);
-    expect(wasmSetupStub.getConfig).toHaveBeenCalledWith(3);
+    expect(wasmSetupStub.getConfig).toHaveBeenCalledWith(3, 7);
   });
 
   it('clones an allowed simulation and shows the success actions', () => {

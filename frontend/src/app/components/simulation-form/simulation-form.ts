@@ -226,7 +226,7 @@ export class SimulationForm implements OnInit {
       case 'private':
         return 'Solo vos podés ver esta simulación. No aparecerá en tu perfil público.';
       case 'hidden':
-        return 'No aparecerá en búsquedas ni en el foro, pero podrás compartirla con un enlace directo.';
+        return 'No aparecerá en búsquedas ni en el foro.';
       default:
         return 'Será visible en tu perfil y podrá aparecer en el foro.';
     }
