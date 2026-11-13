@@ -1,7 +1,9 @@
 <app-header
   [showSearch]="true"
+  [showLogout]="true"
   [searchTerm]="searchTerm"
   (searchTermChange)="searchForums($event)"
+  (logoutClicked)="logout()"
 />
 
 @if (searchTerm.trim() && searchingForums()) {

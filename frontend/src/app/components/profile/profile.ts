@@ -1,4 +1,5 @@
 import { Component, HostListener, OnDestroy, OnInit, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription, forkJoin } from 'rxjs';
@@ -8,6 +9,7 @@ import { SimulationFavourite } from '../../services/simulation-api';
 import { AppHeader } from '../app-header/app-header';
 import { ProfileApiService } from '../../services/profile-api';
 import { SimulationApiService } from '../../services/simulation-api';
+import { ForumApiService } from '../../services/forum-api';
 import { UserApiService } from '../../services/user-api';
 import { AuthService } from '../../services/auth';
 import { ToastService } from '../../services/toast';
@@ -31,6 +33,9 @@ export class ProfilePage implements OnInit, OnDestroy {
   readonly user = signal<User | null>(null);
   readonly simulations = signal<Simulation[]>([]);
   readonly favouriteSimulations = signal<SimulationFavourite[]>([]);
+  readonly favouriteForumAccessDialog = signal<SimulationFavourite | null>(null);
+  readonly joiningFavouriteForum = signal(false);
+  readonly favouriteForumError = signal('');
   readonly loadingFavourites = signal(true);
   readonly favouritesError = signal(false);
   readonly removingFavouriteIds = signal<Set<number>>(new Set());
@@ -85,6 +90,7 @@ export class ProfilePage implements OnInit, OnDestroy {
   constructor(
     private readonly profileApi: ProfileApiService,
     private readonly simulationApi: SimulationApiService,
+    private readonly forumApi: ForumApiService,
     private readonly userApi: UserApiService,
     private readonly auth: AuthService,
     private readonly router: Router,
@@ -172,9 +178,46 @@ export class ProfilePage implements OnInit, OnDestroy {
     const publication = favourite.publication;
     if (!publication || publication.forum === null) return;
 
-    void this.router.navigate(['/forums', publication.forum], {
-      queryParams: { publicationId: publication.id },
+    this.forumApi.getForum(publication.forum).subscribe({
+      next: () => this.navigateToFavouritePublication(favourite),
+      error: (error: unknown) => {
+        if (error instanceof HttpErrorResponse && error.status === 403) {
+          this.favouriteForumError.set('');
+          this.favouriteForumAccessDialog.set(favourite);
+          return;
+        }
+
+        console.error(`Failed to verify membership for forum ${publication.forum}`, error);
+        this.toast.error('No se pudo comprobar tu acceso al foro. Intentá nuevamente.');
+      },
     });
+  }
+
+  rejoinFavouriteForum(): void {
+    const favourite = this.favouriteForumAccessDialog();
+    const publication = favourite?.publication;
+    if (!publication || publication.forum === null || this.joiningFavouriteForum()) return;
+
+    this.favouriteForumError.set('');
+    this.joiningFavouriteForum.set(true);
+    this.forumApi.joinForum(publication.forum).subscribe({
+      next: () => {
+        this.joiningFavouriteForum.set(false);
+        this.favouriteForumAccessDialog.set(null);
+        this.navigateToFavouritePublication(favourite);
+      },
+      error: (error: unknown) => {
+        console.error(`Failed to rejoin forum ${publication.forum}`, error);
+        this.joiningFavouriteForum.set(false);
+        this.favouriteForumError.set('No se pudo volver a entrar al foro. Intentá nuevamente.');
+      },
+    });
+  }
+
+  closeFavouriteForumAccessDialog(): void {
+    if (this.joiningFavouriteForum()) return;
+    this.favouriteForumAccessDialog.set(null);
+    this.favouriteForumError.set('');
   }
 
   removeFavourite(favourite: SimulationFavourite): void {
@@ -186,6 +229,9 @@ export class ProfilePage implements OnInit, OnDestroy {
       next: () => {
         this.favouriteSimulations.update((favourites) =>
           favourites.filter((item) => item.simulation !== simulationId));
+        if (this.favouriteForumAccessDialog()?.simulation === simulationId) {
+          this.closeFavouriteForumAccessDialog();
+        }
         this.removingFavouriteIds.update((ids) => {
           const next = new Set(ids);
           next.delete(simulationId);
@@ -389,6 +435,8 @@ export class ProfilePage implements OnInit, OnDestroy {
   closeSimulationOnEscape(): void {
     if (this.isDeleteConfirmationOpen()) {
       this.isDeleteConfirmationOpen.set(false);
+    } else if (this.favouriteForumAccessDialog()) {
+      this.closeFavouriteForumAccessDialog();
     } else if (this.editingSimulation()) {
       this.closeSimulationManager();
     } else if (this.isEditProfileOpen()) {
@@ -423,6 +471,15 @@ export class ProfilePage implements OnInit, OnDestroy {
   logout(): void {
     this.auth.clearTokens();
     void this.router.navigate(['/']);
+  }
+
+  private navigateToFavouritePublication(favourite: SimulationFavourite): void {
+    const publication = favourite.publication;
+    if (!publication || publication.forum === null) return;
+
+    void this.router.navigate(['/forums', publication.forum], {
+      queryParams: { publicationId: publication.id },
+    });
   }
 
   private handleLoadError(error: unknown): void {

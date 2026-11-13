@@ -16,7 +16,9 @@ export class AppHeader implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   @Input() searchTerm = '';
   @Input() showSearch = false;
+  @Input() showLogout = false;
   @Output() readonly searchTermChange = new EventEmitter<string>();
+  @Output() readonly logoutClicked = new EventEmitter<void>();
   readonly profile = signal<Profile | null>(null);
 
   constructor(

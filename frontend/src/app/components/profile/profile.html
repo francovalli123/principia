@@ -344,3 +344,45 @@
     </section>
   </div>
 }
+
+@if (favouriteForumAccessDialog(); as inaccessibleFavourite) {
+  <div class="simulation-modal-backdrop" (click)="closeFavouriteForumAccessDialog()">
+    <section
+      class="profile-editor-modal forum-access-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="favourite-forum-access-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="editor-modal-header">
+        <div>
+          <h2 id="favourite-forum-access-title">Ya no sos miembro de este foro</h2>
+          <p>Volvé a unirte para ver la publicación o quitá esta simulación de tus favoritos.</p>
+        </div>
+      </header>
+      @if (favouriteForumError()) {
+        <p class="editor-error" role="alert">{{ favouriteForumError() }}</p>
+      }
+      <footer class="editor-actions forum-access-actions">
+        <button
+          class="editor-secondary-button"
+          type="button"
+          [disabled]="joiningFavouriteForum()"
+          (click)="closeFavouriteForumAccessDialog()"
+        >Cancelar</button>
+        <button
+          class="editor-delete-button"
+          type="button"
+          [disabled]="joiningFavouriteForum() || removingFavouriteIds().has(inaccessibleFavourite.simulation)"
+          (click)="removeFavourite(inaccessibleFavourite)"
+        >{{ removingFavouriteIds().has(inaccessibleFavourite.simulation) ? 'Quitando…' : 'Quitar de favoritos' }}</button>
+        <button
+          class="editor-primary-button"
+          type="button"
+          [disabled]="joiningFavouriteForum()"
+          (click)="rejoinFavouriteForum()"
+        >{{ joiningFavouriteForum() ? 'Volviendo a unirte…' : 'Volver a unirme' }}</button>
+      </footer>
+    </section>
+  </div>
+}

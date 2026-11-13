@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from '../../services/auth';
+import { ForumApiService } from '../../services/forum-api';
 import { ProfileApiService } from '../../services/profile-api';
 import { SimulationApiService } from '../../services/simulation-api';
 import { ToastService } from '../../services/toast';
@@ -44,6 +46,10 @@ describe('ProfilePage', () => {
     profileUpdated$: profileUpdated.asObservable(),
   };
   const userApi = { getCurrentUser: vi.fn(() => of(user)) };
+  const forumApi = {
+    getForum: vi.fn(() => of({ id: 23, name: 'Physics' })),
+    joinForum: vi.fn(() => of(undefined)),
+  };
   const simulationApi = {
     getByOwner: vi.fn(() => of(simulations)),
     getFavourites: vi.fn(() => of([])),
@@ -76,6 +82,7 @@ describe('ProfilePage', () => {
       providers: [
         { provide: ProfileApiService, useValue: profileApi },
         { provide: UserApiService, useValue: userApi },
+        { provide: ForumApiService, useValue: forumApi },
         { provide: SimulationApiService, useValue: simulationApi },
         { provide: AuthService, useValue: auth },
         { provide: ToastService, useValue: toast },
@@ -117,6 +124,59 @@ describe('ProfilePage', () => {
 
     expect(auth.clearTokens).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('asks the user to rejoin or unfavourite when they no longer belong to a forum', () => {
+    const favourite = {
+      id: 9,
+      simulation: 3,
+      simulation_details: simulations[0],
+      publication: { id: 41, forum: 23 },
+      marked_date: '2026-01-02T00:00:00Z',
+    };
+    forumApi.getForum.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 403 })),
+    );
+    fixture.componentInstance.favouriteSimulations.set([favourite]);
+
+    fixture.componentInstance.openFavouritePublication(favourite);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Ya no sos miembro de este foro');
+    expect(fixture.nativeElement.querySelector('.forum-access-modal')).toBeTruthy();
+
+    fixture.nativeElement.querySelector('.editor-primary-button').click();
+    fixture.detectChanges();
+
+    expect(forumApi.joinForum).toHaveBeenCalledWith(23);
+    expect(router.navigate).toHaveBeenCalledWith(
+      ['/forums', 23],
+      { queryParams: { publicationId: 41 } },
+    );
+    expect(fixture.nativeElement.querySelector('.forum-access-modal')).toBeNull();
+  });
+
+  it('removes the favourite and closes the membership dialog when requested', () => {
+    const favourite = {
+      id: 9,
+      simulation: 3,
+      simulation_details: simulations[0],
+      publication: { id: 41, forum: 23 },
+      marked_date: '2026-01-02T00:00:00Z',
+    };
+    forumApi.getForum.mockReturnValueOnce(
+      throwError(() => new HttpErrorResponse({ status: 403 })),
+    );
+    fixture.componentInstance.favouriteSimulations.set([favourite]);
+
+    fixture.componentInstance.openFavouritePublication(favourite);
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.editor-delete-button').click();
+    fixture.detectChanges();
+
+    expect(simulationApi.removeFavourite).toHaveBeenCalledWith(3);
+    expect(fixture.componentInstance.favouriteForumAccessDialog()).toBeNull();
+    expect(fixture.componentInstance.favouriteSimulations()).toEqual([]);
   });
 
   it('uploads a selected image as multipart profile data and updates the avatar', () => {

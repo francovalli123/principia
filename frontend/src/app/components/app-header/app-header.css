@@ -76,7 +76,6 @@
   display: grid;
   width: 42px;
   height: 42px;
-  justify-self: end;
   place-items: center;
   overflow: hidden;
   border: 2px solid #dce4ee;
@@ -93,6 +92,37 @@
 .profile-link:focus-visible {
   outline: 3px solid rgb(9 98 159 / 28%);
   outline-offset: 3px;
+}
+
+.account-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 12px;
+}
+
+.logout-button {
+  min-height: 38px;
+  border: 1px solid #e4c8ca;
+  border-radius: 20px;
+  padding: 0 14px;
+  background: #fff;
+  color: #a52f35;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.logout-button:hover {
+  border-color: #b64242;
+  background: #fff7f7;
+}
+
+.logout-button:focus-visible {
+  outline: 3px solid rgb(182 66 66 / 22%);
+  outline-offset: 2px;
 }
 
 .profile-avatar-fallback {
@@ -115,7 +145,7 @@
     grid-row: 2;
   }
 
-  .profile-link {
+  .account-actions {
     grid-column: 2;
     grid-row: 1;
   }

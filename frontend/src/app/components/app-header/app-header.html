@@ -21,11 +21,18 @@
     </label>
   }
 
-  <a class="profile-link" routerLink="/perfil" aria-label="Ver mi perfil" title="Mi perfil">
-    @if (profile()?.profile_picture; as profilePicture) {
-      <img class="profile-avatar profile-photo" [src]="profilePicture" alt="" />
-    } @else {
-      <span class="profile-avatar profile-avatar-fallback" aria-hidden="true">P</span>
+  <div class="account-actions">
+    @if (showLogout) {
+      <button class="logout-button" type="button" (click)="logoutClicked.emit()">
+        Cerrar sesión
+      </button>
     }
-  </a>
+    <a class="profile-link" routerLink="/perfil" aria-label="Ver mi perfil" title="Mi perfil">
+      @if (profile()?.profile_picture; as profilePicture) {
+        <img class="profile-avatar profile-photo" [src]="profilePicture" alt="" />
+      } @else {
+        <span class="profile-avatar profile-avatar-fallback" aria-hidden="true">P</span>
+      }
+    </a>
+  </div>
 </header>

@@ -316,6 +316,14 @@
   box-shadow: 0 24px 70px rgb(8 16 28 / 24%);
 }
 
+.forum-access-modal {
+  width: min(100%, 520px);
+}
+
+.forum-access-actions {
+  flex-wrap: wrap;
+}
+
 .simulation-editor-modal {
   width: min(100%, 680px);
 }

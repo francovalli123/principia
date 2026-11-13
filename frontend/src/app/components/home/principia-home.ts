@@ -2,6 +2,8 @@ import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, debounceTime, distinctUntilChanged, map, of, Subject, switchMap } from 'rxjs';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth';
 import { ForumApiService } from '../../services/forum-api';
 import { UserApiService } from '../../services/user-api';
 import { ForumCardComponent, type ForumCardData } from '../forum-card/forum-card';
@@ -92,6 +94,8 @@ export class PrincipiaHome implements OnInit {
   constructor(
     private readonly forumApi: ForumApiService,
     private readonly userApi: UserApiService,
+    private readonly auth: AuthService,
+    private readonly router: Router,
   ) {}
 
   get visibleMyForums(): ForumCardData[] {
@@ -118,6 +122,11 @@ export class PrincipiaHome implements OnInit {
     this.searchingForums.set(query.length > 0);
     this.searchResults.set(query ? [] : null);
     this.searchTerms.next(query);
+  }
+
+  logout(): void {
+    this.auth.clearTokens();
+    void this.router.navigate(['/']);
   }
 
   updateMembership(event: { forum: ForumCardData; isMember: boolean }): void {
