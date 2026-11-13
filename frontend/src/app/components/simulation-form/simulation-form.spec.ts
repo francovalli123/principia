@@ -127,6 +127,39 @@ describe('SimulationForm', () => {
     expect(router.navigateByUrl).not.toHaveBeenCalled();
   });
 
+  it('shows an error and blocks creation below 15 degrees at zero height', () => {
+    component.selectPhenomenon('Oblique Projectile Motion');
+    component.form.controls.title.setValue('Tiro oblicuo');
+    component.parametersForm.setValue({
+      initial_velocity: 18,
+      angle: 14,
+      initial_height: 0,
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      'Con altura inicial de 0 m, el ángulo de lanzamiento debe ser de al menos 15°.',
+    );
+    expect(
+      (fixture.nativeElement.querySelector('.submit-button') as HTMLButtonElement).disabled,
+    ).toBe(true);
+
+    component.submit();
+    expect(simulationApi.createSimulation).not.toHaveBeenCalled();
+
+    component.parametersForm.controls['angle'].setValue(15);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('debe ser de al menos 15°');
+
+    component.parametersForm.setValue({
+      initial_velocity: 18,
+      angle: 14,
+      initial_height: 0.1,
+    });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('debe ser de al menos 15°');
+  });
+
   it('shows contextual modal actions when created from a publication flow', () => {
     route.snapshot.queryParamMap.get.mockImplementation((key: string) =>
       key === 'forumId' ? '23' : key === 'returnTo' ? 'forum-publication' : null,

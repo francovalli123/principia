@@ -43,6 +43,17 @@ export class SimulationForm implements OnInit {
   isSuccessModalOpen = false;
   createdSimulation?: Simulation;
 
+  get parameterCombinationError(): string {
+    if (this.selectedAdapter?.phenomenonType !== 'Oblique Projectile Motion') {
+      return '';
+    }
+
+    const { angle, initial_height } = this.parametersForm.getRawValue();
+    return initial_height === 0 && angle < 15
+      ? 'Con altura inicial de 0 m, el ángulo de lanzamiento debe ser de al menos 15°.'
+      : '';
+  }
+
   constructor(
     private readonly simulationApi: SimulationApiService,
     private readonly changeDetector: ChangeDetectorRef,
@@ -87,7 +98,13 @@ export class SimulationForm implements OnInit {
 
   submit(): void {
     const adapter = this.selectedAdapter;
-    if (!adapter || this.form.invalid || this.parametersForm.invalid || this.isSubmitting) {
+    if (
+      !adapter ||
+      this.form.invalid ||
+      this.parametersForm.invalid ||
+      this.isSubmitting ||
+      this.parameterCombinationError
+    ) {
       this.form.markAllAsTouched();
       this.parametersForm.markAllAsTouched();
       return;

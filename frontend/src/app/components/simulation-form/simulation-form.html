@@ -126,13 +126,16 @@
 			@if (errorMessage) {
 				<p class="form-error" role="alert">{{ errorMessage }}</p>
 			}
+			@if (parameterCombinationError) {
+				<p class="form-error" role="alert">{{ parameterCombinationError }}</p>
+			}
 
 			<footer class="form-actions">
 				<button class="cancel-button" type="button" (click)="cancel()">Cancelar</button>
 				<button
 					class="submit-button"
 					type="submit"
-					[disabled]="!selectedAdapter || form.invalid || parametersForm.invalid || isSubmitting"
+					[disabled]="!selectedAdapter || form.invalid || parametersForm.invalid || isSubmitting || parameterCombinationError"
 				>
 					{{ isSubmitting ? 'Creando…' : 'Crear simulación' }}
 				</button>

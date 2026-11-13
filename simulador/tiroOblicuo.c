@@ -74,7 +74,14 @@ int main(int argc, char *argv[]) {
     }
 
     float y0 = atof(argv[1]);
-    float angle = atof(argv[2]) * M_PI / 180.0;
+    float angleDegrees = atof(argv[2]);
+
+    if (angleDegrees < 15.0 && y0 == 0) {
+        printf("El ángulo de inclinación no puede ser menor a 15 grados.\n");
+        return 1;
+    }
+
+    float angle = angleDegrees * M_PI / 180.0;
     float v0 = atof(argv[3]);
 
     simInitialY = y0;
