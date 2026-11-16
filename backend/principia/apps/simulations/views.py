@@ -85,7 +85,6 @@ class SimulationView(PaginatedAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         title = title.strip()
-        description = request.data.get("description", "")
         parameters = request.data.get("parameters", {})
         visibility = request.data.get("visibility", "public")
         allow_cloning = request.data.get("allow_cloning", True)
@@ -105,7 +104,6 @@ class SimulationView(PaginatedAPIView):
 
         simulation_serializer = SimulationSerializer(data={
             "title": title,
-            "description": description,
             "phenomenon_type": phenomenon_type,
             "visibility": visibility,
             "allow_cloning": allow_cloning,
@@ -291,7 +289,6 @@ class SimulationCloneView(APIView):
                 owner=request.user,
                 phenomenon_type=source.phenomenon_type,
                 title=f"{source.title or source.phenomenon_type} - Copia",
-                description=source.description,
                 visibility="private",
                 allow_cloning=source.allow_cloning,
             )

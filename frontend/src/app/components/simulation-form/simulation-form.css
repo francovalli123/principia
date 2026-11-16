@@ -76,22 +76,15 @@
 	gap: 7px;
 }
 
-.field label,
-.description-panel > label {
+.field label {
 	color: #172137;
 	font-size: 12px;
 	font-weight: 650;
 }
 
-.description-panel > label span {
-	color: #8995a8;
-	font-weight: 500;
-}
-
 .field input,
 .field select,
-.number-input input,
-.description-panel textarea {
+.number-input input {
 	display: block;
 	width: 100%;
 	min-height: 38px;
@@ -104,15 +97,13 @@
 	font-size: 13px;
 }
 
-.field input::placeholder,
-.description-panel textarea::placeholder {
+.field input::placeholder {
 	color: #8794a8;
 }
 
 .field input:focus,
 .field select:focus,
-.number-input input:focus,
-.description-panel textarea:focus {
+.number-input input:focus {
 	border-color: #09629f;
 	outline: 3px solid rgb(9 98 159 / 14%);
 }
@@ -154,16 +145,6 @@
 	color: #71819a;
 	font-size: 11px;
 	transform: translateY(-50%);
-}
-
-.description-panel {
-	gap: 10px;
-}
-
-.description-panel textarea {
-	min-height: 92px;
-	resize: vertical;
-	line-height: 1.45;
 }
 
 .visibility-panel {

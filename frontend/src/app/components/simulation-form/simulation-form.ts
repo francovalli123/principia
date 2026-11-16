@@ -24,7 +24,6 @@ export class SimulationForm implements OnInit {
       nonNullable: true,
       validators: [Validators.required, Validators.pattern(/\S/), Validators.maxLength(255)],
     }),
-    description: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(2000)] }),
     phenomenonType: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     visibility: new FormControl<'public' | 'hidden' | 'private'>('public', {
       nonNullable: true,
@@ -119,7 +118,6 @@ export class SimulationForm implements OnInit {
     this.simulationApi
       .createSimulation(
         formValue.title.trim(),
-        formValue.description.trim(),
         adapter.phenomenonType,
         formValue.visibility,
         formValue.allowCloning,

@@ -22,7 +22,8 @@ describe('RegisterPage', () => {
 
   it('creates an account and then offers login', () => {
     authApi.signup.mockReturnValue(of({ username: 'carla', email: 'carla@example.com' }));
-    const component = TestBed.createComponent(RegisterPage).componentInstance;
+    const fixture = TestBed.createComponent(RegisterPage);
+    const component = fixture.componentInstance;
     component.form.setValue({
       first_name: 'Carla',
       last_name: 'Pérez',
@@ -43,7 +44,8 @@ describe('RegisterPage', () => {
   });
 
   it('does not send a registration if passwords do not match', () => {
-    const component = TestBed.createComponent(RegisterPage).componentInstance;
+    const fixture = TestBed.createComponent(RegisterPage);
+    const component = fixture.componentInstance;
     component.form.setValue({
       first_name: 'Carla',
       last_name: 'Pérez',
@@ -74,7 +76,8 @@ describe('RegisterPage', () => {
           }),
       ),
     );
-    const component = TestBed.createComponent(RegisterPage).componentInstance;
+    const fixture = TestBed.createComponent(RegisterPage);
+    const component = fixture.componentInstance;
     component.form.setValue({
       first_name: 'Carla',
       last_name: 'Pérez',
@@ -85,7 +88,23 @@ describe('RegisterPage', () => {
     });
 
     component.submit();
+    fixture.detectChanges();
 
     expect(component.errorMessage).toBe('This password is too common.');
+    expect(component.form.getRawValue()).toEqual({
+      first_name: 'Carla',
+      last_name: 'Pérez',
+      username: 'carla',
+      email: 'carla@example.com',
+      password: 'Physics2026!',
+      passwordConfirmation: 'Physics2026!',
+    });
+    expect(component.submitting).toBe(false);
+    expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain(
+      'This password is too common.',
+    );
+    expect(fixture.nativeElement.querySelector('button')?.textContent).toContain(
+      'Crear cuenta gratis',
+    );
   });
 });

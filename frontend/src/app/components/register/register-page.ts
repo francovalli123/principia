@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -45,6 +45,7 @@ export class RegisterPage {
   constructor(
     private readonly authApi: AuthApiService,
     private readonly router: Router,
+    private readonly changeDetector: ChangeDetectorRef,
   ) {}
 
   submit(): void {
@@ -63,7 +64,10 @@ export class RegisterPage {
     this.submitting = true;
     this.authApi
       .signup(first_name, last_name, username, email, password)
-      .pipe(finalize(() => (this.submitting = false)))
+      .pipe(finalize(() => {
+        this.submitting = false;
+        this.changeDetector.markForCheck();
+      }))
       .subscribe({
         next: () => {
           void this.router.navigate(['/login'], {
@@ -72,6 +76,7 @@ export class RegisterPage {
         },
         error: (error: unknown) => {
           this.errorMessage = this.getErrorMessage(error);
+          this.changeDetector.markForCheck();
         },
       });
   }

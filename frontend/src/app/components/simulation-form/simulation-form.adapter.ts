@@ -11,7 +11,6 @@ export interface SimulationFieldDefinition {
 export interface SimulationFormAdapter {
   phenomenonType: string;
   title: string;
-  description: string;
   fields: SimulationFieldDefinition[];
   toParameters(values: Record<string, number>): Record<string, number>;
 }
@@ -25,7 +24,6 @@ export interface ObliqueProjectileParameters extends Record<string, number> {
 export const obliqueProjectileMotionAdapter: SimulationFormAdapter = {
   phenomenonType: 'Oblique Projectile Motion',
   title: 'Movimiento de un proyectil',
-  description: 'Definí las condiciones iniciales del lanzamiento.',
   fields: [
     {
       name: 'initial_velocity',

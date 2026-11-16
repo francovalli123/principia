@@ -22,7 +22,6 @@ class SimulationCreationTests(TestCase):
             "/api/simulations/",
             {
                 "title": "Tiro oblicuo",
-                "description": "Un proyectil lanzado desde el suelo.",
                 "phenomenon_type": "Oblique Projectile Motion",
                 "visibility": "private",
                 "allow_cloning": False,
@@ -41,7 +40,6 @@ class SimulationCreationTests(TestCase):
         self.assertIsInstance(response.data["data"]["id"], int)
         simulation = Simulation.objects.get(pk=response.data["data"]["id"])
         self.assertEqual(simulation.title, "Tiro oblicuo")
-        self.assertEqual(simulation.description, "Un proyectil lanzado desde el suelo.")
         self.assertEqual(simulation.visibility, "private")
         self.assertFalse(simulation.allow_cloning)
         self.assertTrue(
@@ -226,7 +224,6 @@ class SimulationCloneAndFavouriteTests(TestCase):
             owner=self.owner,
             phenomenon_type="Oblique Projectile Motion",
             title="Tiro de prueba",
-            description="Parámetros de prueba",
             visibility="private",
             allow_cloning=True,
         )
@@ -279,7 +276,6 @@ class SimulationCloneAndFavouriteTests(TestCase):
         clone = Simulation.objects.get(pk=response.data["data"]["id"])
         self.assertEqual(clone.owner, self.member)
         self.assertEqual(clone.title, f"{self.simulation.title} - Copia")
-        self.assertEqual(clone.description, self.simulation.description)
         self.assertEqual(clone.visibility, "private")
         self.assertTrue(clone.allow_cloning)
         self.assertEqual(

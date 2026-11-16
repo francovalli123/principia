@@ -4,7 +4,7 @@ from apps.simulations.models import Simulation, Favourite, ObliqueProjectileMoti
 class SimulationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Simulation
-        fields = '__all__'
+        fields = ['id', 'owner', 'phenomenon_type', 'title', 'visibility', 'allow_cloning', 'creation_date']
         read_only_fields = ['owner']
 
 class FavouriteSerializer(serializers.ModelSerializer):

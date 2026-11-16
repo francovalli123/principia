@@ -115,7 +115,6 @@ describe('SimulationForm', () => {
 
     expect(simulationApi.createSimulation).toHaveBeenCalledWith(
       'Tiro oblicuo',
-      '',
       'Oblique Projectile Motion',
       'public',
       true,

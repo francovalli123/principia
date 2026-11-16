@@ -31,9 +31,9 @@ const user = {
   last_name: 'Lovelace',
 };
 const simulations: Simulation[] = [
-  { id: 1, owner: user, title: 'Public', description: '', phenomenon_type: 'Oblique Projectile Motion', visibility: 'public', allow_cloning: true, creation_date: '' },
-  { id: 2, owner: user, title: 'Hidden', description: '', phenomenon_type: 'Dynamics', visibility: 'hidden', allow_cloning: true, creation_date: '' },
-  { id: 3, owner: user, title: 'Private', description: '', phenomenon_type: 'Dynamics', visibility: 'private', allow_cloning: true, creation_date: '' },
+  { id: 1, owner: user, title: 'Public', phenomenon_type: 'Oblique Projectile Motion', visibility: 'public', allow_cloning: true, creation_date: '' },
+  { id: 2, owner: user, title: 'Hidden', phenomenon_type: 'Dynamics', visibility: 'hidden', allow_cloning: true, creation_date: '' },
+  { id: 3, owner: user, title: 'Private', phenomenon_type: 'Dynamics', visibility: 'private', allow_cloning: true, creation_date: '' },
 ];
 
 describe('ProfilePage', () => {

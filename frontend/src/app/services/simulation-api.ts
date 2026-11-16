@@ -101,7 +101,6 @@ export class SimulationApiService {
 
     createSimulation(
         title: string,
-        description: string,
         phenomenonType: string,
         visibility: string,
         allowCloning: boolean,
@@ -109,7 +108,6 @@ export class SimulationApiService {
     ): Observable<SimulationCreationResponse> {
         return this.api.post<SimulationCreationResponse>('simulations/', {
             title,
-            description,
             phenomenon_type: phenomenonType,
             visibility,
             allow_cloning: allowCloning,

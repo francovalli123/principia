@@ -89,7 +89,6 @@ describe('PostCard', () => {
           last_name: 'User',
         },
         title: 'Tiro oblicuo',
-        description: '',
         phenomenon_type: 'Oblique Projectile Motion',
         visibility: 'public',
         allow_cloning: true,
