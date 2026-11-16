@@ -112,36 +112,6 @@
   color: #52627a;
 }
 
-.favourite-mark {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid #dce4ee;
-  border-radius: 50%;
-  color: #61738e;
-}
-
-.favourite-mark svg {
-  width: 17px;
-  height: 17px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
-}
-
-.favourite-mark.is-favourite {
-  border-color: #ffe0ad;
-  color: #f08a00;
-}
-
-.favourite-mark.is-favourite svg {
-  fill: #fff4e2;
-}
-
 .select-button {
   min-height: 34px;
   flex: 0 0 auto;
@@ -297,8 +267,4 @@
     font-size: 11px;
   }
 
-  .favourite-mark {
-    width: 30px;
-    height: 30px;
-  }
 }

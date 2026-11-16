@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, switchMap, throwIfEmpty, timeout } from 'rxjs';
+import { switchMap, throwIfEmpty, timeout } from 'rxjs';
 import { Simulation } from '../../../models/simulation';
 import { SimulationApiService } from '../../services/simulation-api';
 import { UserApiService } from '../../services/user-api';
@@ -16,7 +16,6 @@ export class SelectSimulationPage implements OnInit {
   forumId: number | null = null;
   isForumPublicationFlow = false;
   simulations: Simulation[] = [];
-  favouriteIds = new Set<number>();
   isLoading = true;
   loadError = '';
 
@@ -55,22 +54,15 @@ export class SelectSimulationPage implements OnInit {
         if (!Number.isSafeInteger(user.id) || user.id <= 0) {
           throw new Error('El usuario actual no tiene un identificador válido.');
         }
-        return forkJoin({
-          simulations: this.simulationApi.getByOwner(user.id),
-          favourites: this.simulationApi.getFavourites(),
-        });
+        return this.simulationApi.getByOwner(user.id);
       }),
       timeout(15000),
       throwIfEmpty(() => new Error('La carga de simulaciones no devolvió datos.')),
     ).subscribe({
-      next: ({ simulations, favourites }) => {
-        this.favouriteIds = new Set(favourites.map((favourite) => favourite.simulation));
-        this.simulations = [...simulations].sort((a, b) => {
-          const favouriteDifference =
-            Number(this.favouriteIds.has(b.id)) - Number(this.favouriteIds.has(a.id));
-          if (favouriteDifference !== 0) return favouriteDifference;
-          return new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime();
-        });
+      next: (simulations) => {
+        this.simulations = [...simulations].sort(
+          (a, b) => new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime(),
+        );
         this.isLoading = false;
         this.changeDetector.markForCheck();
       },

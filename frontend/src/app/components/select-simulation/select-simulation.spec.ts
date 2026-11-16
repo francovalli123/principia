@@ -19,7 +19,6 @@ describe('SelectSimulationPage', () => {
   };
   const simulationApi = {
     getByOwner: vi.fn(),
-    getFavourites: vi.fn(),
   };
   const userApi = { getCurrentUser: vi.fn() };
   const router = { navigate: vi.fn() };
@@ -34,7 +33,6 @@ describe('SelectSimulationPage', () => {
     routeForumId = '23';
     userApi.getCurrentUser.mockReturnValue(of({ id: 8 }));
     simulationApi.getByOwner.mockReturnValue(of([firstSimulation]));
-    simulationApi.getFavourites.mockReturnValue(of([{ id: 2, simulation: 17, marked_date: '' }]));
 
     await TestBed.configureTestingModule({
       imports: [SelectSimulationPage],
@@ -58,12 +56,11 @@ describe('SelectSimulationPage', () => {
     fixture.detectChanges();
   });
 
-  it('loads the current user simulations and their favourite state', () => {
+  it('loads the current user simulations without favorite indicators', () => {
     expect(simulationApi.getByOwner).toHaveBeenCalledWith(8);
-    expect(simulationApi.getFavourites).toHaveBeenCalled();
     expect(fixture.nativeElement.textContent).toContain('Tiro oblicuo');
     expect(fixture.nativeElement.textContent).toContain('Pública');
-    expect(fixture.nativeElement.querySelector('.favourite-mark.is-favourite')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.favourite-mark')).toBeNull();
   });
 
   it('continues to the publication form with the selected simulation and forum', () => {
@@ -87,7 +84,7 @@ describe('SelectSimulationPage', () => {
     });
   });
 
-  it('loads the generic my simulations page without forum actions', async () => {
+  it('loads the generic my simulations page without forum actions or favorite markers', async () => {
     routeForumId = null;
     const genericFixture = TestBed.createComponent(SelectSimulationPage);
     genericFixture.detectChanges();
@@ -95,6 +92,7 @@ describe('SelectSimulationPage', () => {
     expect(genericFixture.componentInstance.isForumPublicationFlow).toBe(false);
     expect(genericFixture.nativeElement.textContent).toContain('Mis simulaciones');
     expect(genericFixture.nativeElement.querySelector('.select-button')).toBeNull();
+    expect(genericFixture.nativeElement.querySelector('.favourite-mark')).toBeNull();
     expect(genericFixture.nativeElement.textContent).not.toContain('Crear una simulación nueva');
   });
 
