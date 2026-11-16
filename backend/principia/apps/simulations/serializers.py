@@ -37,4 +37,8 @@ class ObliqueProjectileMotionSerializer(serializers.ModelSerializer):
         extra_fields = received_fields - allowed_fields
         if extra_fields:
             raise serializers.ValidationError({"unknown_fields": list(extra_fields)})
+        if attrs["initial_height"] == 0 and attrs["angle"] < 15:
+            raise serializers.ValidationError({
+                "angle": "Must be at least 15 degrees when initial_height is 0."
+            })
         return attrs

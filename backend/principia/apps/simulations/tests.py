@@ -88,6 +88,25 @@ class SimulationCreationTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data["message"], "title must be a string")
 
+    def test_rejects_low_angle_when_initial_height_is_zero(self):
+        response = self.client.post(
+            "/api/simulations/",
+            {
+                "title": "Tiro oblicuo",
+                "phenomenon_type": "Oblique Projectile Motion",
+                "parameters": {
+                    "initial_velocity": 18,
+                    "angle": 14,
+                    "initial_height": 0,
+                },
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("angle", response.data["message"])
+        self.assertFalse(Simulation.objects.exists())
+
     def test_owner_can_update_simulation_metadata_and_parameters(self):
         simulation = Simulation.objects.create(
             owner=self.user,
