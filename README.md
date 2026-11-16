@@ -17,7 +17,9 @@ pueden consultarse desde el perfil de su dueño.
 
 ## Demostración
 
-![Demostración de una simulación de tiro oblicuo en Principia](frontend/src/assets/principia%20demo.gif)
+<p align="center">
+  <img src="frontend/src/assets/principia%20demo.gif" alt="Demostración de una simulación de tiro oblicuo en Principia" width="520" />
+</p>
 
 ### Contenido
 
