@@ -131,7 +131,8 @@ describe('PostCard', () => {
 
     expect(fixture.nativeElement.textContent).toContain('A test publication');
     expect(fixture.nativeElement.textContent).toContain('Publication details');
-    expect(fixture.nativeElement.textContent).toContain('test-user');
+    expect(fixture.nativeElement.querySelector('.author-name').textContent.trim()).toBe('Test User');
+    expect(fixture.nativeElement.querySelector('.author-name').textContent).not.toContain('test-user');
     expect(fixture.nativeElement.textContent).toContain('Todavía no hay comentarios.');
   });
 
@@ -191,7 +192,17 @@ describe('PostCard', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Comentarios');
     expect(fixture.nativeElement.textContent).toContain('Useful comment');
-    expect(fixture.nativeElement.textContent).toContain('commenter');
+    expect(fixture.nativeElement.textContent).toContain('Comment Author');
+    expect(fixture.nativeElement.textContent).not.toContain('commenter');
+  });
+
+  it('falls back to the username when the author has no first or last name', () => {
+    expect(component.authorName({
+      id: 12,
+      username: 'test-user',
+      first_name: ' ',
+      last_name: '',
+    })).toBe('test-user');
   });
 
   it('only shows a delete button for the current user’s comment', () => {

@@ -155,6 +155,7 @@ export class ProfilePage implements OnInit, OnDestroy {
         this.clearPicturePreview();
         this.isUploadingPicture.set(false);
         input.value = '';
+        this.toast.success('Tu foto de perfil se actualizó correctamente.');
       },
       error: (error: unknown) => {
         console.error('Failed to update profile picture', error);

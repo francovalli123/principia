@@ -197,6 +197,7 @@ describe('ProfilePage', () => {
     expect(fixture.componentInstance.profile()?.profile_picture).toBe('/media/new-avatar.png');
     expect(fixture.nativeElement.querySelector('.profile-picture').getAttribute('src'))
       .toBe('/media/new-avatar.png');
+    expect(toast.success).toHaveBeenCalledWith('Tu foto de perfil se actualizó correctamente.');
   });
 
   it('opens the chosen simulation in a modal and closes it from the close button', async () => {
