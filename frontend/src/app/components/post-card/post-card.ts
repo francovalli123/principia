@@ -130,13 +130,29 @@ export class PostCard implements OnInit, OnChanges {
   }
 
   authorName(author: Author | number | null | undefined): string {
-    if (typeof author === 'object' && author !== null && typeof author.username === 'string') {
-      return author.username;
+    if (typeof author === 'object' && author !== null) {
+      const firstName = typeof author.first_name === 'string' ? author.first_name.trim() : '';
+      const lastName = typeof author.last_name === 'string' ? author.last_name.trim() : '';
+      const fullName = [firstName, lastName].filter(Boolean).join(' ');
+      if (fullName) return fullName;
+
+      if (typeof author.username === 'string' && author.username.trim()) {
+        return author.username.trim();
+      }
     }
     return 'Usuario';
   }
 
   authorInitials(author: Author | number | null | undefined): string {
+    if (typeof author === 'object' && author !== null) {
+      const nameParts = [author.first_name, author.last_name]
+        .filter((name): name is string => typeof name === 'string' && name.trim().length > 0)
+        .map((name) => name.trim());
+      if (nameParts.length > 0) {
+        return nameParts.map((name) => name[0]).join('').slice(0, 2).toUpperCase();
+      }
+    }
+
     return this.authorName(author).slice(0, 2).toUpperCase();
   }
 

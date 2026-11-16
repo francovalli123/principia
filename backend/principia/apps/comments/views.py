@@ -81,7 +81,7 @@ class CommentView(PaginatedAPIView):
         if not self._check_publication_access(request, publication):
             return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
-        result = Comment.objects.filter(publication=publication).order_by("-creation_date")
+        result = Comment.objects.filter(publication=publication).order_by("creation_date", "id")
         # Serialization receives only the requested page, not all the comments
         page = self.paginate_queryset(result, request)
         serializer = CommentSerializer(page if page is not None else result, many=True)
