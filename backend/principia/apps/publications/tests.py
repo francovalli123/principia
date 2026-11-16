@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 from rest_framework.test import APITestCase
 
@@ -110,4 +112,45 @@ class PublicationAccessTests(APITestCase):
 		self.assertEqual(
 			response.data["data"]["owner"]["profile_picture"],
 			"/media/profile_pictures/avatar.png",
+		)
+
+	def test_creating_forum_publication_broadcasts_serialized_publication(self):
+		self.client.force_authenticate(user=self.owner)
+
+		with patch("apps.publications.views.publish_forum_event") as publish_event:
+			response = self.client.post(
+				"/api/publications/",
+				{
+					"title": "New forum publication",
+					"description": "Live update",
+					"simulation": self.publication.simulation_id,
+					"forum": self.forum.id,
+				},
+				format="json",
+			)
+
+		self.assertEqual(response.status_code, 201)
+		publish_event.assert_called_once_with(
+			self.forum.id,
+			"publication_created",
+			response.data["data"],
+		)
+
+	def test_deleting_forum_publication_broadcasts_visibility_metadata(self):
+		self.client.force_authenticate(user=self.owner)
+
+		with patch("apps.publications.views.publish_forum_event") as publish_event:
+			response = self.client.delete(f"/api/publications/{self.publication.id}/")
+
+		self.assertEqual(response.status_code, 204)
+		self.assertFalse(Publication.objects.filter(id=self.publication.id).exists())
+		publish_event.assert_called_once_with(
+			self.forum.id,
+			"publication_deleted",
+			{
+				"id": self.publication.id,
+				"forum": self.forum.id,
+				"visibility": "private",
+				"simulation_owner_id": self.owner.id,
+			},
 		)

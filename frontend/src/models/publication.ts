@@ -1,4 +1,3 @@
-import { Forum } from "./forum";
 import { Author } from "./user";
 import { Simulation } from "./simulation";
 export interface Publication {
@@ -7,6 +6,6 @@ export interface Publication {
     description: string;
     simulation: number | Simulation;
     owner: Author | number;
-    forum: Forum | null;
+    forum: number | null;
     creation_date: string;
 }

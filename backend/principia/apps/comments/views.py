@@ -1,16 +1,36 @@
+import hashlib
+import secrets
+from datetime import timedelta
+
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework.views import APIView 
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 
 from apps.common.permissions import IsOwnerOrReadOnly, SimulationPermission
 from apps.common.pagination import PaginatedAPIView
+from apps.common.realtime import publish_forum_event
 from apps.publications.models import Publication
-from .models import Comment
+from .models import Comment, CommentSocketTicket
 from .serializers import CommentSerializer
+
+class CommentSocketTicketView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        now = timezone.now()
+        CommentSocketTicket.objects.filter(expires_at__lte=now).delete()
+        ticket = secrets.token_urlsafe(32)
+        CommentSocketTicket.objects.create(
+            user=request.user,
+            token_hash=hashlib.sha256(ticket.encode("utf-8")).hexdigest(),
+            expires_at=now + timedelta(seconds=30),
+        )
+        return Response({"ticket": ticket}, status=status.HTTP_201_CREATED)
 
 #CommentView
 class CommentView(PaginatedAPIView):
@@ -80,8 +100,14 @@ class CommentView(PaginatedAPIView):
             if not self._check_publication_access(request, publication):
                 return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
 
-            serializer.save(owner=request.user)
-            return Response({"status": "success", "data": serializer.data}, status=status.HTTP_201_CREATED)
+            comment = serializer.save(owner=request.user)
+            response_data = CommentSerializer(comment).data
+            publish_forum_event(
+                publication.forum_id,
+                "comment_created",
+                response_data,
+            )
+            return Response({"status": "success", "data": response_data}, status=status.HTTP_201_CREATED)
 
         return Response({"status": "error", "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -93,5 +119,13 @@ class CommentView(PaginatedAPIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
         self.check_object_permissions(request,result) 
+        forum_id = result.publication.forum_id
+        comment_id = result.id
+        publication_id = result.publication_id
         result.delete()
+        publish_forum_event(
+            forum_id,
+            "comment_deleted",
+            {"id": comment_id, "publication": publication_id},
+        )
         return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_204_NO_CONTENT)

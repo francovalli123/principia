@@ -8,6 +8,7 @@ from django.db.models import Q
 
 from apps.common.permissions import IsOwnerOrReadOnly, SimulationPermission
 from apps.common.pagination import PaginatedAPIView
+from apps.common.realtime import publish_forum_event
 from .models import Publication
 from .serializers import PublicationSerializer
 
@@ -78,13 +79,24 @@ class PublicationView(PaginatedAPIView):
             if forum is not None and not forum.members.filter(id=request.user.id).exists():
                 return Response({"status": "error", "message": "You are not a member of this forum."}, status=status.HTTP_403_FORBIDDEN)
             self.check_object_permissions(request, simulation)
-            serializer.save(owner=request.user)
-            return Response({"status": "success", "data": serializer.data}, status = status.HTTP_201_CREATED)
+            publication = serializer.save(owner=request.user)
+            publication_data = PublicationSerializer(publication).data
+            if forum is not None:
+                publish_forum_event(forum.id, "publication_created", publication_data)
+            return Response({"status": "success", "data": publication_data}, status = status.HTTP_201_CREATED)
 
         return Response({"status": "error", "message": serializer.errors}, status = status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id=None, *args, **kwargs):
         result = get_object_or_404(Publication, id=id)
         self.check_object_permissions(request,result) 
+        forum_id = result.forum_id
+        publication_data = {
+            "id": result.id,
+            "forum": forum_id,
+            "visibility": result.simulation.visibility,
+            "simulation_owner_id": result.simulation.owner_id,
+        }
         result.delete()
+        publish_forum_event(forum_id, "publication_deleted", publication_data)
         return Response({"status": "success", "data": "Record Deleted"}, status=status.HTTP_204_NO_CONTENT)

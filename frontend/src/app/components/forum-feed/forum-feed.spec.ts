@@ -11,6 +11,9 @@ import { CommentApiService } from '../../services/comment-api';
 import { UserApiService } from '../../services/user-api';
 import { ProfileApiService } from '../../services/profile-api';
 import { SimulationApiService } from '../../services/simulation-api';
+import { CommentRealtimeEvent, CommentRealtimeService } from '../../services/comment-realtime';
+import { Comment } from '../../../models/comment';
+import { Publication } from '../../../models/publication';
 
 describe('ForumFeed', () => {
   let component: ForumFeed;
@@ -35,6 +38,13 @@ describe('ForumFeed', () => {
     ])),
   };
   const commentApi = { getComments: () => of({ status: 'ok', data: { count: 0, next: null, previous: null, results: [] } }) };
+  let onRealtimeEvent: (event: CommentRealtimeEvent) => void = () => {};
+  const commentRealtime = {
+    connect: vi.fn((_forumId: number, onEvent: (event: CommentRealtimeEvent) => void) => {
+      onRealtimeEvent = onEvent;
+      return vi.fn();
+    }),
+  };
   const profileApi = {
     profileUpdated$: EMPTY,
     getProfile: vi.fn(() => of({
@@ -52,6 +62,10 @@ describe('ForumFeed', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    commentRealtime.connect.mockImplementation((_forumId, onEvent) => {
+      onRealtimeEvent = onEvent;
+      return vi.fn();
+    });
     publicationApi.getPaginatedByForum.mockReturnValue(
       of({ status: 'ok', data: { count: 0, next: null, previous: null, results: [] } }),
     );
@@ -61,6 +75,7 @@ describe('ForumFeed', () => {
         { provide: ForumApiService, useValue: forumApi },
         { provide: PublicationApiService, useValue: publicationApi },
         { provide: CommentApiService, useValue: commentApi },
+        { provide: CommentRealtimeService, useValue: commentRealtime },
         { provide: ProfileApiService, useValue: profileApi },
         { provide: UserApiService, useValue: userApi },
         { provide: SimulationApiService, useValue: simulationApi },
@@ -132,6 +147,62 @@ describe('ForumFeed', () => {
   it('loads the current user ID for own-comment actions', () => {
     expect(userApi.getCurrentUser).toHaveBeenCalledOnce();
     expect(component.currentUserId).toBe(12);
+  });
+
+  it('subscribes to forum events and applies comment creation and deletion', () => {
+    const publication = { id: 31 } as Publication;
+    component.posts.set([{
+      publication,
+      comments: [],
+      nextCommentPage: null,
+      loadingComments: false,
+    }]);
+    const comment = {
+      id: 54,
+      publication: 31,
+      content: 'En tiempo real',
+      owner: { id: 15, username: 'other-user' },
+      creation_date: '2026-11-16T12:00:00Z',
+    } as Comment;
+
+    expect(commentRealtime.connect).toHaveBeenCalledWith(23, expect.any(Function));
+    onRealtimeEvent({ type: 'comment.created', comment });
+    expect(component.posts()[0].comments).toEqual([comment]);
+
+    component.addComment(component.posts()[0], comment);
+    expect(component.posts()[0].comments).toEqual([comment]);
+
+    onRealtimeEvent({ type: 'comment.deleted', id: 54, publication: 31 });
+    expect(component.posts()[0].comments).toEqual([]);
+  });
+
+  it('inserts and removes publications received from the forum event stream', () => {
+    const publication = {
+      id: 62,
+      title: 'Nueva publicación',
+      description: 'Creada desde otra sesión',
+      simulation: 15,
+      owner: 18,
+      forum: 23,
+      creation_date: '2026-11-16T12:00:00Z',
+    } as Publication;
+
+    onRealtimeEvent({ type: 'publication.created', publication });
+    expect(component.posts().map((post) => post.publication.id)).toEqual([62]);
+
+    onRealtimeEvent({ type: 'publication.created', publication });
+    expect(component.posts()).toHaveLength(1);
+
+    onRealtimeEvent({ type: 'publication.deleted', publication_id: 62 });
+    expect(component.posts()).toEqual([]);
+  });
+
+  it('disconnects the forum event stream when destroyed', () => {
+    const disconnect = commentRealtime.connect.mock.results[0]?.value as ReturnType<typeof vi.fn>;
+
+    fixture.destroy();
+
+    expect(disconnect).toHaveBeenCalledOnce();
   });
 
   it('does not render a search field outside the home page', () => {

@@ -4,31 +4,50 @@ import { Injectable } from '@angular/core';
     providedIn: 'root'
 })
 export class AuthService {
+    private readonly storage = getStorage('sessionStorage');
+
+    constructor() {
+        if (typeof window === 'undefined') return;
+
+        getStorage('localStorage')?.removeItem('access_token');
+        getStorage('localStorage')?.removeItem('refresh_token');
+        if (window.opener) this.clearTokens();
+    }
+
     setTokens(access: string, refresh: string): void {
-        localStorage.setItem('access_token', access);
-        localStorage.setItem('refresh_token', refresh);
+        this.storage?.setItem('access_token', access);
+        this.storage?.setItem('refresh_token', refresh);
     }
     setAccessToken(access: string): void {
-        localStorage.setItem('access_token', access);
+        this.storage?.setItem('access_token', access);
     }
 
     setRefreshToken(refresh: string): void {
-        localStorage.setItem('refresh_token', refresh);
+        this.storage?.setItem('refresh_token', refresh);
     }
     getAccessToken(): string | null {
-        return localStorage.getItem('access_token');
+        return this.storage?.getItem('access_token') ?? null;
     }
 
     getRefreshToken(): string | null {
-        return localStorage.getItem('refresh_token');
+        return this.storage?.getItem('refresh_token') ?? null;
     }
 
     clearTokens(): void {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        this.storage?.removeItem('access_token');
+        this.storage?.removeItem('refresh_token');
     }
 
     isLoggedIn(): boolean {
         return this.getAccessToken() !== null;
+    }
+}
+
+function getStorage(name: 'localStorage' | 'sessionStorage'): Storage | null {
+    if (typeof window === 'undefined') return null;
+    try {
+        return window[name] ?? null;
+    } catch {
+        return null;
     }
 }

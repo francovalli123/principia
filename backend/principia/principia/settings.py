@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+import sys
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
@@ -47,6 +48,7 @@ ALLOWED_HOSTS = [host for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").spl
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -55,6 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
+    'channels',
     'apps.simulations',
     'apps.publications',
     'apps.forums',
@@ -101,6 +104,23 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'principia.wsgi.application'
+ASGI_APPLICATION = 'principia.asgi.application'
+
+REDIS_URL = os.environ.get("REDIS_URL")
+RUNNING_TESTS = any(argument in {"test", "pytest"} for argument in sys.argv)
+if not DEBUG and not REDIS_URL and not RUNNING_TESTS:
+    raise ImproperlyConfigured("REDIS_URL must be configured for real-time events")
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": (
+            "channels_redis.core.RedisChannelLayer"
+            if REDIS_URL
+            else "channels.layers.InMemoryChannelLayer"
+        ),
+        "CONFIG": {"hosts": [REDIS_URL]} if REDIS_URL else {},
+    },
+}
 
 
 # Database

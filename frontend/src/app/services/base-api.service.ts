@@ -27,6 +27,13 @@ export class BaseApiService {
         return `${this.baseUrl}/${path.replace(/^\/+/, '')}`;   // Removes duplicate slash if any (e.g. ./api//users)
     }
 
+    getWebSocketUrl(path: string): string {
+        const url = new URL(this.baseUrl);
+        url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+        url.pathname = path.startsWith('/') ? path : `/${path}`;
+        return url.toString();
+    }
+
     // Generic HTTP methods
 
     get<T>(path: string, options: ApiRequestOptions = {}): Observable<T> {

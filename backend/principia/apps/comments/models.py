@@ -1,5 +1,5 @@
 from django.db import models
-from django.conf import settings 
+from django.conf import settings
 from django.core.validators import MinLengthValidator, MaxLengthValidator
 
 class Comment(models.Model):
@@ -20,3 +20,9 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.owner.username}"
+
+
+class CommentSocketTicket(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    token_hash = models.CharField(max_length=64, unique=True)
+    expires_at = models.DateTimeField(db_index=True)

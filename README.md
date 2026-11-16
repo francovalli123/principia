@@ -38,6 +38,13 @@ Django ORM administra los modelos y sus relaciones; los serializadores de DRF
 validan las solicitudes y generan las respuestas JSON. La base configurada por
 defecto es SQLite.
 
+Las publicaciones y comentarios del foro se sincronizan en tiempo real mediante
+WebSockets de Django Channels. En desarrollo se usa una capa de canales en memoria. Para
+producción, instalar las dependencias de `backend/requirements.txt`, configurar
+`REDIS_URL` y servir `principia.asgi:application` con un servidor ASGI; todos los
+procesos deben compartir la misma instancia Redis. El origen del frontend debe
+estar incluido en `DJANGO_CORS_ALLOWED_ORIGINS` para permitir la conexión.
+
 ## Funcionalidades técnicas
 
 ### Autenticación y protección de datos

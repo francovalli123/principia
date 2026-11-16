@@ -18,6 +18,10 @@ interface CommentResponse {
     data: Comment;
 }
 
+interface CommentSocketTicketResponse {
+    ticket: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -33,6 +37,10 @@ export class CommentApiService {
 
     getComment(id: number): Observable<Comment> {
         return this.api.get<Comment>(`comments/${id}/`);
+    }
+
+    getSocketTicket(): Observable<CommentSocketTicketResponse> {
+        return this.api.post<CommentSocketTicketResponse>('comments/socket-ticket/', {});
     }
 
     createComment(publicationId: number, content: string): Observable<Comment> {

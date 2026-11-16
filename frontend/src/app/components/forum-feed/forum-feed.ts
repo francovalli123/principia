@@ -11,6 +11,8 @@ import { PublicationApiService } from '../../services/publication-api';
 import { ProfileApiService } from '../../services/profile-api';
 import { UserApiService } from '../../services/user-api';
 import { SimulationApiService } from '../../services/simulation-api';
+import { CommentRealtimeService } from '../../services/comment-realtime';
+import type { CommentRealtimeEvent } from '../../services/comment-realtime';
 import { PostCard } from '../../components/post-card/post-card';
 import { FormsModule } from '@angular/forms';
 
@@ -57,6 +59,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
   private page = 1;
   private observer?: IntersectionObserver;
   private targetPublicationId: number | null = null;
+  private disconnectCommentRealtime?: () => void;
   forumId!: number;
 
   constructor(
@@ -66,6 +69,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     private readonly profileApi: ProfileApiService,
     private readonly userApi: UserApiService,
     private readonly simulationApi: SimulationApiService,
+    private readonly commentRealtime: CommentRealtimeService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
   ) {}
@@ -79,6 +83,10 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.forumId = routeForumId;
+    this.disconnectCommentRealtime = this.commentRealtime.connect(
+      this.forumId,
+      (event) => this.applyCommentRealtimeEvent(event),
+    );
     const targetPublicationId = Number(this.route.snapshot.queryParamMap.get('publicationId'));
     if (Number.isSafeInteger(targetPublicationId) && targetPublicationId > 0) {
       this.targetPublicationId = targetPublicationId;
@@ -125,6 +133,7 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.observer?.disconnect();
+    this.disconnectCommentRealtime?.();
   }
 
   loadMore(): void {
@@ -188,8 +197,51 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
   addComment(post: FeedPost, comment: Comment): void {
     this.updatePost(post.publication.id, (current) => ({
       ...current,
-      comments: [...current.comments, comment],
+      comments: current.comments.some((existing) => existing.id === comment.id)
+        ? current.comments
+        : [...current.comments, comment],
     }));
+  }
+
+  private applyCommentRealtimeEvent(event: CommentRealtimeEvent): void {
+    if (event.type === 'comment.created') {
+      this.updatePost(event.comment.publication, (current) => ({
+        ...current,
+        comments: current.comments.some((comment) => comment.id === event.comment.id)
+          ? current.comments
+          : [...current.comments, event.comment],
+      }));
+      return;
+    }
+
+    if (event.type === 'comment.deleted') {
+      this.updatePost(event.publication, (current) => ({
+        ...current,
+        comments: current.comments.filter((comment) => comment.id !== event.id),
+      }));
+      return;
+    }
+
+    if (event.type === 'publication.created') {
+      if (
+        event.publication.forum !== this.forumId ||
+        this.posts().some((post) => post.publication.id === event.publication.id)
+      ) {
+        return;
+      }
+
+      const post: FeedPost = {
+        publication: event.publication,
+        comments: [],
+        nextCommentPage: 1,
+        loadingComments: true,
+      };
+      this.posts.update((posts) => [post, ...posts]);
+      this.loadInitialComments(post);
+      return;
+    }
+
+    this.removePublication(event.publication_id);
   }
 
   removeComment(post: FeedPost, commentId: number): void {
@@ -309,12 +361,15 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     console.info(`Loading publications for forum ${this.forumId}, page ${requestedPage}`);
     this.publicationApi.getPaginatedByForum(requestedPage, this.forumId).subscribe({
       next: (response) => {
-        const newPosts = response.data.results.map((publication) => ({
-          publication,
-          comments: [],
-          nextCommentPage: 1,
-          loadingComments: true,
-        }));
+        const existingIds = new Set(this.posts().map((post) => post.publication.id));
+        const newPosts = response.data.results
+          .filter((publication) => !existingIds.has(publication.id))
+          .map((publication) => ({
+            publication,
+            comments: [],
+            nextCommentPage: 1,
+            loadingComments: true,
+          }));
         console.info(`Loaded ${newPosts.length} publications for forum ${this.forumId}, page ${requestedPage}`);
         this.posts.update((current) => [...current, ...newPosts]);
         this.page = requestedPage + 1;

@@ -11,7 +11,14 @@ describe('auth interceptor refresh flow', () => {
   let auth: AuthService;
 
   beforeEach(() => {
-    localStorage.clear();
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: createStorage(),
+    });
+    Object.defineProperty(window, 'sessionStorage', {
+      configurable: true,
+      value: createStorage(),
+    });
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([errorInterceptor, authInterceptor])),
@@ -25,7 +32,6 @@ describe('auth interceptor refresh flow', () => {
 
   afterEach(() => {
     httpTesting.verify();
-    localStorage.clear();
     vi.restoreAllMocks();
   });
 
@@ -86,3 +92,15 @@ describe('auth interceptor refresh flow', () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 });
+
+function createStorage(): Storage {
+  const values = new Map<string, string>();
+  return {
+    get length() { return values.size; },
+    clear: () => values.clear(),
+    getItem: (key) => values.get(key) ?? null,
+    key: (index) => Array.from(values.keys())[index] ?? null,
+    removeItem: (key) => values.delete(key),
+    setItem: (key, value) => values.set(key, String(value)),
+  };
+}

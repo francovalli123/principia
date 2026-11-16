@@ -48,6 +48,12 @@ describe('BaseApiService', () => {
         expect(backend.request?.method).toBe('GET');
     });
 
+    it('builds a WebSocket URL from the API host', () => {
+        expect(api.getWebSocketUrl('/ws/forums/23/comments/')).toBe(
+            'ws://127.0.0.1:8000/ws/forums/23/comments/'
+        );
+    });
+
     it('forwards headers to API requests', () => {
         const headers = new HttpHeaders({ Authorization: 'Bearer access-token' });
 

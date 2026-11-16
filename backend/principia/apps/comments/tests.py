@@ -1,7 +1,10 @@
+import hashlib
+from unittest.mock import patch
+
 from django.test import TestCase
 from rest_framework.test import APITestCase
 
-from apps.comments.models import Comment
+from apps.comments.models import Comment, CommentSocketTicket
 from apps.forums.models import Forum, ForumMembership
 from apps.publications.models import Publication
 from apps.simulations.models import Simulation
@@ -45,7 +48,7 @@ class CommentAccessTests(APITestCase):
 		owner = User.objects.create_user(
 			username="publication-owner",
 			email="publication-owner@example.com",
-			******,
+			password="password123",
 		)
 		forum = Forum.objects.create(name="Physics", owner=owner)
 		ForumMembership.objects.create(forum=forum, user=self.user)
@@ -63,14 +66,54 @@ class CommentAccessTests(APITestCase):
 		)
 		self.client.force_authenticate(user=self.user)
 
-		response = self.client.post(
-			"/api/comments/",
-			{"publication": publication.id, "content": "A comment"},
-			format="json",
-		)
+		with patch("apps.comments.views.publish_forum_event") as publish_event:
+			response = self.client.post(
+				"/api/comments/",
+				{"publication": publication.id, "content": "A comment"},
+				format="json",
+			)
 
 		self.assertEqual(response.status_code, 201)
 		self.assertTrue(Comment.objects.filter(publication=publication, owner=self.user).exists())
+		publish_event.assert_called_once_with(
+			forum.id,
+			"comment_created",
+			response.data["data"],
+		)
+
+	def test_authenticated_user_can_request_a_short_lived_socket_ticket(self):
+		self.client.force_authenticate(user=self.user)
+
+		response = self.client.post("/api/comments/socket-ticket/", {}, format="json")
+
+		self.assertEqual(response.status_code, 201)
+		ticket = response.data["ticket"]
+		stored_ticket = CommentSocketTicket.objects.get(user=self.user)
+		self.assertNotEqual(stored_ticket.token_hash, ticket)
+		self.assertEqual(stored_ticket.token_hash, hashlib.sha256(ticket.encode()).hexdigest())
+
+	def test_comment_deletion_broadcasts_after_successful_delete(self):
+		forum = Forum.objects.create(name="Physics", owner=self.user)
+		ForumMembership.objects.create(forum=forum, user=self.user)
+		self.publication.forum = forum
+		self.publication.save(update_fields=["forum"])
+		comment = Comment.objects.create(
+			owner=self.user,
+			publication=self.publication,
+			content="Remove this comment",
+		)
+		self.client.force_authenticate(user=self.user)
+
+		with patch("apps.comments.views.publish_forum_event") as publish_event:
+			response = self.client.delete(f"/api/comments/{comment.id}/")
+
+		self.assertEqual(response.status_code, 204)
+		self.assertFalse(Comment.objects.filter(id=comment.id).exists())
+		publish_event.assert_called_once_with(
+			forum.id,
+			"comment_deleted",
+			{"id": comment.id, "publication": self.publication.id},
+		)
 
 	def test_comment_response_includes_safe_owner_details(self):
 		forum = Forum.objects.create(name="Physics", owner=self.user)
