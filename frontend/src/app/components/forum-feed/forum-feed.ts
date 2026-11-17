@@ -13,6 +13,7 @@ import { UserApiService } from '../../services/user-api';
 import { SimulationApiService } from '../../services/simulation-api';
 import { CommentRealtimeService } from '../../services/comment-realtime';
 import type { CommentRealtimeEvent } from '../../services/comment-realtime';
+import { getProfileInitials } from '../../utils/profile-initials';
 import { PostCard } from '../../components/post-card/post-card';
 import { FormsModule } from '@angular/forms';
 
@@ -51,6 +52,10 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
   readonly deletingForum = signal(false);
   readonly deleteConfirmation = signal(false);
   readonly settingsError = signal('');
+
+  get profileInitials(): string {
+    return getProfileInitials(this.profile());
+  }
 
   forumName = '';
   forumDescription = '';

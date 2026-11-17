@@ -34,7 +34,6 @@ export type ProjectileModuleFactory = (
     options: ProjectileModuleOptions // Passes initialization arguments to Emscripten.
 ) => Promise<ObliqueProjectileWasmRuntime>; // Resolves when the WASM runtime is ready.
 
-// Describes the Emscripten module initialization options
 export const OBLIQUE_PROJECTILE_CONTROLS: readonly EngineControl[] = [ 
     {
         id: 'pause', 

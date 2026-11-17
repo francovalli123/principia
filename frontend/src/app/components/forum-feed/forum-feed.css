@@ -122,17 +122,19 @@
 }
 
 .composer-avatar {
-	width: 36px;
-	height: 36px;
-	flex: 0 0 36px;
+	width: 40px;
+	height: 40px;
+	flex: 0 0 40px;
 	border-radius: 50%;
 	object-fit: cover;
 }
 
 .composer-profile-link {
 	display: grid;
-	flex: 0 0 36px;
+	flex: 0 0 40px;
 	border-radius: 50%;
+	color: #1d5e83;
+	text-decoration: none;
 }
 
 .composer-profile-link:focus-visible {
@@ -142,19 +144,14 @@
 
 .composer-avatar-fallback {
 	display: grid;
+	width: 40px;
+	height: 40px;
 	place-items: center;
-	color: #1d5e83;
+	border-radius: 50%;
 	background: #dcecf4;
-}
-
-.composer-avatar-fallback svg {
-	width: 22px;
-	height: 22px;
-	fill: none;
-	stroke: currentColor;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-	stroke-width: 1.7;
+	color: #1d5e83;
+	font-size: 14px;
+	font-weight: 700;
 }
 
 .create-publication-button:hover {

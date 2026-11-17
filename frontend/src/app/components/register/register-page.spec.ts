@@ -20,6 +20,27 @@ describe('RegisterPage', () => {
     vi.spyOn(router, 'navigate');
   });
 
+  it('disables the submit button while the form is invalid', () => {
+    const fixture = TestBed.createComponent(RegisterPage);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+    expect(button.disabled).toBe(true);
+
+    component.form.setValue({
+      first_name: 'Carla',
+      last_name: 'Pérez',
+      username: 'carla',
+      email: 'carla@example.com',
+      password: 'Physics2026!',
+      passwordConfirmation: 'Physics2026!',
+    });
+    fixture.detectChanges();
+
+    expect(button.disabled).toBe(false);
+  });
+
   it('creates an account and then offers login', () => {
     authApi.signup.mockReturnValue(of({ username: 'carla', email: 'carla@example.com' }));
     const fixture = TestBed.createComponent(RegisterPage);
@@ -59,6 +80,30 @@ describe('RegisterPage', () => {
 
     expect(component.errorMessage).toBe('Las contraseñas no coinciden.');
     expect(authApi.signup).not.toHaveBeenCalled();
+  });
+
+  it('shows a password length error below 8 characters, but not at 8', () => {
+    const fixture = TestBed.createComponent(RegisterPage);
+    const password = fixture.componentInstance.form.controls.password;
+
+    password.setValue('1234567');
+    password.markAsTouched();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('#password-error')?.textContent).toContain(
+      'La contraseña debe tener al menos 8 caracteres.',
+    );
+    expect(fixture.nativeElement.querySelector('#password')?.getAttribute('aria-invalid')).toBe(
+      'true',
+    );
+
+    password.setValue('12345678');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('#password-error')).toBeNull();
+    expect(fixture.nativeElement.querySelector('#password')?.getAttribute('aria-invalid')).toBe(
+      'false',
+    );
   });
 
   it('shows the validation message from the API response envelope', () => {

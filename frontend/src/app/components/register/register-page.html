@@ -50,9 +50,19 @@
         formControlName="password"
         autocomplete="new-password"
         minlength="8"
+        [attr.aria-invalid]="form.controls.password.invalid && form.controls.password.touched"
+        [attr.aria-describedby]="
+          form.controls.password.hasError('minlength') && form.controls.password.touched
+            ? 'password-error'
+            : null
+        "
         required
       />
-      <p class="field-hint">Usá al menos 8 caracteres.</p>
+      @if (form.controls.password.hasError('minlength') && form.controls.password.touched) {
+        <p id="password-error" class="error-message" role="alert">
+          La contraseña debe tener al menos 8 caracteres.
+        </p>
+      }
 
       <label for="passwordConfirmation">Confirmar contraseña</label>
       <input
@@ -67,7 +77,11 @@
         <p class="error-message" role="alert">{{ errorMessage }}</p>
       }
 
-      <button type="submit" [disabled]="submitting">
+      <button
+        type="submit"
+        [disabled]="submitting || form.invalid"
+        [class.is-submitting]="submitting"
+      >
         {{ submitting ? 'Creando cuenta…' : 'Crear cuenta gratis' }}
       </button>
     </form>

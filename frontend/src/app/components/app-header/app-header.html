@@ -31,7 +31,9 @@
       @if (profile()?.profile_picture; as profilePicture) {
         <img class="profile-avatar profile-photo" [src]="profilePicture" alt="" />
       } @else {
-        <span class="profile-avatar profile-avatar-fallback" aria-hidden="true">P</span>
+        <span class="profile-avatar profile-avatar-fallback" aria-hidden="true">
+          {{ profileInitials }}
+        </span>
       }
     </a>
   </div>

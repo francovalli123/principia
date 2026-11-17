@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Profile } from '../../../models/user';
 import { ProfileApiService } from '../../services/profile-api';
+import { getProfileInitials } from '../../utils/profile-initials';
 
 @Component({
   selector: 'app-header',
@@ -20,6 +21,10 @@ export class AppHeader implements OnInit {
   @Output() readonly searchTermChange = new EventEmitter<string>();
   @Output() readonly logoutClicked = new EventEmitter<void>();
   readonly profile = signal<Profile | null>(null);
+
+  get profileInitials(): string {
+    return getProfileInitials(this.profile());
+  }
 
   constructor(
     private readonly profileApi: ProfileApiService,

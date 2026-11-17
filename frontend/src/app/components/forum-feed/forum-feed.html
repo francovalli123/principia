@@ -32,10 +32,7 @@
 				<img class="composer-avatar" [src]="profilePicture" alt="" />
 			} @else {
 				<span class="composer-avatar composer-avatar-fallback" aria-hidden="true">
-					<svg viewBox="0 0 24 24" focusable="false">
-						<circle cx="12" cy="8" r="3.5" />
-						<path d="M5 21c.4-4.1 2.8-6.2 7-6.2s6.6 2.1 7 6.2" />
-					</svg>
+					{{ profileInitials }}
 				</span>
 			}
 		</a>

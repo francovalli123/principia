@@ -117,6 +117,25 @@ describe('ForumFeed', () => {
     expect(avatar.closest('a')).toBeTruthy();
   });
 
+  it('shows the current user initials beside the publish button when there is no profile picture', () => {
+    component.profile.set({
+      id: 8,
+      user: 12,
+      first_name: 'Nazareno',
+      last_name: 'Rodriguez',
+      bio: null,
+      visible_name: null,
+      profile_picture: null,
+      creation_date: '',
+    });
+    fixture.detectChanges();
+
+    expect(
+      fixture.nativeElement.querySelector('.composer-avatar-fallback')?.textContent.trim(),
+    ).toBe('NR');
+    expect(fixture.nativeElement.querySelector('.publication-composer .composer-avatar img')).toBeNull();
+  });
+
   it('loads the current forum and provides a return action', () => {
     expect(forumApi.getForum).toHaveBeenCalledWith(23);
     expect(fixture.nativeElement.textContent).toContain('Physics');
