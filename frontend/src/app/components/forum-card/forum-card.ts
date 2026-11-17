@@ -9,8 +9,6 @@ export interface ForumCardData {
   member_count: number;
   is_member: boolean;
   is_owner: boolean;
-  latestPost?: string;
-  isNew?: boolean;
 }
 
 @Component({
@@ -34,6 +32,8 @@ export class ForumCardComponent implements OnChanges {
     private readonly toast: ToastService,
   ) {}
 
+  // Lifecycle hook that is executed when component's input properties are changed.
+  // It's used to recharge data when an input is modified
   ngOnChanges(): void {
     this.isMember.set(this.forum.is_member);
   }
