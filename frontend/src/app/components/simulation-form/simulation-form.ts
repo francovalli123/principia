@@ -222,7 +222,7 @@ export class SimulationForm implements OnInit {
   get visibilityDescription(): string {
     switch (this.selectedVisibility) {
       case 'private':
-        return 'Solo vos podés ver esta simulación. No aparecerá en tu perfil público.';
+        return 'Solo vos y los miembros del foro en el que este publicada podran ver esta simulación. No aparecerá en tu perfil público.';
       case 'hidden':
         return 'No aparecerá en búsquedas ni en el foro.';
       default:

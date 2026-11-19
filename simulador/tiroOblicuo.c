@@ -82,6 +82,10 @@ int main(int argc, char *argv[]) {
     }
 
     float angle = angleDegrees * M_PI / 180.0;
+    float cosAngle = cosf(angle);
+    if (fabsf(cosAngle) < 1e-6f) {
+        cosAngle = 0.0f;
+    }
     float v0 = atof(argv[3]);
 
     simInitialY = y0;
@@ -96,7 +100,7 @@ int main(int argc, char *argv[]) {
     float v0 = 20;
     */
 
-    float vx = v0 * cos(angle);
+    float vx = v0 * cosAngle;
     float vy = v0 * sin(angle);
 
     // Coordenadas físicas
@@ -116,9 +120,11 @@ int main(int argc, char *argv[]) {
     float maxRange = vx * flightTime;
     float maxHeight = y0 + (vy * vy) / (2 * G);
 
-    float scaleX = (GetScreenWidth() - 200) / maxRange;
+    float scaleX = maxRange > 0.001f
+        ? (GetScreenWidth() - 200) / maxRange
+        : INFINITY;
     float scaleY = (GetScreenHeight() - 200) / maxHeight;
-    float const SCALE = fmin(scaleX, scaleY);
+    float const SCALE = fminf(scaleX, scaleY);
 
     SetTargetFPS(60);
 
