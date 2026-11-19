@@ -38,7 +38,7 @@
 					>
 						<option value="" disabled>Seleccioná un fenómeno</option>
 						@for (phenomenon of phenomena; track phenomenon) {
-							<option [value]="phenomenon">{{ phenomenon }}</option>
+							<option [value]="phenomenon">{{ phenomenonLabel(phenomenon) }}</option>
 						}
 					</select>
 				</div>

@@ -74,7 +74,7 @@
 								} @else {
 									<span class="member-avatar member-avatar-fallback" aria-hidden="true">{{ memberInitials(member) }}</span>
 								}
-								<span class="member-name">{{ member.username }}</span>
+								<span class="member-name">{{ memberName(member) }}</span>
 								@if (member.id === forum()?.owner) {
 									<span class="member-owner-badge">Propietario</span>
 								}

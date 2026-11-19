@@ -61,12 +61,17 @@ describe('LoginPage', () => {
           }),
       ),
     );
-    const component = TestBed.createComponent(LoginPage).componentInstance;
+    const fixture = TestBed.createComponent(LoginPage);
+    const component = fixture.componentInstance;
     component.form.setValue({ username: 'carla', password: 'wrong' });
 
     component.submit();
+    fixture.detectChanges();
 
     expect(component.errorMessage).toBe('Credenciales invalidas');
+    expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain(
+      'Credenciales invalidas',
+    );
     expect(auth.setTokens).not.toHaveBeenCalled();
     expect(router.navigateByUrl).not.toHaveBeenCalled();
   });

@@ -33,8 +33,20 @@ describe('ForumFeed', () => {
       is_owner: false,
     })),
     getMembers: vi.fn(() => of([
-      { id: 1, username: 'owner', profile_picture: 'https://example.test/owner.jpg' },
-      { id: 45, username: 'member-one', profile_picture: 'https://example.test/member.jpg' },
+      {
+        id: 1,
+        username: 'owner',
+        first_name: 'Forum',
+        last_name: 'Owner',
+        profile_picture: 'https://example.test/owner.jpg',
+      },
+      {
+        id: 45,
+        username: 'member-one',
+        first_name: 'Member',
+        last_name: 'One',
+        profile_picture: 'https://example.test/member.jpg',
+      },
     ])),
   };
   const commentApi = { getComments: () => of({ status: 'ok', data: { count: 0, next: null, previous: null, results: [] } }) };
@@ -155,7 +167,8 @@ describe('ForumFeed', () => {
     ) as HTMLImageElement;
     const memberLink = memberAvatar.closest('.member-link') as HTMLAnchorElement;
     expect(fixture.debugElement.query(By.css('.member-link')).injector.get(RouterLink)).toBeTruthy();
-    expect(memberLink.textContent).toContain('member-one');
+    expect(memberLink.textContent).toContain('Member One');
+    expect(memberLink.textContent).not.toContain('member-one');
     expect(memberAvatar.src).toBe('https://example.test/member.jpg');
     const ownerBadge = fixture.nativeElement.querySelector('.member-owner-badge') as HTMLElement;
     const ownerLink = ownerBadge.closest('.member-link') as HTMLAnchorElement;

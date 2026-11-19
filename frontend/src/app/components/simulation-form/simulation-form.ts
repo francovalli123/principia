@@ -53,6 +53,10 @@ export class SimulationForm implements OnInit {
       : '';
   }
 
+  phenomenonLabel(phenomenonType: string): string {
+    return phenomenonType === 'Oblique Projectile Motion' ? 'Tiro oblicuo' : phenomenonType;
+  }
+
   constructor(
     private readonly simulationApi: SimulationApiService,
     private readonly changeDetector: ChangeDetectorRef,

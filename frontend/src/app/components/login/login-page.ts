@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -32,6 +32,7 @@ export class LoginPage {
   }
 
   constructor(
+    private readonly changeDetector: ChangeDetectorRef,
     private readonly authApi: AuthApiService,
     private readonly auth: AuthService,
     private readonly route: ActivatedRoute,
@@ -50,11 +51,15 @@ export class LoginPage {
 
     this.authApi
       .login(username, password)
-      .pipe(finalize(() => (this.submitting = false)))
+      .pipe(finalize(() => {
+        this.submitting = false;
+        this.changeDetector.markForCheck();
+      }))
       .subscribe({
         next: (response) => {
           if (!response?.access || !response.refresh) {
             this.errorMessage = 'La respuesta de inicio de sesión no es válida.';
+            this.changeDetector.markForCheck();
             return;
           }
 
@@ -67,6 +72,7 @@ export class LoginPage {
             error instanceof HttpErrorResponse && typeof error.error?.message === 'string'
               ? error.error.message
               : 'No se pudo iniciar sesión. Revisa tus credenciales e inténtalo de nuevo.';
+          this.changeDetector.markForCheck();
         },
       });
   }

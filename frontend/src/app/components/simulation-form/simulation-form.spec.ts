@@ -63,7 +63,7 @@ describe('SimulationForm', () => {
     expect(component.isLoading).toBe(false);
     expect(component.phenomena).toContain('Oblique Projectile Motion');
     expect(element.querySelector('option[value="Oblique Projectile Motion"]')?.textContent).toContain(
-      'Oblique Projectile Motion',
+      'Tiro oblicuo',
     );
     expect(element.textContent).not.toContain('Cargando fenómenos');
   });

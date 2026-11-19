@@ -183,6 +183,14 @@ export class ForumFeed implements OnInit, AfterViewInit, OnDestroy {
     return member.username.slice(0, 2).toUpperCase();
   }
 
+  memberName(member: Author): string {
+    const fullName = [member.first_name, member.last_name]
+      .map((name) => name.trim())
+      .filter(Boolean)
+      .join(' ');
+    return fullName || member.username;
+  }
+
   loadMoreComments(post: FeedPost): void {
     if (post.nextCommentPage === null || post.loadingComments) return;
 
